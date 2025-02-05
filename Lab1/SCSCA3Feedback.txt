@@ -1,0 +1,33 @@
+Overall, Lab 1 is complete, with minor changes. Project Scope might be a little too big, please cut down if you dont have
+enough time to implement.
+
+Functional Requirements: 
+1. Form Validation requirements can be written in the Use Case Description/Data Dictionary (Optional)
+2. Navigation Bar is not needed in the FRs (This can be viewed in UI Mockup)
+3. Route Search Bar some functionalities might be difficult to implement
+4. Example 1.6.3 As the page is part of the system, might be good to just say the system should display Current Friend List
+
+Non-Functional Requirements: 
+1. When mentioning compatability with IOS and Android, good to mention the Software or OS version numbers
+2. Usability sounds like FR, Usability should state things for UI/UX helping users to do things in 5 clicks etc.
+3. Security part sounds weird, users must be authenticated when logging in. 
+All users must be authenticated before performing any actions?
+
+
+Data Dictionary: 
+Correct, No comments
+
+Initial Use Case Diagram: 
+1. Navigation bubbles not needed since Navigation FRs are not needed
+2. Use Case Bubbles should always start with a verb, for example, UserRegistration -> Register Account
+3. FriendsData and UserData is part of the system, therefore, not needed as actors
+4. RouteData is a an API, mention API name
+
+Use Case Description: 
+No Comments. Well done 
+
+UI Mockup:
+All UIs match FRs
+
+
+
