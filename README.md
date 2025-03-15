@@ -1,3 +1,5 @@
 # 2006-SCSC-A3
 
-run npm install react-router-dom
+run
+npm install react-router-dom
+npm install lucide-react
