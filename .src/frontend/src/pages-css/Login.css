@@ -1,0 +1,43 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cyclinggowhere-logo {
+  width: 30%;
+  height: 30%;
+}
+
+.username-box {
+  margin-top: 3%;
+  padding: 1%;
+  border-bottom: 2px solid gray;
+}
+
+.password-box {
+  margin-bottom: 1%;
+  padding: 1%;
+}
+
+.username-input {
+  background-color: white;
+  border: 0;
+  margin-left: 10px;
+}
+
+.password-input {
+  background-color: white;
+  border: 0;
+  margin-left: 10px;
+}
+
+input::placeholder {
+  color: gray;
+  opacity: 1;
+}
+
+input {
+  color: black;
+  outline: none;
+}

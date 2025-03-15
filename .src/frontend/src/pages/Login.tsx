@@ -1,6 +1,7 @@
 import "../pages-css/Login.css";
 import { useState } from "react";
 import { UserRoundCheck, Lock } from "lucide-react";
+import logo from "../assets/cyclegowherelogo.png";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -8,9 +9,9 @@ function Login() {
 
   return (
     <div className="login-container">
-      <img className="cyclinggowhere-logo" src=""></img>
+      <img className="cyclinggowhere-logo" src={logo}></img>
       <div className="username-box">
-        <UserRoundCheck size="16" />
+        <UserRoundCheck size="16" color="gray" />
         <input
           type="text"
           placeholder="Email ID or Username"
@@ -20,7 +21,7 @@ function Login() {
         ></input>
       </div>
       <div className="password-box">
-        <Lock size="16" />
+        <Lock size="16" color="gray" />
         <input
           type="text"
           placeholder="Password"
