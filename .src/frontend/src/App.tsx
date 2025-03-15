@@ -4,6 +4,10 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import "./App.css";
 
 function App() {

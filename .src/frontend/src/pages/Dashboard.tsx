@@ -1,7 +1,7 @@
-import "../pages-css/Dashboard.css"
+import "../pages-css/Dashboard.css";
 
-function Dashboard(){
-    return();
+function Dashboard() {
+  return <div></div>;
 }
 
 export default Dashboard;
