@@ -8,6 +8,7 @@ function Login() {
   const [password, setPassword] = useState("");
 
   return (
+
     <div className="login-container">
       <img className="cyclinggowhere-logo" src={logo}></img>
       <div className="username-box">
@@ -33,6 +34,7 @@ function Login() {
       {/* this button should submit the username and password to backend and if successful fetch the required data */}
       <button className="login-button">Login</button>
     </div>
+
   );
 }
 
