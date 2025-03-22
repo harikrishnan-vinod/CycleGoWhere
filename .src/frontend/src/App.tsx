@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import SavedRoutes from "./pages/SavedRoutes";
 import "./App.css";
 
 function App() {
@@ -16,10 +17,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate replace to="/login" />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/Dashboard" element={<Dashboard />} />
+          <Route path="/Profile" element={<Profile />} />
+          <Route path="/SavedRoutes" element={<SavedRoutes />} />
+          <Route path="/Settings" element={<Settings />} />
+          <Route path="/Login" element={<Login />} />
         </Routes>
       </Router>
     </>

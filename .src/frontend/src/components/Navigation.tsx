@@ -1,15 +1,38 @@
-import "../pages-css/Navigate.css";
-import React from 'react';
+import "../components.css/Navigation.css";
+import { Link } from "react-router-dom";
 
+import mainpageicon from "../assets/mainpageicon.png";
+import profileicon from "../assets/profileicon.png";
+import savedroutesicon from "../assets/savedroutesicon.png";
+import settingsicon from "../assets/settingsicon.png";
 
-const Navigate = () => {
+function Navigate() {
     return (
         <div className="navigation">
-            <ul>
-                <li><a href="#home">Main</a></li>
-                <li><a href="#profile">Profile</a></li>
-                <li><a href="#services">SavedRoutes</a></li>
-                <li><a href="#contact">Settings</a></li>
+            <ul className="nav-bar">
+                <li className="nav-item">
+                    <Link to="/Dashboard">
+                        <img src={mainpageicon} alt="Main" />
+                    </Link>
+                </li>
+
+                <li className="nav-item">
+                    <Link to="/Profile">
+                        <img src={profileicon} alt="Profile" />
+                    </Link>
+                </li>
+
+                <li className="nav-item">
+                    <Link to="/SavedRoutes">
+                        <img src={savedroutesicon} alt="Saved Routes" />
+                    </Link>
+                </li>
+
+                <li className="nav-item">
+                    <Link to="/Settings">
+                        <img src={settingsicon} alt="Settings" />
+                    </Link>
+                </li>
             </ul>
         </div>
     );
