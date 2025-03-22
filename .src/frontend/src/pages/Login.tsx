@@ -44,6 +44,7 @@ function Login() {
   
 
   return (
+
     <div className="login-container">
       <img className="cyclinggowhere-logo" src={logo} alt="Cycling Go Where Logo" />
       
@@ -79,6 +80,7 @@ function Login() {
         </button>
       </form>
     </div>
+
   );
 }
 
