@@ -4,11 +4,12 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
+import MainPage from "./pages/MainPage";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import SavedRoutes from "./pages/SavedRoutes";
+import Register from "./pages/Register";
 import "./App.css";
 
 function App() {
@@ -17,11 +18,12 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate replace to="/login" />} />
-          <Route path="/Dashboard" element={<Dashboard />} />
+          <Route path="/MainPage" element={<MainPage />} />
           <Route path="/Profile" element={<Profile />} />
           <Route path="/SavedRoutes" element={<SavedRoutes />} />
           <Route path="/Settings" element={<Settings />} />
           <Route path="/Login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </Router>
     </>

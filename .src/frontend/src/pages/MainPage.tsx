@@ -1,14 +1,14 @@
-import "../pages-css/Dashboard.css";
+import "../pages-css/MainPage.css";
 import React from "react";
 import Navigate from "../components/Navigation";
 
-function Dashboard() {
+function MainPage() {
   return (
     <div>
-      <h1>Dashboard</h1>
+      <h1>Main Page</h1>
       <Navigate />
     </div>
   );
-};
+}
 
-export default Dashboard;
+export default MainPage;
