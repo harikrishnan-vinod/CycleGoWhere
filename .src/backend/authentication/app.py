@@ -5,6 +5,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from google.oauth2 import service_account
+
 
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
@@ -58,8 +60,8 @@ def login():
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("user", None)
-    return jsonify({"message": "Logout successful"})
-
+    print("hello world")
+    return jsonify({"message": "Logout successful"}), 200
 
 @app.route("/register", methods=['POST'])
 def register():
@@ -128,6 +130,8 @@ def google_callback():
         return redirect('http://localhost:5173/mainpage')
 
     return jsonify({"message": "Google login failed"}), 400
+
+
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
