@@ -6,12 +6,20 @@ from firebase_admin import credentials, firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from google.oauth2 import service_account
-
+import cloudinary
+import cloudinary.uploader
 
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
 GOOGLE_CLIENT_ID = 'REMOVED'
+
+
+cloudinary.config(
+  cloud_name = "dp75ekaxp",
+  api_key = "REMOVED",
+  api_secret = "REMOVED"
+)
 
 config = {
     "apiKey": "REMOVED",
@@ -25,7 +33,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate("work.json")
+cred = credentials.Certificate(".src/backend/authentication/work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -39,23 +47,36 @@ def login():
         email = login_input
     else:
         username_doc = db.collection("usernames").document(login_input).get()
-
         if username_doc.exists:
             email = username_doc.to_dict().get("email")
         else:
-            print(f"No username found for {login_input}")
             return jsonify({"message": "Wrong username or password"}), 401
 
     try:
         user = auth.sign_in_with_email_and_password(email, password)
+
+
+        username = login_input if "@" not in login_input else None
+
+        if username is None:
+            users_ref = db.collection("usernames").stream()
+            for doc_snapshot in users_ref:
+                doc = doc_snapshot.to_dict()
+                if doc.get("email") == email:
+                    username = doc_snapshot.id
+                    break
+
         session["user"] = email
         return jsonify({
-            "message": "Login successful", 
-            "userId": user["localId"], 
-            "email": email
+            "message": "Login successful",
+            "userId": user["localId"],
+            "email": email,
+            "username": username
         })
     except Exception as e:
+        print("Login failed:", e)
         return jsonify({"message": "Wrong username or password"}), 401
+
 
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -131,7 +152,45 @@ def google_callback():
 
     return jsonify({"message": "Google login failed"}), 400
 
+@app.route("/upload-profile-pic", methods=["POST"])
+def upload_profile_pic():
+    if 'file' not in request.files or 'username' not in request.form:
+        return {"message": "Missing file or username"}, 400
 
+    file = request.files['file']
+    username = request.form['username']
+
+    try:
+        result = cloudinary.uploader.upload(file, folder="profilePictures")
+        image_url = result.get("secure_url")
+    except Exception as e:
+        print("Upload failed:", e)
+        return {"message": "Upload to Cloudinary failed"}, 500
+
+    try:
+        db.collection("usernames").document(username).update({
+            "profilePic": image_url
+        })
+        return {"message": "Profile picture updated", "url": image_url}, 200
+    except Exception as e:
+        print("Firestore update failed:", e)
+        return {"message": "Failed to update Firestore"}, 500
+    
+@app.route("/get-profile-pic")
+def get_profile_pic():
+    username = request.args.get("username")
+    if not username:
+        return jsonify({"message": "Username required"}), 400
+
+    try:
+        doc = db.collection("usernames").document(username).get()
+        if doc.exists:
+            return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print("Error fetching profile picture:", e)
+        return jsonify({"message": "Server error"}), 500
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
