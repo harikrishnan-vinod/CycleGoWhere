@@ -19,6 +19,8 @@ import requests
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import cloudinary
+import cloudinary.uploader
 
 load_dotenv()
 
@@ -32,6 +34,12 @@ app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
 GOOGLE_CLIENT_ID = 'REMOVED'
 
+cloudinary.config(
+  cloud_name = "dp75ekaxp",
+  api_key = "REMOVED",
+  api_secret = "REMOVED"
+)
+
 config = {
     "apiKey": "REMOVED",
     "authDomain": "REMOVED.firebaseapp.com",
@@ -44,18 +52,17 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate("work.json")
+cred = credentials.Certificate(".src/backend/work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# Initialize controllers
+
 login_controller = LoginPageController()
 main_controller = MainPageController()
 profile_controller = ProfilePageController()
 saved_routes_controller = SavedRoutesController()
 settings_controller = SettingsPageController()
 
-# Existing auth routes
 @app.route("/auth", methods=['POST'])
 def login():
     data = request.get_json()
@@ -66,25 +73,36 @@ def login():
         email = login_input
     else:
         username_doc = db.collection("usernames").document(login_input).get()
-
         if username_doc.exists:
             email = username_doc.to_dict().get("email")
         else:
-            print(f"No username found for {login_input}")
             return jsonify({"message": "Wrong username or password"}), 401
 
     try:
         user = auth.sign_in_with_email_and_password(email, password)
+
+
+        username = login_input if "@" not in login_input else None
+
+        if username is None:
+            users_ref = db.collection("usernames").stream()
+            for doc_snapshot in users_ref:
+                doc = doc_snapshot.to_dict()
+                if doc.get("email") == email:
+                    username = doc_snapshot.id
+                    break
+
         session["user"] = email
-        session["user_id"] = user["localId"]
         return jsonify({
-            "message": "Login successful", 
-            "userId": user["localId"], 
-            "email": email
+            "message": "Login successful",
+            "userId": user["localId"],
+            "email": email,
+            "username": username
         })
     except Exception as e:
+        print("Login failed:", e)
         return jsonify({"message": "Wrong username or password"}), 401
-
+    
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("user", None)
@@ -162,26 +180,22 @@ def google_callback():
         email = id_info.get('email')
         user_uid = id_info.get('sub')
 
-        # Check if user exists, if not create a new user document
         user_doc = db.collection("users").where("email", "==", email).get()
         if not user_doc:
-            # Extract user info
-            username = email.split('@')[0]  # Use part of email as username
+            username = email.split('@')[0]  
             
-            # Ensure username is unique
             username_count = 0
             base_username = username
             while db.collection("usernames").document(username).get().exists:
                 username_count += 1
                 username = f"{base_username}{username_count}"
             
-            # Create username document
+
             db.collection("usernames").document(username).set({
                 "email": email,
                 "userUID": user_uid
             })
             
-            # Create user document
             db.collection("users").document(user_uid).set({
                 "email": email,
                 "username": username,
@@ -205,7 +219,6 @@ def searchaddressUpdateList():
     
     if fromAddress:
         print("fromAddress received:", fromAddress)
-        # Do something with from_address
         try:
             url = "https://www.onemap.gov.sg/api/common/elastic/search?"
             params = {
@@ -233,7 +246,6 @@ def searchaddressUpdateList():
         
     if destAddress:
         print("fromAddress received:", destAddress)
-        # Do something with from_address
         try:
             url = "https://www.onemap.gov.sg/api/common/elastic/search?"
             params = {
