@@ -6,7 +6,17 @@ from firebase_admin import credentials, firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from google.oauth2 import service_account
+import time
+import requests
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+auth_token = {
+    "token": None,
+    "expires_at": 0
+}
 
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
@@ -130,6 +140,101 @@ def google_callback():
         return redirect('http://localhost:5173/mainpage')
 
     return jsonify({"message": "Google login failed"}), 400
+
+
+@app.route('/search')
+def searchaddressUpdateList():
+    fromAddress = request.args.get("fromAddress")
+    destAddress = request.args.get("destAddress")
+    token = get_onemap_token()
+
+    
+    if fromAddress:
+        print("fromAddress received:", fromAddress)
+        # Do something with from_address
+        try:
+            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
+            params = {
+                "searchVal": f"{fromAddress}",
+                "returnGeom": "Y",
+                "getAddrDetails": "Y",
+            }
+            headers = {
+                "Authorization": f"Bearer {token}"
+            }
+
+            response = requests.get(
+            url,
+            params=params,
+            headers=headers
+            )
+            data = response.json()
+            data["results"] = data.get("results", [])[:5]
+            print(data)
+            return jsonify(data)
+
+        except Exception as e:
+            return jsonify({'error':'internal server error'}) 
+
+        
+    if destAddress:
+        print("fromAddress received:", destAddress)
+        # Do something with from_address
+        try:
+            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
+            params = {
+                "searchVal": f"{destAddress}",
+                "returnGeom": "Y",
+                "getAddrDetails": "Y",
+            }
+            headers = {
+                "Authorization": f"Bearer {token}"
+            }
+
+            response = requests.get(
+            url,
+            params=params,
+            headers=headers
+            )
+            data = response.json()
+            data["results"] = data.get("results", [])[:5]
+            print(data)
+            return jsonify(data)
+
+
+        except Exception as e:
+            return jsonify({'error':'internal server error'}) 
+    
+
+
+def get_onemap_token():
+    """Fetch and cache the OneMap token"""
+    current_time = time.time()
+
+    if auth_token["token"] and current_time < auth_token["expires_at"]:
+        return auth_token["token"]
+
+    print("Fetching new OneMap token...")
+
+    url = "https://www.onemap.gov.sg/api/auth/post/getToken"
+    payload = {
+        "email": os.environ["ONEMAP_EMAIL"],
+        "password": os.environ["ONEMAP_EMAIL_PASSWORD"]
+    }
+
+    response = requests.post(url, json=payload)
+
+    if response.status_code != 200:
+        raise Exception("Failed to get OneMap token")
+
+    data = response.json()
+    token = data["access_token"]
+
+    auth_token["token"] = token
+    auth_token["expires_at"] = current_time + 24 * 60 * 60  # 24-hour expiry
+
+    return token
+
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
