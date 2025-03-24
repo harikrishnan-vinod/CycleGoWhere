@@ -63,29 +63,21 @@ export default function MapDrawer() {
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      const params = new URLSearchParams();
-      if (formData.fromAddress) {
-        params.append("fromAddress", formData.fromAddress);
-      }
-      if (formData.destAddress) {
-        params.append("destAddress", formData.destAddress);
-      }
-
-      const url = new URL("http://127.0.0.1:1234/search");
-      url.search = params.toString();
-
-      const response = await fetch(url, {
+      const url = new URL("http://127.0.0.1:1234/route");
+      url.searchParams.append("fromAddress", formData.fromAddress);
+      url.searchParams.append("destAddress", formData.destAddress);
+      const response = await fetch(url.toString(), {
         method: "GET",
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || "Something went wrong");
+        throw new Error("Failed to fetch route");
       }
+
+      const data = await response.json();
       console.log("Route response:", data);
     } catch (error) {
-      console.error("Submit error:", error);
+      console.log("Submit error:", error);
     }
   };
 

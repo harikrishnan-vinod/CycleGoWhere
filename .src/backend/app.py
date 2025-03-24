@@ -258,6 +258,16 @@ def searchaddressUpdateList():
 
         except Exception as e:
             return jsonify({'error':'internal server error'}) 
+        
+@app.route('/route')
+def handlerouting():
+
+    fromAddress = request.args.get("fromAddress")
+    destAddress = request.args.get("destAddress")
+    print(fromAddress,destAddress)
+
+    return 1
+
 
 def get_onemap_token():
     """Fetch and cache the OneMap token"""
