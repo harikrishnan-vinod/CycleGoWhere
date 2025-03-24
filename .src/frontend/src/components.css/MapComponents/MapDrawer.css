@@ -92,3 +92,23 @@
 .go-button:hover {
   background-color: #00b359; /* Slightly darker green on hover */
 }
+
+.suggestions {
+  list-style: none;
+  padding: 0;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
+
+.suggestions li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestions li:hover {
+  background-color: #f0f0f0;
+}

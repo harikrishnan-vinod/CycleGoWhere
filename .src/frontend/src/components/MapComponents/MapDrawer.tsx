@@ -14,27 +14,49 @@ export default function MapDrawer() {
     destAddress: "",
   });
 
+  const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
+  const [destSuggestions, setDestSuggestions] = useState<any[]>([]);
+
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
 
+    if (!value.trim()) {
+      if (name === "fromAddress") {
+        setFromSuggestions([]);
+      } else if (name === "destAddress") {
+        setDestSuggestions([]);
+      }
+      return;
+    }
+
     try {
       const url = new URL("http://127.0.0.1:1234/search");
-      url.searchParams.append(name, value); // sends only the changed field
+      url.searchParams.append(name, value);
 
       console.log("Sending GET request to:", url.toString());
       const response = await fetch(url.toString(), {
         method: "GET",
       });
+
       if (!response.ok) {
         throw new Error("Failed to fetch");
       }
+
       const data = await response.json();
-    } catch (Error) {
-      console.error(`GET request error for ${name}:`, Error);
+      const trimmedResults = data.results.slice(0, 5);
+
+      if (name === "fromAddress") {
+        setFromSuggestions(trimmedResults);
+      } else if (name === "destAddress") {
+        setDestSuggestions(trimmedResults);
+      }
+    } catch (error) {
+      console.error(`GET request error for ${name}:`, error);
     }
   };
 
@@ -86,6 +108,22 @@ export default function MapDrawer() {
               value={formData.fromAddress}
               onChange={handleChange}
             />
+            <ul className="suggestions">
+              {fromSuggestions.map((item, idx) => (
+                <li
+                  key={idx}
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      fromAddress: item.ADDRESS,
+                    }));
+                    setFromSuggestions([]); // hide list on select
+                  }}
+                >
+                  {item.ADDRESS}
+                </li>
+              ))}
+            </ul>
             <input
               name="destAddress"
               className="search"
@@ -93,6 +131,22 @@ export default function MapDrawer() {
               value={formData.destAddress}
               onChange={handleChange}
             />
+            <ul className="suggestions">
+              {destSuggestions.map((item, idx) => (
+                <li
+                  key={idx}
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      destAddress: item.ADDRESS,
+                    }));
+                    setDestSuggestions([]); // hide list on select
+                  }}
+                >
+                  {item.ADDRESS}
+                </li>
+              ))}
+            </ul>
             <button type="button" className="go-button" onClick={handleSubmit}>
               GO
             </button>
