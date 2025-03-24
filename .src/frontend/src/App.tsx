@@ -30,7 +30,7 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/hangeUsername" element={<ChangeUsername />} />
+        <Route path="/changeUsername" element={<ChangeUsername />} />
         <Route path="/ChangeEmail" element={<ChangeEmail />} />
         <Route path="/ChangePassword" element={<ChangePassword />} />
         <Route
