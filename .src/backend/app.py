@@ -287,5 +287,45 @@ def get_onemap_token():
 
     return token
 
+@app.route("/upload-profile-pic", methods=["POST"])
+def upload_profile_pic():
+    if 'file' not in request.files or 'username' not in request.form:
+        return {"message": "Missing file or username"}, 400
+
+    file = request.files['file']
+    username = request.form['username']
+
+    try:
+        result = cloudinary.uploader.upload(file, folder="profilePictures")
+        image_url = result.get("secure_url")
+    except Exception as e:
+        print("Upload failed:", e)
+        return {"message": "Upload to Cloudinary failed"}, 500
+
+    try:
+        db.collection("usernames").document(username).update({
+            "profilePic": image_url
+        })
+        return {"message": "Profile picture updated", "url": image_url}, 200
+    except Exception as e:
+        print("Firestore update failed:", e)
+        return {"message": "Failed to update Firestore"}, 500
+    
+@app.route("/get-profile-pic")
+def get_profile_pic():
+    username = request.args.get("username")
+    if not username:
+        return jsonify({"message": "Username required"}), 400
+
+    try:
+        doc = db.collection("usernames").document(username).get()
+        if doc.exists:
+            return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print("Error fetching profile picture:", e)
+        return jsonify({"message": "Server error"}), 500
+
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
