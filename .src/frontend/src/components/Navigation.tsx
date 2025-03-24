@@ -1,4 +1,4 @@
-import "../components.css/Navigation.css";
+import "../components-css/Navigation.css";
 import { Link } from "react-router-dom";
 
 import mainpageicon from "../assets/mainpageicon.png";
