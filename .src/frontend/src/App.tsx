@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import SavedRoutes from "./pages/SavedRoutes";
 import Register from "./pages/Register";
+import Logout from "./components/Logout";
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/Settings" element={<Settings />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/logout" element={<Logout />} />
         </Routes>
       </Router>
     </>
