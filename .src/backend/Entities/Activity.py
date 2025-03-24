@@ -1,51 +1,54 @@
 from datetime import datetime
 
 class Activity:
-    """Represents a cycling activity session recorded by a user.
+    def __init__(self, id=None, user_id=None, route=None, start_time=None, end_time=None, 
+                 distance=0, duration=0, calories=0, avg_speed=0, max_speed=0, 
+                 min_elevation=0, max_elevation=0, cadence=0):
+        self.id = id
+        self.user_id = user_id
+        self.route = route
+        self.start_time = start_time or datetime.now()
+        self.end_time = end_time
+        self.distance = distance  # in kilometers
+        self.duration = duration  # in seconds
+        self.calories = calories
+        self.average_speed = avg_speed  # in km/h
+        self.max_speed = max_speed  # in km/h
+        self.min_elevation = min_elevation  # in meters
+        self.max_elevation = max_elevation  # in meters
+        self.cadence = cadence  # in rpm
     
-    Attributes:
-        activity_id (int): Unique identifier for the activity
-        user (User): User who performed the activity
-        date_time_started (datetime): Activity start timestamp
-        date_time_ended (datetime): Activity end timestamp
-        time_elapsed (float): Total activity duration in seconds
-        route_taken (Route): Cycling route used for this activity
-        filters_used (Filters): Map filters applied during activity
-    """
-
-    def __init__(self, activity_id: int, user: 'User'):
-        """Initializes a new Activity instance.
-        
-        Args:
-            activity_id: Unique numeric identifier
-            user: Associated User object
-        """
-        self.activity_id = activity_id
-        self.user = user
-        self.date_time_started = None
-        self.date_time_ended = None
-        self.time_elapsed = 0.0
-        self.route_taken = None
-        self.filters_used = None
-
-    def set_route_taken(self, route: 'Route') -> bool:
-        """Links a cycling route to this activity.
-        
-        Args:
-            route: Route object representing path taken
-            
-        Returns:
-            bool: True if successfully set
-        """
-        self.route_taken = route
-        return True
-
-    def get_time_elapsed(self) -> float:
-        """Calculates duration between start and end times.
-        
-        Returns:
-            float: Activity duration in seconds
-        """
-        if self.date_time_started and self.date_time_ended:
-            return (self.date_time_ended - self.date_time_started).total_seconds()
-        return 0.0
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "route": self.route.to_dict() if self.route else None,
+            "start_time": self.start_time.isoformat() if isinstance(self.start_time, datetime) else self.start_time,
+            "end_time": self.end_time.isoformat() if isinstance(self.end_time, datetime) else self.end_time,
+            "distance": self.distance,
+            "duration": self.duration,
+            "calories": self.calories,
+            "average_speed": self.average_speed,
+            "max_speed": self.max_speed,
+            "min_elevation": self.min_elevation,
+            "max_elevation": self.max_elevation,
+            "cadence": self.cadence
+        }
+    
+    @staticmethod
+    def from_dict(data):
+        activity = Activity(
+            id=data.get("id"),
+            user_id=data.get("user_id"),
+            start_time=data.get("start_time"),
+            end_time=data.get("end_time"),
+            distance=data.get("distance", 0),
+            duration=data.get("duration", 0),
+            calories=data.get("calories", 0),
+            avg_speed=data.get("average_speed", 0),
+            max_speed=data.get("max_speed", 0),
+            min_elevation=data.get("min_elevation", 0),
+            max_elevation=data.get("max_elevation", 0),
+            cadence=data.get("cadence", 0)
+        )
+        return activity
