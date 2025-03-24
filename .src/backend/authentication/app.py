@@ -5,6 +5,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from google.oauth2 import service_account
+
 
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
@@ -23,7 +25,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate(".src/backend/authentication/work.json")
+cred = credentials.Certificate("work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
