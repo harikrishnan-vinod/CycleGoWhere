@@ -32,7 +32,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate("work.json")
+cred = credentials.Certificate(".src/backend/authentication/work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -371,6 +371,8 @@ def record_activity():
         "message": "Activity recorded successfully",
         "activity_id": new_activity_ref.id
     }), 201
+
+
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
