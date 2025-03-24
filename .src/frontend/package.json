@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/react": "^18.3.19",
     "@types/react-dom": "^18.3.5",
+    "firebase": "^11.5.0",
     "lucide-react": "^0.482.0",
     "mdb-react-ui-kit": "^9.0.0",
     "react": "^18.3.1",

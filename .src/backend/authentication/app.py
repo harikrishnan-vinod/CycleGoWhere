@@ -25,7 +25,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate("work.json")
+cred = credentials.Certificate(".src/backend/authentication/work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
