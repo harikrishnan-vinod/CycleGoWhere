@@ -11,10 +11,10 @@ import Profile from "./pages/Profile";
 import SavedRoutes from "./pages/SavedRoutes";
 import Register from "./pages/Register";
 import Logout from "./components/Logout";
-import ChangeUsername from "./components/changeUsername";
-import ChangeEmail from "./components/changeEmail";
-import ChangePassword from "./components/changePassword";
-import ChangeProfilePicture from "./components/changeProfilePicture";
+import ChangeUsername from "./components/ChangeUsername";
+import ChangeEmail from "./components/ChangeEmail";
+import ChangePassword from "./components/ChangePassword";
+import ChangeProfilePicture from "./components/ChangeProfilePicture";
 
 import "./App.css";
 
@@ -30,10 +30,13 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/changeUsername" element={<ChangeUsername />} />
-        <Route path="/changeEmail" element={<ChangeEmail />} />
-        <Route path="/changePassword" element={<ChangePassword />} />
-        <Route path="/changeProfilePicture" element={<ChangeProfilePicture />} />
+        <Route path="/hangeUsername" element={<ChangeUsername />} />
+        <Route path="/ChangeEmail" element={<ChangeEmail />} />
+        <Route path="/ChangePassword" element={<ChangePassword />} />
+        <Route
+          path="/changeProfilePicture"
+          element={<ChangeProfilePicture />}
+        />
       </Routes>
     </Router>
   );
