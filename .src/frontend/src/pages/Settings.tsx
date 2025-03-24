@@ -15,21 +15,29 @@ function Settings() {
         Log Out
       </button>
       <Navigate />
-      <div className="settings-options">
-        <button className="change" onClick={() => navigate("/changeUsername")}>
-          Change Username
-        </button>
-        <button className="change" onClick={() => navigate("/changeEmail")}>
-          Change Email
-        </button>
-        <button className="change" onClick={() => navigate("/changePassword")}>
-          Change Password
-        </button>
-        <button className="change" onClick={() => navigate("/changeProfilePicture")}>
-          Change Profile Picture
-        </button>
-      </div>
-    </div>
+      <ul className="settings-options">
+        <li>
+          <button onClick={() => navigate("/changeUsername")}>
+            Change Username
+          </button>
+        </li>
+        <li>
+          <button onClick={() => navigate("/changeEmail")}>
+            Change Email
+          </button>
+        </li>
+        <li>
+          <button onClick={() => navigate("/changePassword")}>
+            Change Password
+          </button>
+        </li>
+        <li>
+          <button onClick={() => navigate("/changeProfilePicture")}>
+            Change Profile Picture
+          </button>
+        </li>
+      </ul>
+    </div >
   );
 }
 
