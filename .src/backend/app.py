@@ -20,6 +20,8 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
+#Import helper Functions
+from helperFunctions import search  
 load_dotenv()
 
 auth_token = {
@@ -207,25 +209,8 @@ def searchaddressUpdateList():
         print("fromAddress received:", fromAddress)
         # Do something with from_address
         try:
-            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
-            params = {
-                "searchVal": f"{fromAddress}",
-                "returnGeom": "Y",
-                "getAddrDetails": "Y",
-            }
-            headers = {
-                "Authorization": f"Bearer {token}"
-            }
-
-            response = requests.get(
-            url,
-            params=params,
-            headers=headers
-            )
-            data = response.json()
-            data["results"] = data.get("results", [])[:5]
-            print(data)
-            return jsonify(data)
+            data = search.searchRequest(fromAddress,token)
+            return data
 
         except Exception as e:
             return jsonify({'error':'internal server error'}) 
@@ -235,26 +220,8 @@ def searchaddressUpdateList():
         print("fromAddress received:", destAddress)
         # Do something with from_address
         try:
-            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
-            params = {
-                "searchVal": f"{destAddress}",
-                "returnGeom": "Y",
-                "getAddrDetails": "Y",
-            }
-            headers = {
-                "Authorization": f"Bearer {token}"
-            }
-
-            response = requests.get(
-            url,
-            params=params,
-            headers=headers
-            )
-            data = response.json()
-            data["results"] = data.get("results", [])[:5]
-            print(data)
-            return jsonify(data)
-
+            data = search.searchRequest(destAddress,token)
+            return data
 
         except Exception as e:
             return jsonify({'error':'internal server error'}) 
@@ -264,9 +231,23 @@ def handlerouting():
 
     fromAddress = request.args.get("fromAddress")
     destAddress = request.args.get("destAddress")
-    print(fromAddress,destAddress)
+    token = get_onemap_token()
+    #get latitude and longitude from onemap api
+    
+    try:
+        data_fromAddress = search.searchAndReturnLL(fromAddress,token).get_json()
+        data_destAddress = search.searchAndReturnLL(destAddress,token).get_json()
+        
+        combined_address = {
+            "from": data_fromAddress,
+            "destination": data_destAddress
+        }
+        
+        return search.getRouting(combined_address,token)
 
-    return 1
+    
+    except Exception as e:
+        return jsonify({'error':'internal server error'}) 
 
 
 def get_onemap_token():
