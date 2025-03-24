@@ -29,5 +29,6 @@ dist-ssr
 
 node_modules/
 package.jsonyarn.lock
+
 venv/
 *.env

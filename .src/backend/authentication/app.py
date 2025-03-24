@@ -2,14 +2,23 @@ from flask import Flask, session, request, jsonify, redirect, url_for
 from flask_cors import CORS
 import pyrebase
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth as firebase_auth
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 from google.oauth2 import service_account
+
+# Import controllers
+from Controllers.LoginPageController import LoginPageController
+from Controllers.MainPageController import MainPageController
+from Controllers.ProfilePageController import ProfilePageController
+from Controllers.SavedRoutesController import SavedRoutesController
+from Controllers.SettingsPageController import SettingsPageController
+
 import time
 import requests
 import os
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -25,12 +34,12 @@ GOOGLE_CLIENT_ID = 'REMOVED'
 
 config = {
     "apiKey": "REMOVED",
-  "authDomain": "REMOVED.firebaseapp.com",
-  "projectId": "REMOVED",
-  "storageBucket": "REMOVED",
-  "messagingSenderId": "REMOVED",
-  "appId": "1:REMOVED:web:496edabac517dfff8e3062",
-  "databaseURL" :""
+    "authDomain": "REMOVED.firebaseapp.com",
+    "projectId": "REMOVED",
+    "storageBucket": "REMOVED",
+    "messagingSenderId": "REMOVED",
+    "appId": "1:REMOVED:web:496edabac517dfff8e3062",
+    "databaseURL": ""
 }
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
@@ -39,6 +48,14 @@ cred = credentials.Certificate("work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+# Initialize controllers
+login_controller = LoginPageController()
+main_controller = MainPageController()
+profile_controller = ProfilePageController()
+saved_routes_controller = SavedRoutesController()
+settings_controller = SettingsPageController()
+
+# Existing auth routes
 @app.route("/auth", methods=['POST'])
 def login():
     data = request.get_json()
@@ -59,6 +76,7 @@ def login():
     try:
         user = auth.sign_in_with_email_and_password(email, password)
         session["user"] = email
+        session["user_id"] = user["localId"]
         return jsonify({
             "message": "Login successful", 
             "userId": user["localId"], 
@@ -70,8 +88,8 @@ def login():
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("user", None)
+    session.pop("user_id", None)
     return jsonify({"message": "Logout successful"})
-
 
 @app.route("/register", methods=['POST'])
 def register():
@@ -91,6 +109,14 @@ def register():
         db.collection("usernames").document(username).set({
             "email": email,
             "userUID": user_uid
+        })
+
+        # Create user document in 'users' collection
+        db.collection("users").document(user_uid).set({
+            "email": email,
+            "username": username,
+            "notification_enabled": True,
+            "created_at": firestore.SERVER_TIMESTAMP
         })
 
         return jsonify({"message": "Registration successful!"}), 201
@@ -123,118 +149,51 @@ def google_callback():
         'grant_type': 'authorization_code'
     }
 
-    token_response = requests.Request().session.post(token_url, data=payload)
+    token_response = google_requests.Request().session.post(token_url, data=payload)
     token_response_json = token_response.json()
 
     if 'id_token' in token_response_json:
         id_info = id_token.verify_oauth2_token(
             token_response_json['id_token'],
-            requests.Request(),
+            google_requests.Request(),
             GOOGLE_CLIENT_ID
         )
 
         email = id_info.get('email')
         user_uid = id_info.get('sub')
 
+        # Check if user exists, if not create a new user document
+        user_doc = db.collection("users").where("email", "==", email).get()
+        if not user_doc:
+            # Extract user info
+            username = email.split('@')[0]  # Use part of email as username
+            
+            # Ensure username is unique
+            username_count = 0
+            base_username = username
+            while db.collection("usernames").document(username).get().exists:
+                username_count += 1
+                username = f"{base_username}{username_count}"
+            
+            # Create username document
+            db.collection("usernames").document(username).set({
+                "email": email,
+                "userUID": user_uid
+            })
+            
+            # Create user document
+            db.collection("users").document(user_uid).set({
+                "email": email,
+                "username": username,
+                "notification_enabled": True,
+                "created_at": firestore.SERVER_TIMESTAMP
+            })
+
         session["user"] = email
+        session["user_id"] = user_uid
         return redirect('http://localhost:5173/mainpage')
 
     return jsonify({"message": "Google login failed"}), 400
-
-
-@app.route('/search')
-def searchaddressUpdateList():
-    fromAddress = request.args.get("fromAddress")
-    destAddress = request.args.get("destAddress")
-    token = get_onemap_token()
-
-    
-    if fromAddress:
-        print("fromAddress received:", fromAddress)
-        # Do something with from_address
-        try:
-            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
-            params = {
-                "searchVal": f"{fromAddress}",
-                "returnGeom": "Y",
-                "getAddrDetails": "Y",
-            }
-            headers = {
-                "Authorization": f"Bearer {token}"
-            }
-
-            response = requests.get(
-            url,
-            params=params,
-            headers=headers
-            )
-            data = response.json()
-            data["results"] = data.get("results", [])[:5]
-            print(data)
-            return jsonify(data)
-
-        except Exception as e:
-            return jsonify({'error':'internal server error'}) 
-
-        
-    if destAddress:
-        print("fromAddress received:", destAddress)
-        # Do something with from_address
-        try:
-            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
-            params = {
-                "searchVal": f"{destAddress}",
-                "returnGeom": "Y",
-                "getAddrDetails": "Y",
-            }
-            headers = {
-                "Authorization": f"Bearer {token}"
-            }
-
-            response = requests.get(
-            url,
-            params=params,
-            headers=headers
-            )
-            data = response.json()
-            data["results"] = data.get("results", [])[:5]
-            print(data)
-            return jsonify(data)
-
-
-        except Exception as e:
-            return jsonify({'error':'internal server error'}) 
-    
-
-
-def get_onemap_token():
-    """Fetch and cache the OneMap token"""
-    current_time = time.time()
-
-    if auth_token["token"] and current_time < auth_token["expires_at"]:
-        return auth_token["token"]
-
-    print("Fetching new OneMap token...")
-
-    url = "https://www.onemap.gov.sg/api/auth/post/getToken"
-    payload = {
-        "email": os.environ["ONEMAP_EMAIL"],
-        "password": os.environ["ONEMAP_EMAIL_PASSWORD"]
-    }
-
-    response = requests.post(url, json=payload)
-
-    if response.status_code != 200:
-        raise Exception("Failed to get OneMap token")
-
-    data = response.json()
-    token = data["access_token"]
-
-    auth_token["token"] = token
-    auth_token["expires_at"] = current_time + 24 * 60 * 60  # 24-hour expiry
-
-    return token
-
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
