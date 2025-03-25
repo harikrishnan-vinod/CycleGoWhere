@@ -1,14 +1,14 @@
 class Settings:
-    def __init__(self, user_id=None, notification_enabled=True, theme="light"):
-        self.user_id = user_id
-        self.notification_enabled = notification_enabled
-        self.theme = theme
+    def __init__(self, user=None, notification_enabled=True, profile_picture=None):
+        self.__user = user
+        self.__notification_enabled = notification_enabled
+        self.__profile_picture = profile_picture
     
     def to_dict(self):
         return {
-            "user_id": self.user_id,
+            "user": self.__user.to_dict() if self.__user else None,
             "notification_enabled": self.notification_enabled,
-            "theme": self.theme
+            "profile_picture": self.__profile_picture
         }
     
     @staticmethod
@@ -16,5 +16,12 @@ class Settings:
         return Settings(
             user_id=data.get("user_id"),
             notification_enabled=data.get("notification_enabled", True),
-            theme=data.get("theme", "light")
+            profile_picture=data.get("theme", "light")
         )
+    
+    # Getters and Setters
+    get_user = lambda self: self.__user
+    get_notification_enabled = lambda self: self.__notification_enabled
+    get_profile_picture = lambda self: self.__profile_picture
+
+    set_user = lambda self, user: setattr(self, "__user", user)

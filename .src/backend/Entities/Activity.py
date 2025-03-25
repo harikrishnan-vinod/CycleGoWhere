@@ -3,7 +3,7 @@ from datetime import datetime
 class Activity:
     def __init__(self, id=None, user_id=None, route=None, start_time=None, end_time=None, 
                  distance=0, duration=0, calories=0, avg_speed=0, max_speed=0, 
-                 min_elevation=0, max_elevation=0, cadence=0):
+                 min_elevation=0, max_elevation=0, cadence=0, filters=None):
         self.id = id
         self.user_id = user_id
         self.route = route
@@ -17,6 +17,7 @@ class Activity:
         self.min_elevation = min_elevation  # in meters
         self.max_elevation = max_elevation  # in meters
         self.cadence = cadence  # in rpm
+        self.__filers = filters or []
     
     def to_dict(self):
         return {
