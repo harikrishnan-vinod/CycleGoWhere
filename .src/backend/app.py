@@ -54,12 +54,11 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate(".src/backend/work.json")
+cred = credentials.Certificate("work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-
-login_controller = LoginPageController()
+login_controller = LoginPageController(firebase)
 main_controller = MainPageController()
 profile_controller = ProfilePageController()
 saved_routes_controller = SavedRoutesController()
@@ -70,6 +69,7 @@ def login():
     data = request.get_json()
     login_input = data.get("login")
     password = data.get("password")
+    return login_controller.login(session, login_input, password)
 
     if "@" in login_input:
         email = login_input

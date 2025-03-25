@@ -32,3 +32,11 @@ package.jsonyarn.lock
 
 venv/
 *.env
+
+*/__pycache__/
+*.pyc
+*.pyo
+
+#ignore .pyc files and __pycache__/
+*.pyc
+__pycache__/
