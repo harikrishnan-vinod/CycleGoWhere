@@ -24,7 +24,7 @@ export default function MapDrawer() {
       ...prevData,
       [name]: value,
     }));
-
+    
     if (!value.trim()) {
       if (name === "fromAddress") {
         setFromSuggestions([]);
