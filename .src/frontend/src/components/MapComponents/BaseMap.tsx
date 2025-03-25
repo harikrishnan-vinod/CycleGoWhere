@@ -1,20 +1,19 @@
-//for hooks etc
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import MapDrawer from "./MapDrawer";
-import polyline from "@mapbox/polyline";
-import "leaflet-routing-machine";
-
-//for css
-import "../../components.css/MapComponents/BaseMap.css";
-import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+import polyline from "@mapbox/polyline";
+
+import "../../components.css/MapComponents/BaseMap.css";
+import MapDrawer from "./MapDrawer";
 
 export default function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
-  const routingControlRef = useRef<L.Routing.Control | null>(null);
+  const polylineLayerRef = useRef<L.Polyline | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
 
+  // Initialize the map
   useEffect(() => {
     if (mapRef.current) return;
 
@@ -43,64 +42,42 @@ export default function BaseMap() {
     mapRef.current = map;
   }, []);
 
+  // Render route when geometry updates
   useEffect(() => {
     if (!mapRef.current || !routeGeometry) return;
 
+    // Decode the polyline with appropriate precision
     const latlngs = polyline
-      .decode(routeGeometry, 5)
+      .decode(routeGeometry, 5) // Adjust precision as needed
       .map(([lat, lng]) => L.latLng(lat, lng));
 
-    // Remove old route if exists
-    if (routingControlRef.current) {
-      routingControlRef.current.remove();
+    // Clear the previous polyline if exists
+    if (polylineLayerRef.current) {
+      polylineLayerRef.current.remove(); // Remove previous polyline
     }
 
-    // ✅ Custom router to bypass LRM's built-in routing logic
-    //@ts-ignore
-    const CustomRouter = L.Routing.Router.extend({
-      route: function (
-        _waypoints: L.Routing.Waypoint[],
-        callback: (err: Error | null, routes?: L.Routing.IRoute[]) => void
-      ) {
-        callback(null, [
-          {
-            name: "Precomputed Route",
-            coordinates: latlngs,
-            instructions: [],
-            summary: {
-              totalDistance: 0,
-              totalTime: 0,
-            },
-            inputWaypoints: [
-              L.Routing.waypoint(latlngs[0]),
-              L.Routing.waypoint(latlngs[latlngs.length - 1]),
-            ],
-            actualWaypoints: [latlngs[0], latlngs[latlngs.length - 1]],
-          } as any,
-        ]);
-      },
-    });
-
-    // ✅ Plug it into LRM
-    routingControlRef.current = L.Routing.control({
-      waypoints: [latlngs[0], latlngs[latlngs.length - 1]],
-      router: new CustomRouter(),
-      fitSelectedRoutes: true,
-      show: false,
-      addWaypoints: false,
-      routeWhileDragging: false,
-      //@ts-ignore
-      draggableWaypoints: false,
-      plan: L.Routing.plan(
-        [latlngs[0], latlngs[latlngs.length - 1]].map((pt) =>
-          L.Routing.waypoint(pt)
-        ),
-        {
-          createMarker: () => false, // optional: don't show markers
-        }
-      ),
+    // Create a new polyline for the new route
+    const polylineLayer = L.polyline(latlngs, {
+      color: "blue",
+      weight: 5,
     }).addTo(mapRef.current);
+
+    // Store the reference to the polyline
+    polylineLayerRef.current = polylineLayer;
+
+    // Fit map bounds to the route
+    mapRef.current.fitBounds(polylineLayer.getBounds());
   }, [routeGeometry]);
+
+  const clearRoute = () => {
+    setRouteGeometry(null); // Clear the route geometry state
+
+    // Remove the polyline from the map
+    if (polylineLayerRef.current) {
+      polylineLayerRef.current.remove(); // Remove the polyline layer
+      polylineLayerRef.current = null; // Reset the reference
+    }
+  };
 
   return (
     <>
@@ -112,7 +89,7 @@ export default function BaseMap() {
         }}
       ></div>
 
-      <MapDrawer setRouteGeometry={setRouteGeometry} />
+      <MapDrawer setRouteGeometry={setRouteGeometry} clearRoute={clearRoute} />
     </>
   );
 }

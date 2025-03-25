@@ -36,6 +36,11 @@ app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
 GOOGLE_CLIENT_ID = 'REMOVED'
 
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',  # Allow cookies for cross-origin requests
+    SESSION_COOKIE_SECURE=True,      # Ensure cookies are sent over HTTPS
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Set session lifetime (optional)
+)
 cloudinary.config(
   cloud_name = "dp75ekaxp",
   api_key = "REMOVED",
