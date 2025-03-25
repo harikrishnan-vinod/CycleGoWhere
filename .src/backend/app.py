@@ -22,6 +22,8 @@ from datetime import datetime, timedelta
 import cloudinary
 import cloudinary.uploader
 
+#Import helper Functions
+from helperFunctions import search  
 load_dotenv()
 
 auth_token = {
@@ -220,25 +222,8 @@ def searchaddressUpdateList():
     if fromAddress:
         print("fromAddress received:", fromAddress)
         try:
-            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
-            params = {
-                "searchVal": f"{fromAddress}",
-                "returnGeom": "Y",
-                "getAddrDetails": "Y",
-            }
-            headers = {
-                "Authorization": f"Bearer {token}"
-            }
-
-            response = requests.get(
-            url,
-            params=params,
-            headers=headers
-            )
-            data = response.json()
-            data["results"] = data.get("results", [])[:5]
-            print(data)
-            return jsonify(data)
+            data = search.searchRequest(fromAddress,token)
+            return data
 
         except Exception as e:
             return jsonify({'error':'internal server error'}) 
@@ -247,29 +232,35 @@ def searchaddressUpdateList():
     if destAddress:
         print("fromAddress received:", destAddress)
         try:
-            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
-            params = {
-                "searchVal": f"{destAddress}",
-                "returnGeom": "Y",
-                "getAddrDetails": "Y",
-            }
-            headers = {
-                "Authorization": f"Bearer {token}"
-            }
-
-            response = requests.get(
-            url,
-            params=params,
-            headers=headers
-            )
-            data = response.json()
-            data["results"] = data.get("results", [])[:5]
-            print(data)
-            return jsonify(data)
-
+            data = search.searchRequest(destAddress,token)
+            return data
 
         except Exception as e:
             return jsonify({'error':'internal server error'}) 
+        
+@app.route('/route')
+def handlerouting():
+
+    fromAddress = request.args.get("fromAddress")
+    destAddress = request.args.get("destAddress")
+    token = get_onemap_token()
+    #get latitude and longitude from onemap api
+    
+    try:
+        data_fromAddress = search.searchAndReturnLL(fromAddress,token).get_json()
+        data_destAddress = search.searchAndReturnLL(destAddress,token).get_json()
+        
+        combined_address = {
+            "from": data_fromAddress,
+            "destination": data_destAddress
+        }
+        
+        return search.getRouting(combined_address,token)
+
+    
+    except Exception as e:
+        return jsonify({'error':'internal server error'}) 
+
 
 def get_onemap_token():
     """Fetch and cache the OneMap token"""
@@ -338,6 +329,37 @@ def get_profile_pic():
     except Exception as e:
         print("Error fetching profile picture:", e)
         return jsonify({"message": "Server error"}), 500
+    
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    data = request.get_json()
+    email = data.get("email")
+    old_password = data.get("oldPassword")
+    new_password = data.get("newPassword")
+
+    try:
+        user = auth.sign_in_with_email_and_password(email, old_password)
+
+        id_token = user["idToken"]
+        url = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=REMOVED"
+
+        payload = {
+            "idToken": id_token,
+            "password": new_password,
+            "returnSecureToken": True
+        }
+
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return jsonify({"message": "Password updated successfully"}), 200
+        else:
+            print("Failed:", response.json())
+            return jsonify({"message": "Failed to update password"}), 400
+
+    except Exception as e:
+        print("Error changing password:", e)
+        return jsonify({"message": "Authentication failed"}), 401
+
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
