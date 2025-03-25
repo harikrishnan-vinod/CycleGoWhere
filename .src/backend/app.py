@@ -338,6 +338,37 @@ def get_profile_pic():
     except Exception as e:
         print("Error fetching profile picture:", e)
         return jsonify({"message": "Server error"}), 500
+    
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    data = request.get_json()
+    email = data.get("email")
+    old_password = data.get("oldPassword")
+    new_password = data.get("newPassword")
+
+    try:
+        user = auth.sign_in_with_email_and_password(email, old_password)
+
+        id_token = user["idToken"]
+        url = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=REMOVED"
+
+        payload = {
+            "idToken": id_token,
+            "password": new_password,
+            "returnSecureToken": True
+        }
+
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return jsonify({"message": "Password updated successfully"}), 200
+        else:
+            print("Failed:", response.json())
+            return jsonify({"message": "Failed to update password"}), 400
+
+    except Exception as e:
+        print("Error changing password:", e)
+        return jsonify({"message": "Authentication failed"}), 401
+
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
