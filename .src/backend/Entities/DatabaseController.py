@@ -22,6 +22,8 @@ class DatabaseController:
     
     def __init__(self):
         """Initialize the database connection"""
+        cred = credentials.Certificate(".src/backend/work.json")
+        firebase_admin.initialize_app(cred)
         self.db = firestore.client()
     
     # User methods
@@ -34,7 +36,7 @@ class DatabaseController:
         Returns:
             User object if found, None otherwise
         """
-        user_doc = self.db.collection('users').document(user_id).get()
+        user_doc = self.db.collection('usernames').document(user_id).get()
         if user_doc.exists:
             data = user_doc.to_dict()
             
