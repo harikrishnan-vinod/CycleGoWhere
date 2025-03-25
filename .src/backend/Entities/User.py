@@ -34,13 +34,37 @@ class User:
         )
     
     # Getters and Setters
-    get_uid = lambda self: self.__uid
-    get_email = lambda self: self.__email
-    get_username = lambda self: self.__username
-    get_settings = lambda self: self.__settings
-    get_activities = lambda self: self.__activities
+    
+    # Getters
+    def get_uid(self):
+        return self.__uid
+    
+    def get_email(self):
+        return self.__email
+    
+    def get_username(self):
+        return self.__username
+    
+    def get_settings(self):
+        return self.__settings
+    
+    def get_activities(self):
+        return self.__activities
 
-    set_username = lambda self, username: setattr(self, "__username", username)
-    set_email = lambda self, email: setattr(self, "__email", email)
-    set_settings = lambda self, settings: setattr(self, "__settings", settings)
-    set_activities = lambda self, activities: setattr(self, "__activities", activities)
+
+    # Setters
+    def set_username(self, username):
+        self.__username = username
+        return self.__username
+    
+    def set_email(self, email):
+        self.__email = email
+        return self.__email
+    
+    def set_settings(self, settings):
+        self.__settings = settings
+        return self.__settings
+    
+    def set_activities(self, activities):
+        self.__activities = activities
+        return self.__activities

@@ -1,7 +1,11 @@
 import firebase_admin
+import firebase_admin.firestore
+import pyrebase
+import uuid
+import os
+from pathlib import Path
 from firebase_admin import credentials, firestore
 from datetime import datetime, timedelta
-import uuid
 from typing import List, Optional, Dict, Any, Union
 
 # Import entities
@@ -22,8 +26,19 @@ class DatabaseController:
     
     def __init__(self):
         """Initialize the database connection"""
-        cred = credentials.Certificate(".src/backend/work.json")
-        firebase_admin.initialize_app(cred)
+        # config = {
+        #     "apiKey": "REMOVED",
+        #     "authDomain": "REMOVED.firebaseapp.com",
+        #     "projectId": "REMOVED",
+        #     "storageBucket": "REMOVED",
+        #     "messagingSenderId": "REMOVED",
+        #     "appId": "1:REMOVED:web:496edabac517dfff8e3062",
+        #     "databaseURL": ""
+        # }
+        # self.firebase = pyrebase.initialize_app(config)
+        # self.auth = self.firebase.auth()
+        # self.cred = credentials.Certificate(Path(__file__).parent.parent / 'work.json')
+        # firebase_admin.initialize_app(self.cred)
         self.db = firestore.client()
     
     # User methods
