@@ -1,25 +1,23 @@
 from Entities.Location import Location
 
 class Route:
-    def __init__(self, start_location=None, end_location=None, id=None, distance=0, 
-                 estimated_time=0, elevation_gain=0, path=None):
-        self.id = id
-        self.start_location = start_location
-        self.end_location = end_location
-        self.distance = distance  # in kilometers
-        self.estimated_time = estimated_time  # in seconds
-        self.elevation_gain = elevation_gain  # in meters
-        self.path = path or []  # list of Location objects representing the path
+    def __init__(self, start_point=None, end_point=None, route_id=None, distance=0, 
+                 estimated_time=0, route_path=None):
+        self.__route_id = route_id
+        self.__start_point = start_point
+        self.__end_point = end_point
+        self.__total_distance = distance  # in kilometers
+        self.__total_time = estimated_time  # in seconds
+        self.__route_path = route_path or {}  # list of Location objects representing the path
     
     def to_dict(self):
         return {
-            "id": self.id,
-            "start_location": self.start_location.to_dict() if self.start_location else None,
-            "end_location": self.end_location.to_dict() if self.end_location else None,
-            "distance": self.distance,
-            "estimated_time": self.estimated_time,
-            "elevation_gain": self.elevation_gain,
-            "path": [location.to_dict() for location in self.path] if self.path else []
+            "route_id": self.__route_id,
+            "start_point": self.__start_point.to_dict() if self.__start_point else None,
+            "end_point": self.__end_point.to_dict() if self.__end_point else None,
+            "distance": self.__total_distance,
+            "total_time": self.__total_time,
+            "path": {location.to_dict() for location in self.__route_path} if self.__route_path else []
         }
     
     @staticmethod
@@ -32,9 +30,9 @@ class Route:
         if data.get("end_location"):
             end_location = Location.from_dict(data["end_location"])
         
-        path = []
-        if data.get("path"):
-            path = [Location.from_dict(loc) for loc in data["path"]]
+        route_path = {}
+        if data.get("route_path"):
+            route_path = dict([Location.from_dict(loc) for loc in data["route_path"]])
         
         return Route(
             id=data.get("id"),
@@ -42,8 +40,7 @@ class Route:
             end_location=end_location,
             distance=data.get("distance", 0),
             estimated_time=data.get("estimated_time", 0),
-            elevation_gain=data.get("elevation_gain", 0),
-            path=path
+            route_path=route_path
         )
     
     # Get methods

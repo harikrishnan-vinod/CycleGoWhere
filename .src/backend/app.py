@@ -19,6 +19,8 @@ import requests
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import cloudinary
+import cloudinary.uploader
 
 #Import helper Functions
 from helperFunctions import search  
@@ -33,6 +35,12 @@ app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
 GOOGLE_CLIENT_ID = 'REMOVED'
+
+cloudinary.config(
+  cloud_name = "dp75ekaxp",
+  api_key = "REMOVED",
+  api_secret = "REMOVED"
+)
 
 config = {
     "apiKey": "REMOVED",
@@ -50,43 +58,53 @@ cred = credentials.Certificate("work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# Initialize controllers
-login_controller = LoginPageController()
+login_controller = LoginPageController(firebase)
 main_controller = MainPageController()
 profile_controller = ProfilePageController()
 saved_routes_controller = SavedRoutesController()
 settings_controller = SettingsPageController()
 
-# Existing auth routes
 @app.route("/auth", methods=['POST'])
 def login():
     data = request.get_json()
     login_input = data.get("login")
     password = data.get("password")
+    return login_controller.login(session, login_input, password)
 
     if "@" in login_input:
         email = login_input
     else:
         username_doc = db.collection("usernames").document(login_input).get()
-
         if username_doc.exists:
             email = username_doc.to_dict().get("email")
         else:
-            print(f"No username found for {login_input}")
             return jsonify({"message": "Wrong username or password"}), 401
 
     try:
         user = auth.sign_in_with_email_and_password(email, password)
+
+
+        username = login_input if "@" not in login_input else None
+
+        if username is None:
+            users_ref = db.collection("usernames").stream()
+            for doc_snapshot in users_ref:
+                doc = doc_snapshot.to_dict()
+                if doc.get("email") == email:
+                    username = doc_snapshot.id
+                    break
+
         session["user"] = email
-        session["user_id"] = user["localId"]
         return jsonify({
-            "message": "Login successful", 
-            "userId": user["localId"], 
-            "email": email
+            "message": "Login successful",
+            "userId": user["localId"],
+            "email": email,
+            "username": username
         })
     except Exception as e:
+        print("Login failed:", e)
         return jsonify({"message": "Wrong username or password"}), 401
-
+    
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("user", None)
@@ -164,26 +182,22 @@ def google_callback():
         email = id_info.get('email')
         user_uid = id_info.get('sub')
 
-        # Check if user exists, if not create a new user document
         user_doc = db.collection("users").where("email", "==", email).get()
         if not user_doc:
-            # Extract user info
-            username = email.split('@')[0]  # Use part of email as username
+            username = email.split('@')[0]  
             
-            # Ensure username is unique
             username_count = 0
             base_username = username
             while db.collection("usernames").document(username).get().exists:
                 username_count += 1
                 username = f"{base_username}{username_count}"
             
-            # Create username document
+
             db.collection("usernames").document(username).set({
                 "email": email,
                 "userUID": user_uid
             })
             
-            # Create user document
             db.collection("users").document(user_uid).set({
                 "email": email,
                 "username": username,
@@ -207,7 +221,6 @@ def searchaddressUpdateList():
     
     if fromAddress:
         print("fromAddress received:", fromAddress)
-        # Do something with from_address
         try:
             data = search.searchRequest(fromAddress,token)
             return data
@@ -218,7 +231,6 @@ def searchaddressUpdateList():
         
     if destAddress:
         print("fromAddress received:", destAddress)
-        # Do something with from_address
         try:
             data = search.searchRequest(destAddress,token)
             return data
@@ -277,6 +289,77 @@ def get_onemap_token():
     auth_token["expires_at"] = current_time + 24 * 60 * 60  # 24-hour expiry
 
     return token
+
+@app.route("/upload-profile-pic", methods=["POST"])
+def upload_profile_pic():
+    if 'file' not in request.files or 'username' not in request.form:
+        return {"message": "Missing file or username"}, 400
+
+    file = request.files['file']
+    username = request.form['username']
+
+    try:
+        result = cloudinary.uploader.upload(file, folder="profilePictures")
+        image_url = result.get("secure_url")
+    except Exception as e:
+        print("Upload failed:", e)
+        return {"message": "Upload to Cloudinary failed"}, 500
+
+    try:
+        db.collection("usernames").document(username).update({
+            "profilePic": image_url
+        })
+        return {"message": "Profile picture updated", "url": image_url}, 200
+    except Exception as e:
+        print("Firestore update failed:", e)
+        return {"message": "Failed to update Firestore"}, 500
+    
+@app.route("/get-profile-pic")
+def get_profile_pic():
+    username = request.args.get("username")
+    if not username:
+        return jsonify({"message": "Username required"}), 400
+
+    try:
+        doc = db.collection("usernames").document(username).get()
+        if doc.exists:
+            return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print("Error fetching profile picture:", e)
+        return jsonify({"message": "Server error"}), 500
+    
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    data = request.get_json()
+    email = data.get("email")
+    old_password = data.get("oldPassword")
+    new_password = data.get("newPassword")
+
+    try:
+        user = auth.sign_in_with_email_and_password(email, old_password)
+
+        id_token = user["idToken"]
+        url = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=REMOVED"
+
+        payload = {
+            "idToken": id_token,
+            "password": new_password,
+            "returnSecureToken": True
+        }
+
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return jsonify({"message": "Password updated successfully"}), 200
+        else:
+            print("Failed:", response.json())
+            return jsonify({"message": "Failed to update password"}), 400
+
+    except Exception as e:
+        print("Error changing password:", e)
+        return jsonify({"message": "Authentication failed"}), 401
+
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)

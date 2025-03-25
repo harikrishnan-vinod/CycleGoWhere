@@ -28,7 +28,7 @@ export default function MapDrawer({ setRouteGeometry }: MapDrawerProps) {
       ...prevData,
       [name]: value,
     }));
-
+    
     if (!value.trim()) {
       if (name === "fromAddress") {
         setFromSuggestions([]);
