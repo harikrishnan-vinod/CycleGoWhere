@@ -50,11 +50,11 @@ config = {
     "databaseURL": ""
 }
 firebase = pyrebase.initialize_app(config)
-# auth = firebase.auth()
+auth = firebase.auth()
 
 cred = credentials.Certificate("work.json")
 firebase_admin.initialize_app(cred)
-# db = firestore.client()
+db = firestore.client()
 
 login_controller = LoginPageController(firebase)
 main_controller = MainPageController()
@@ -69,80 +69,79 @@ def login():
     password = data.get("password")
     return login_controller.login(session, login_input, password)
 
-    # if "@" in login_input:
-    #     email = login_input
-    # else:
-    #     username_doc = db.collection("usernames").document(login_input).get()
-    #     if username_doc.exists:
-    #         email = username_doc.to_dict().get("email")
-    #     else:
-    #         return jsonify({"message": "Wrong username or password"}), 401
+    if "@" in login_input:
+        email = login_input
+    else:
+        username_doc = db.collection("usernames").document(login_input).get()
+        if username_doc.exists:
+            email = username_doc.to_dict().get("email")
+        else:
+            return jsonify({"message": "Wrong username or password"}), 401
 
-    # try:
-    #     user = auth.sign_in_with_email_and_password(email, password)
+    try:
+        user = auth.sign_in_with_email_and_password(email, password)
 
 
-    #     username = login_input if "@" not in login_input else None
+        username = login_input if "@" not in login_input else None
 
-    #     if username is None:
-    #         users_ref = db.collection("usernames").stream()
-    #         for doc_snapshot in users_ref:
-    #             doc = doc_snapshot.to_dict()
-    #             if doc.get("email") == email:
-    #                 username = doc_snapshot.id
-    #                 break
+        if username is None:
+            users_ref = db.collection("usernames").stream()
+            for doc_snapshot in users_ref:
+                doc = doc_snapshot.to_dict()
+                if doc.get("email") == email:
+                    username = doc_snapshot.id
+                    break
 
-    #     session["user"] = email
-    #     return jsonify({
-    #         "message": "Login successful",
-    #         "userId": user["localId"],
-    #         "email": email,
-    #         "username": username
-    #     })
-    # except Exception as e:
-    #     print("Login failed:", e)
-    #     return jsonify({"message": "Wrong username or password"}), 401
+        session["user"] = email
+        return jsonify({
+            "message": "Login successful",
+            "userId": user["localId"],
+            "email": email,
+            "username": username
+        })
+    except Exception as e:
+        print("Login failed:", e)
+        return jsonify({"message": "Wrong username or password"}), 401
     
 @app.route("/logout", methods=["POST"])
 def logout():
-    # session.pop("user", None)
-    # session.pop("user_id", None)
+    session.pop("user", None)
+    session.pop("user_id", None)
     return jsonify({"message": "Logout successful"})
 
 @app.route("/register", methods=['POST'])
 def register():
-    # data = request.get_json()
-    # email = data.get("email")
-    # username = data.get("username")
-    # password = data.get("password")
+    data = request.get_json()
+    email = data.get("email")
+    username = data.get("username")
+    password = data.get("password")
 
-    # username_doc = db.collection("usernames").document(username).get()
-    # if username_doc.exists:
-    #     return jsonify({"message": "Username already exists"}), 400
+    username_doc = db.collection("usernames").document(username).get()
+    if username_doc.exists:
+        return jsonify({"message": "Username already exists"}), 400
 
-    # try:
-    #     user = auth.create_user_with_email_and_password(email, password)
-    #     user_uid = user["localId"]
+    try:
+        user = auth.create_user_with_email_and_password(email, password)
+        user_uid = user["localId"]
 
-    #     db.collection("usernames").document(username).set({
-    #         "email": email,
-    #         "userUID": user_uid
-    #     })
+        db.collection("usernames").document(username).set({
+            "email": email,
+            "userUID": user_uid
+        })
 
-    #     # Create user document in 'users' collection
-    #     db.collection("users").document(user_uid).set({
-    #         "email": email,
-    #         "username": username,
-    #         "notification_enabled": True,
-    #         "created_at": firestore.SERVER_TIMESTAMP
-    #     })
+        # Create user document in 'users' collection
+        db.collection("users").document(user_uid).set({
+            "email": email,
+            "username": username,
+            "notification_enabled": True,
+            "created_at": firestore.SERVER_TIMESTAMP
+        })
 
-    #     return jsonify({"message": "Registration successful!"}), 201
+        return jsonify({"message": "Registration successful!"}), 201
 
-    # except Exception as e:
-    #     print(f"Error registering user: {e}")
-    #     return jsonify({"message": "Registration failed"}), 400
-    pass
+    except Exception as e:
+        print(f"Error registering user: {e}")
+        return jsonify({"message": "Registration failed"}), 400
 
 @app.route('/google-login')
 def google_login():
@@ -157,59 +156,58 @@ def google_login():
 
 @app.route('/google-callback')
 def google_callback():
-    # code = request.args.get('code')
-    # token_url = 'https://oauth2.googleapis.com/token'
+    code = request.args.get('code')
+    token_url = 'https://oauth2.googleapis.com/token'
 
-    # payload = {
-    #     'code': code,
-    #     'client_id': 'REMOVED',
-    #     'client_secret': 'REMOVED',
-    #     'redirect_uri': url_for('google_callback', _external=True),
-    #     'grant_type': 'authorization_code'
-    # }
+    payload = {
+        'code': code,
+        'client_id': 'REMOVED',
+        'client_secret': 'REMOVED',
+        'redirect_uri': url_for('google_callback', _external=True),
+        'grant_type': 'authorization_code'
+    }
 
-    # token_response = google_requests.Request().session.post(token_url, data=payload)
-    # token_response_json = token_response.json()
+    token_response = google_requests.Request().session.post(token_url, data=payload)
+    token_response_json = token_response.json()
 
-    # if 'id_token' in token_response_json:
-    #     id_info = id_token.verify_oauth2_token(
-    #         token_response_json['id_token'],
-    #         google_requests.Request(),
-    #         GOOGLE_CLIENT_ID
-    #     )
+    if 'id_token' in token_response_json:
+        id_info = id_token.verify_oauth2_token(
+            token_response_json['id_token'],
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
 
-    #     email = id_info.get('email')
-    #     user_uid = id_info.get('sub')
+        email = id_info.get('email')
+        user_uid = id_info.get('sub')
 
-    #     user_doc = db.collection("users").where("email", "==", email).get()
-    #     if not user_doc:
-    #         username = email.split('@')[0]  
+        user_doc = db.collection("users").where("email", "==", email).get()
+        if not user_doc:
+            username = email.split('@')[0]  
             
-    #         username_count = 0
-    #         base_username = username
-    #         while db.collection("usernames").document(username).get().exists:
-    #             username_count += 1
-    #             username = f"{base_username}{username_count}"
+            username_count = 0
+            base_username = username
+            while db.collection("usernames").document(username).get().exists:
+                username_count += 1
+                username = f"{base_username}{username_count}"
             
 
-    #         db.collection("usernames").document(username).set({
-    #             "email": email,
-    #             "userUID": user_uid
-    #         })
+            db.collection("usernames").document(username).set({
+                "email": email,
+                "userUID": user_uid
+            })
             
-    #         db.collection("users").document(user_uid).set({
-    #             "email": email,
-    #             "username": username,
-    #             "notification_enabled": True,
-    #             "created_at": firestore.SERVER_TIMESTAMP
-    #         })
+            db.collection("users").document(user_uid).set({
+                "email": email,
+                "username": username,
+                "notification_enabled": True,
+                "created_at": firestore.SERVER_TIMESTAMP
+            })
 
-    #     session["user"] = email
-    #     session["user_id"] = user_uid
-    #     return redirect('http://localhost:5173/mainpage')
+        session["user"] = email
+        session["user_id"] = user_uid
+        return redirect('http://localhost:5173/mainpage')
 
-    # return jsonify({"message": "Google login failed"}), 400
-    pass
+    return jsonify({"message": "Google login failed"}), 400
 
 
 @app.route('/search')
@@ -303,45 +301,43 @@ def get_onemap_token():
 
 @app.route("/upload-profile-pic", methods=["POST"])
 def upload_profile_pic():
-    # if 'file' not in request.files or 'username' not in request.form:
-    #     return {"message": "Missing file or username"}, 400
+    if 'file' not in request.files or 'username' not in request.form:
+        return {"message": "Missing file or username"}, 400
 
-    # file = request.files['file']
-    # username = request.form['username']
+    file = request.files['file']
+    username = request.form['username']
 
-    # try:
-    #     result = cloudinary.uploader.upload(file, folder="profilePictures")
-    #     image_url = result.get("secure_url")
-    # except Exception as e:
-    #     print("Upload failed:", e)
-    #     return {"message": "Upload to Cloudinary failed"}, 500
+    try:
+        result = cloudinary.uploader.upload(file, folder="profilePictures")
+        image_url = result.get("secure_url")
+    except Exception as e:
+        print("Upload failed:", e)
+        return {"message": "Upload to Cloudinary failed"}, 500
 
-    # try:
-    #     db.collection("usernames").document(username).update({
-    #         "profilePic": image_url
-    #     })
-    #     return {"message": "Profile picture updated", "url": image_url}, 200
-    # except Exception as e:
-    #     print("Firestore update failed:", e)
-    #     return {"message": "Failed to update Firestore"}, 500
-    pass
+    try:
+        db.collection("usernames").document(username).update({
+            "profilePic": image_url
+        })
+        return {"message": "Profile picture updated", "url": image_url}, 200
+    except Exception as e:
+        print("Firestore update failed:", e)
+        return {"message": "Failed to update Firestore"}, 500
     
 @app.route("/get-profile-pic")
 def get_profile_pic():
-    # username = request.args.get("username")
-    # if not username:
-    #     return jsonify({"message": "Username required"}), 400
+    username = request.args.get("username")
+    if not username:
+        return jsonify({"message": "Username required"}), 400
 
-    # try:
-    #     doc = db.collection("usernames").document(username).get()
-    #     if doc.exists:
-    #         return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
-    #     else:
-    #         return jsonify({"message": "User not found"}), 404
-    # except Exception as e:
-    #     print("Error fetching profile picture:", e)
-    #     return jsonify({"message": "Server error"}), 500
-    pass
+    try:
+        doc = db.collection("usernames").document(username).get()
+        if doc.exists:
+            return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print("Error fetching profile picture:", e)
+        return jsonify({"message": "Server error"}), 500
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)

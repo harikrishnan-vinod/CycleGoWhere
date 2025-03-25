@@ -21,7 +21,7 @@ class LoginPageController:
             return jsonify({"message": "Wrong username or password"}), 401
 
         try:
-            user = auth.sign_in_with_email_and_password(email, password)
+            user = self.auth.sign_in_with_email_and_password(email, password)
             username = login_input if "@" not in login_input else None
 
             if username is None:
