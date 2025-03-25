@@ -29,6 +29,7 @@ function Login() {
       if (response.ok) {
         sessionStorage.setItem("email", result.email);
         sessionStorage.setItem("userId", result.userId);
+        sessionStorage.setItem("username", result.username);
         window.location.href = "/mainpage";
       } else {
         setError(result.message || "Invalid credentials, try again!");
