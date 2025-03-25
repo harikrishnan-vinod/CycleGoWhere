@@ -1,7 +1,11 @@
 import { useState } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
 
-export default function MapDrawer() {
+interface MapDrawerProps {
+  setRouteGeometry: (geometry: string) => void;
+}
+
+export default function MapDrawer({ setRouteGeometry }: MapDrawerProps) {
   interface searchData {
     fromAddress: string;
     destAddress: string;
@@ -76,6 +80,9 @@ export default function MapDrawer() {
 
       const data = await response.json();
       console.log("Route response:", data);
+
+      // ✅ Pass route_geometry to BaseMap
+      setRouteGeometry(data.route_geometry);
     } catch (error) {
       console.log("Submit error:", error);
     }
