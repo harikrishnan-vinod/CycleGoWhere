@@ -8,7 +8,7 @@ function changeEmail() {
     return <div>
 
         <div>
-            <header>CHANGE EMAIL</header>
+            <header>EMAIL</header>
         </div>
         <div>
             <form>

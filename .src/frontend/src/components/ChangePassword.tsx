@@ -60,7 +60,7 @@ function ChangePassword() {
   return (
     <div>
       <div>
-        <header>CHANGE PASSWORD</header>
+        <header>PASSWORD</header>
       </div>
       <div>
         <form onSubmit={handleSubmit}>
