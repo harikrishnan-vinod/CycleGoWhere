@@ -12,6 +12,7 @@ header {
     top: 5%;
     right: 5%;
     color: red;
+    background-color: rgb(200, 200, 200);
 }
 
 .settings-options {

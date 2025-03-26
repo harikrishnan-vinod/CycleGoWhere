@@ -7,17 +7,17 @@ interface MapDrawerProps {
   setRouteInstructions: (routeInstructions: any) => void;
 }
 
+interface searchData {
+  fromAddress: string;
+  destAddress: string;
+}
+
 export default function MapDrawer({
   setRouteGeometry,
   clearRoute,
   setRouteInstructions,
 }: MapDrawerProps) {
-  interface searchData {
-    fromAddress: string;
-    destAddress: string;
-  }
-
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // open by default
 
   const [formData, setFormData] = useState<searchData>({
     fromAddress: "",
@@ -30,15 +30,15 @@ export default function MapDrawer({
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setFormData((prevData) => ({
-      ...prevData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
     }));
 
     if (!value.trim()) {
       if (name === "fromAddress") {
         setFromSuggestions([]);
-      } else if (name === "destAddress") {
+      } else {
         setDestSuggestions([]);
       }
       return;
@@ -48,25 +48,19 @@ export default function MapDrawer({
       const url = new URL("http://127.0.0.1:1234/search");
       url.searchParams.append(name, value);
 
-      console.log("Sending GET request to:", url.toString());
-      const response = await fetch(url.toString(), {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch");
-      }
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error("Failed to fetch suggestions");
 
       const data = await response.json();
       const trimmedResults = data.results.slice(0, 5);
 
       if (name === "fromAddress") {
         setFromSuggestions(trimmedResults);
-      } else if (name === "destAddress") {
+      } else {
         setDestSuggestions(trimmedResults);
       }
     } catch (error) {
-      console.error(`GET request error for ${name}:`, error);
+      console.error(error);
     }
   };
 
@@ -74,22 +68,16 @@ export default function MapDrawer({
     e.preventDefault();
     clearRoute();
     setRouteInstructions(null);
+
     try {
       const url = new URL("http://127.0.0.1:1234/route");
       url.searchParams.append("fromAddress", formData.fromAddress);
       url.searchParams.append("destAddress", formData.destAddress);
-      const response = await fetch(url.toString(), {
-        method: "GET",
-      });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch route");
-      }
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error("Failed to fetch route");
 
       const data = await response.json();
-      console.log("Route response:", data);
-
-      // Pass route_geometry to BaseMap and route_instructions
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
     } catch (error) {
@@ -98,69 +86,63 @@ export default function MapDrawer({
   };
 
   return (
-    <>
-      {!isOpen && (
-        <div className="pull-tab" onClick={() => setIsOpen(true)}>
-          <div className="drag-bar" />
-        </div>
-      )}
+    <div className={`drawer ${isOpen ? "open" : ""}`}>
+      <div className="drawer-content">
+        <input
+          name="fromAddress"
+          className="search"
+          placeholder="Current Location"
+          value={formData.fromAddress}
+          onChange={handleChange}
+        />
+        <ul className="suggestions">
+          {fromSuggestions.map((item, idx) => (
+            <li
+              key={idx}
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  fromAddress: item.ADDRESS,
+                }));
+                setFromSuggestions([]);
+              }}
+            >
+              {item.ADDRESS}
+            </li>
+          ))}
+        </ul>
 
-      <div className={`drawer ${isOpen ? "open" : ""}`}>
-        <div className="drag-bar" onClick={() => setIsOpen(false)} />
-        <div className="drawer-content">
-          <div>
-            <input
-              name="fromAddress"
-              className="search"
-              placeholder="Current Location"
-              value={formData.fromAddress}
-              onChange={handleChange}
-            />
-            <ul className="suggestions">
-              {fromSuggestions.map((item, idx) => (
-                <li
-                  key={idx}
-                  onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      fromAddress: item.ADDRESS,
-                    }));
-                    setFromSuggestions([]); // hide list on select
-                  }}
-                >
-                  {item.ADDRESS}
-                </li>
-              ))}
-            </ul>
-            <input
-              name="destAddress"
-              className="search"
-              placeholder="Destination Address"
-              value={formData.destAddress}
-              onChange={handleChange}
-            />
-            <ul className="suggestions">
-              {destSuggestions.map((item, idx) => (
-                <li
-                  key={idx}
-                  onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      destAddress: item.ADDRESS,
-                    }));
-                    setDestSuggestions([]); // hide list on select
-                  }}
-                >
-                  {item.ADDRESS}
-                </li>
-              ))}
-            </ul>
-            <button type="button" className="go-button" onClick={handleSubmit}>
-              GO
-            </button>
-          </div>
-        </div>
+        <input
+          name="destAddress"
+          className="search"
+          placeholder="Destination Address"
+          value={formData.destAddress}
+          onChange={handleChange}
+        />
+        <ul className="suggestions">
+          {destSuggestions.map((item, idx) => (
+            <li
+              key={idx}
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  destAddress: item.ADDRESS,
+                }));
+                setDestSuggestions([]);
+              }}
+            >
+              {item.ADDRESS}
+            </li>
+          ))}
+        </ul>
+
+        <button type="button" className="go-button" onClick={handleSubmit}>
+          GO
+        </button>
       </div>
-    </>
+
+      {/* Drag bar at the BOTTOM of the drawer */}
+      <div className="drag-bar" onClick={() => setIsOpen(!isOpen)} />
+    </div>
   );
 }
