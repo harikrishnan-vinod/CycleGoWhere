@@ -22,26 +22,6 @@
     border-color: #007bff;
 }
 
-.submit-btn {
-    width: 320px;
-    height: 55px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    background: #00c88c;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.cancel-btn {
-    background: red;
-    color: white;
-    border-radius: 50px;
-    font-size: 1rem;
-}
-
 .change-username button:hover {
     transform: scale(1.05);
 }

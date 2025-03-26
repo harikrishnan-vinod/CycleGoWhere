@@ -8,7 +8,7 @@ function changeUsername() {
     return <div>
 
         <div>
-            <header>CHANGE USERNAME</header>
+            <header>USERNAME</header>
         </div>
         <div>
             <form>

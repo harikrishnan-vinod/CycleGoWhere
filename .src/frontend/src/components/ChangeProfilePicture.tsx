@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import "../components-css/changeProfilePicture.css";
+import { useNavigate } from "react-router-dom";
 
 function ChangeProfilePicture() {
+  const navigate = useNavigate();
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -83,7 +85,7 @@ function ChangeProfilePicture() {
 
   return (
     <div className="change-profile-container">
-      <h1>Change Profile Picture</h1>
+      <header>PROFILE PICTURE</header>
 
       {profilePicUrl && (
         <div className="profile-pic-frame">
@@ -102,6 +104,13 @@ function ChangeProfilePicture() {
           className={`upload-button ${success ? "success" : ""}`}
         >
           {success ? "Image Uploaded" : "Upload"}
+        </button>
+        <button
+          onClick={() => navigate("/Settings")}
+          type="button"
+          className="cancel-btn"
+        >
+          Cancel
         </button>
       </div>
 
