@@ -15,6 +15,7 @@ function ChangePassword() {
     newpassword: "",
     confirmnewpassword: "",
   });
+  const [passwordChanged, setPasswordChanged] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,8 +29,6 @@ function ChangePassword() {
     e.preventDefault();
 
     if (password.newpassword === password.confirmnewpassword) {
-      console.log("Password Changed");
-
       try {
         const response = await fetch("http://127.0.0.1:1234/change-password", {
           method: "POST",
@@ -45,7 +44,7 @@ function ChangePassword() {
 
         if (response.ok) {
           console.log("Password updated successfully!");
-          navigate("/Settings");
+          setPasswordChanged(true);
         } else {
           console.log("Error updating password.");
         }
@@ -103,7 +102,7 @@ function ChangePassword() {
               type="button"
               className="cancel-btn"
             >
-              Cancel
+              {passwordChanged ? "Back to Settings" : "Cancel"}
             </button>
           </ul>
         </form>

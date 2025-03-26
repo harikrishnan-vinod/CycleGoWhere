@@ -28,7 +28,17 @@ h1 {
     object-fit: cover;
 }
 
-
+.custom-file-label {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    text-align: center;
+  }  
 
 .upload-controls {
     display: flex;

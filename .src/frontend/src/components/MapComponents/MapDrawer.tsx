@@ -86,63 +86,71 @@ export default function MapDrawer({
   };
 
   return (
-    <div className={`drawer ${isOpen ? "open" : ""}`}>
-      <div className="drawer-content">
-        <input
-          name="fromAddress"
-          className="search"
-          placeholder="Current Location"
-          value={formData.fromAddress}
-          onChange={handleChange}
-        />
-        <ul className="suggestions">
-          {fromSuggestions.map((item, idx) => (
-            <li
-              key={idx}
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  fromAddress: item.ADDRESS,
-                }));
-                setFromSuggestions([]);
-              }}
-            >
-              {item.ADDRESS}
-            </li>
-          ))}
-        </ul>
+    <>
+      {/* Drawer */}
+      <div className={`drawer ${isOpen ? "open" : ""}`}>
+        <div className="drawer-content">
+          <input
+            name="fromAddress"
+            className="search"
+            placeholder="Current Location"
+            value={formData.fromAddress}
+            onChange={handleChange}
+          />
+          <ul className="suggestions">
+            {fromSuggestions.map((item, idx) => (
+              <li
+                key={idx}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    fromAddress: item.ADDRESS,
+                  }));
+                  setFromSuggestions([]);
+                }}
+              >
+                {item.ADDRESS}
+              </li>
+            ))}
+          </ul>
 
-        <input
-          name="destAddress"
-          className="search"
-          placeholder="Destination Address"
-          value={formData.destAddress}
-          onChange={handleChange}
-        />
-        <ul className="suggestions">
-          {destSuggestions.map((item, idx) => (
-            <li
-              key={idx}
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  destAddress: item.ADDRESS,
-                }));
-                setDestSuggestions([]);
-              }}
-            >
-              {item.ADDRESS}
-            </li>
-          ))}
-        </ul>
+          <input
+            name="destAddress"
+            className="search"
+            placeholder="Destination Address"
+            value={formData.destAddress}
+            onChange={handleChange}
+          />
+          <ul className="suggestions">
+            {destSuggestions.map((item, idx) => (
+              <li
+                key={idx}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    destAddress: item.ADDRESS,
+                  }));
+                  setDestSuggestions([]);
+                }}
+              >
+                {item.ADDRESS}
+              </li>
+            ))}
+          </ul>
 
-        <button type="button" className="go-button" onClick={handleSubmit}>
-          GO
-        </button>
+          <button type="button" className="go-button" onClick={handleSubmit}>
+            GO
+          </button>
+        </div>
+
+        {/* Dash at the bottom of the drawer to close it */}
+        <div className="drag-bar" onClick={() => setIsOpen(!isOpen)} />
       </div>
 
-      {/* Drag bar at the BOTTOM of the drawer */}
-      <div className="drag-bar" onClick={() => setIsOpen(!isOpen)} />
-    </div>
+      {/* Dash at the top of the screen to open it (only if closed) */}
+      {!isOpen && (
+        <div className="pull-tab-closed" onClick={() => setIsOpen(true)} />
+      )}
+    </>
   );
 }

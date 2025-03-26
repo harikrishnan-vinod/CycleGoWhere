@@ -1,56 +1,62 @@
+/* The drawer: fully off-screen when closed, slides to top: 0 when open */
 .drawer {
   position: fixed;
-  top: -300px;
+  top: -300px; /* fully hidden off-screen */
   left: 50%;
+  transform: translateX(-50%);
   width: 80%;
   height: 300px;
   background: #2c2c2e;
-  transform: translateX(-50%);
   color: #fff;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
-  transition: bottom 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: top 0.3s ease;
   z-index: 1000;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  border-radius: 20px;
+  overflow-x: hidden; /* no horizontal scroll */
 }
 
 .drawer.open {
-  top: 0;
+  top: 0; /* slides down into view */
 }
 
-.pull-tab {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-  background: transparent;
-  cursor: pointer;
-}
-
-.drag-bar {
-  width: 40px;
-  height: 5px;
-  background-color: #555;
-  border-radius: 5px;
-  margin: 10px auto;
-  cursor: pointer;
-}
-
+/* The main content area of the drawer */
 .drawer-content {
   padding: 1rem;
-  overflow-y: hidden;
-  overflow-x: hidden; 
-  height: calc(100% - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100% - 40px); /* leave space for the bottom dash */
 }
 
+/* The bottom dash (inside the drawer) for closing it */
+.drag-bar {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 6px;
+  background-color: #555;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+/* The top dash for opening the drawer when it's closed */
+.pull-tab-closed {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 15px;
+  background-color: #555;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1500;
+}
+
+/* Example styling for your inputs, button, suggestions */
 .search {
   width: 100%;
   padding: 12px;
@@ -58,52 +64,38 @@
   border: none;
   margin-bottom: 1rem;
   color: white;
-}
-
-.actions button {
-  background: #2c2c2e;
-  color: white;
-  border: none;
-  margin-right: 0.5rem;
-  padding: 10px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-}
-
-.recent p {
-  margin: 1rem 0;
-  line-height: 1.4;
+  background-color: #333;
 }
 
 .go-button {
-  background-color: #00cc66; 
+  background-color: #00cc66;
   color: white;
   border: none;
-  padding: 16px 24px; 
-  font-size: 20px; 
+  padding: 16px 24px;
+  font-size: 20px;
   font-weight: bold;
   border-radius: 30px;
   margin-top: 1rem;
-  width: 100%; 
+  width: 100%;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .go-button:hover {
-  background-color: #00b359; 
+  background-color: #00b359;
 }
 
 .suggestions {
   list-style: none;
   color: #000;
-  background: #ffff;
+  background: #fff;
   padding: 0;
   margin-top: 4px;
   border: 1px solid #ccc;
   border-radius: 4px;
   max-height: 200px;
   overflow-y: auto;
-  overflow-x: hidden; 
+  overflow-x: hidden;
   font-size: 0.9rem;
 }
 
@@ -116,7 +108,7 @@
   background-color: #f0f0f0;
 }
 
-/* Optional: Hide scrollbar for WebKit browsers */
+/* Hide scrollbars in WebKit browsers (optional) */
 .drawer-content::-webkit-scrollbar,
 .suggestions::-webkit-scrollbar {
   display: none;
