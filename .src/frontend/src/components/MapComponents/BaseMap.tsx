@@ -11,6 +11,8 @@ import MapDrawer from "./MapDrawer";
 
 export default function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
+  const startMarkerRef = useRef<L.Marker | null>(null);
+  const endMarkerRef = useRef<L.Marker | null>(null);
   const polylineLayerRef = useRef<L.Polyline | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
@@ -57,6 +59,14 @@ export default function BaseMap() {
     if (polylineLayerRef.current) {
       polylineLayerRef.current.remove(); // Remove previous polyline
     }
+    if (startMarkerRef.current) {
+      startMarkerRef.current.remove();
+      startMarkerRef.current = null;
+    }
+    if (endMarkerRef.current) {
+      endMarkerRef.current.remove();
+      endMarkerRef.current = null;
+    }
 
     // Create a new polyline for the new route
     const polylineLayer = L.polyline(latlngs, {
@@ -66,6 +76,20 @@ export default function BaseMap() {
 
     // Store the reference to the polyline
     polylineLayerRef.current = polylineLayer;
+
+    //add start marker to map
+    const startMarker = L.marker(latlngs[0], {
+      title: "Start",
+    }).addTo(mapRef.current);
+    startMarker.bindPopup("Start").openPopup();
+    startMarkerRef.current = startMarker;
+
+    // add end marker to map
+    const endMarker = L.marker(latlngs[latlngs.length - 1], {
+      title: "Destination",
+    }).addTo(mapRef.current);
+    endMarker.bindPopup("Destination");
+    endMarkerRef.current = endMarker;
 
     // Fit map bounds to the route
     mapRef.current.fitBounds(polylineLayer.getBounds());
