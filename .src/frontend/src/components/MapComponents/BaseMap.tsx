@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import polyline from "@mapbox/polyline";
+import RouteInstructionList from "./RouteInstructionsList";
 
 import "../../components.css/MapComponents/BaseMap.css";
 import MapDrawer from "./MapDrawer";
@@ -12,6 +13,7 @@ export default function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
   const polylineLayerRef = useRef<L.Polyline | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
+  const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
 
   // Initialize the map
   useEffect(() => {
@@ -89,7 +91,12 @@ export default function BaseMap() {
         }}
       ></div>
 
-      <MapDrawer setRouteGeometry={setRouteGeometry} clearRoute={clearRoute} />
+      <MapDrawer
+        setRouteGeometry={setRouteGeometry}
+        clearRoute={clearRoute}
+        setRouteInstructions={setRouteInstructions}
+      />
+      <RouteInstructionList routeInstructions={routeInstructions} />
     </>
   );
 }
