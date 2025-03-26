@@ -1,7 +1,17 @@
 import { useState } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
 
-export default function MapDrawer() {
+interface MapDrawerProps {
+  setRouteGeometry: (geometry: string) => void;
+  clearRoute: () => void;
+  setRouteInstructions: (routeInstructions: any) => void;
+}
+
+export default function MapDrawer({
+  setRouteGeometry,
+  clearRoute,
+  setRouteInstructions,
+}: MapDrawerProps) {
   interface searchData {
     fromAddress: string;
     destAddress: string;
@@ -24,7 +34,7 @@ export default function MapDrawer() {
       ...prevData,
       [name]: value,
     }));
-    
+
     if (!value.trim()) {
       if (name === "fromAddress") {
         setFromSuggestions([]);
@@ -62,6 +72,8 @@ export default function MapDrawer() {
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    clearRoute();
+    setRouteInstructions(null);
     try {
       const url = new URL("http://127.0.0.1:1234/route");
       url.searchParams.append("fromAddress", formData.fromAddress);
@@ -76,6 +88,10 @@ export default function MapDrawer() {
 
       const data = await response.json();
       console.log("Route response:", data);
+
+      // Pass route_geometry to BaseMap and route_instructions
+      setRouteGeometry(data.route_geometry);
+      setRouteInstructions(data.route_instructions);
     } catch (error) {
       console.log("Submit error:", error);
     }
