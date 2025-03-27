@@ -70,40 +70,6 @@ def login():
     login_input = data.get("login")
     password = data.get("password")
     return login_controller.login(session, login_input, password)
-
-    if "@" in login_input:
-        email = login_input
-    else:
-        username_doc = db.collection("usernames").document(login_input).get()
-        if username_doc.exists:
-            email = username_doc.to_dict().get("email")
-        else:
-            return jsonify({"message": "Wrong username or password"}), 401
-
-    try:
-        user = auth.sign_in_with_email_and_password(email, password)
-
-
-        username = login_input if "@" not in login_input else None
-
-        if username is None:
-            users_ref = db.collection("usernames").stream()
-            for doc_snapshot in users_ref:
-                doc = doc_snapshot.to_dict()
-                if doc.get("email") == email:
-                    username = doc_snapshot.id
-                    break
-
-        session["user"] = email
-        return jsonify({
-            "message": "Login successful",
-            "userId": user["localId"],
-            "email": email,
-            "username": username
-        })
-    except Exception as e:
-        print("Login failed:", e)
-        return jsonify({"message": "Wrong username or password"}), 401
     
 @app.route("/logout", methods=["POST"])
 def logout():

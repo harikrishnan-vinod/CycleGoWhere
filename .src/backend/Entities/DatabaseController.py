@@ -42,7 +42,45 @@ class DatabaseController:
         self.db = firestore.client()
     
     # User methods
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
+    def get_uid_by_username(self, username: str) -> Optional[str]:
+        """Retrieves a user's unique identifier by their username.
+        
+        Args:
+            username: Username to search for
+            
+        Returns:
+            User ID if found, None otherwise
+        """
+        user_doc = self.db.collection('usernames').document(username).get()
+        if user_doc.exists:
+            return user_doc.to_dict().get('userUID')
+        return None
+    
+    def get_notifications_enabled(self, username: str):
+        """Retrieves a user's notification preferences.
+        
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            True if notifications are enabled
+        """
+        user_doc = self.db.collection('users').document(username).get()
+        return user_doc.to_dict().get('notification_enabled', True)
+    
+    def get_profile_picture(self, username: str):
+        """Retrieves a user's profile picture URL.
+        
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            Profile picture URL
+        """
+        user_doc = self.db.collection('users').document(username).get()
+        return user_doc.to_dict().get('profilePic', '')
+    
+    def get_user_by_id(self, user_id: str) -> Optional[User]: # TODO: Fix this
         """Retrieves a user by their ID.
         
         Args:

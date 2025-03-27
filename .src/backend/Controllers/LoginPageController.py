@@ -3,6 +3,7 @@ import pyrebase
 from flask import request, jsonify
 from firebase_admin import auth, credentials
 from Entities.User import User
+from Entities.Settings import Settings
 from Entities.DatabaseController import DatabaseController
 
 class LoginPageController:
@@ -14,7 +15,7 @@ class LoginPageController:
         if "@" in login_input:
             email = login_input
         else:
-            username_doc = self.db_controller.db.collection("usernames").document(login_input).get()
+            username_doc = self.db_controller.db.collection("usernames").document(login_input).get() # TODO: Use database_controller method instead
         if username_doc.exists:
             email = username_doc.to_dict().get("email")
         else:
@@ -33,15 +34,26 @@ class LoginPageController:
                         break
 
             session["user"] = email
+            ###TESTING###
+            uid = self.db_controller.get_uid_by_username(username) # TODO: Might not be necessary, remove?
+            user.set_username(username)
+            notification_enabled = self.db_controller.get_notifications_enabled(username)
+            profile_picture = self.db_controller.get_profile_picture(username)
+            settings = Settings(notification_enabled, profile_picture)
+            saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+            activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+            #############
             return jsonify({
                 "message": "Login successful",
                 "userId": user["localId"],
                 "email": email,
                 "username": username
-            })
+            }), 200
+        
         except Exception as e:
             print("Login failed:", e)
             return jsonify({"message": "Wrong username or password"}), 401
+            # return None, jsonify({"message": "Wrong username or password"}), 401
  
         # try:
         #     # Firebase authentication
@@ -50,6 +62,11 @@ class LoginPageController:
         #     return self.db_controller.get_user_by_id(user.uid)
         # except Exception as e:
         #     return {"error": str(e)}, 401
+
+    def logout(self, session):
+        session.pop("user", None)
+        session.pop("user_id", None)
+        return jsonify({"message": "Logout successful"})
     
     def register(self, email, username, password):
         try:
