@@ -36,6 +36,11 @@ app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
 GOOGLE_CLIENT_ID = 'REMOVED'
 
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',  # Allow cookies for cross-origin requests
+    SESSION_COOKIE_SECURE=True,      # Ensure cookies are sent over HTTPS
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Set session lifetime (optional)
+)
 cloudinary.config(
   cloud_name = "dp75ekaxp",
   api_key = "REMOVED",
@@ -84,6 +89,8 @@ def register():
     email = data.get("email")
     username = data.get("username")
     password = data.get("password")
+    first_name = data.get("firstName", "")
+    last_name = data.get("lastName", "")
 
     username_doc = db.collection("usernames").document(username).get()
     if username_doc.exists:
@@ -98,10 +105,13 @@ def register():
             "userUID": user_uid
         })
 
-        # Create user document in 'users' collection
-        db.collection("users").document(user_uid).set({
+        db.collection("users").document(username).set({
             "email": email,
             "username": username,
+            "firstName": first_name,
+            "profilePic": "",
+            "lastName": last_name,
+            "savedRoutes": ["", "", "", "", ""],
             "notification_enabled": True,
             "created_at": firestore.SERVER_TIMESTAMP
         })
@@ -143,31 +153,38 @@ def google_callback():
         id_info = id_token.verify_oauth2_token(
             token_response_json['id_token'],
             google_requests.Request(),
-            GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=5
         )
 
         email = id_info.get('email')
         user_uid = id_info.get('sub')
+        full_name = id_info.get('name', '')
+        name_parts = full_name.split(" ", 1)
+        first_name = name_parts[0] if len(name_parts) > 0 else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
 
         user_doc = db.collection("users").where("email", "==", email).get()
         if not user_doc:
             username = email.split('@')[0]  
-            
             username_count = 0
             base_username = username
             while db.collection("usernames").document(username).get().exists:
                 username_count += 1
                 username = f"{base_username}{username_count}"
-            
 
             db.collection("usernames").document(username).set({
                 "email": email,
                 "userUID": user_uid
             })
-            
-            db.collection("users").document(user_uid).set({
+
+            db.collection("users").document(username).set({
                 "email": email,
                 "username": username,
+                "firstName": first_name,
+                "profilePic":"",
+                "lastName": last_name,
+                "savedRoutes": ["", "", "", "", ""],
                 "notification_enabled": True,
                 "created_at": firestore.SERVER_TIMESTAMP
             })
@@ -177,7 +194,6 @@ def google_callback():
         return redirect('http://localhost:5173/mainpage')
 
     return jsonify({"message": "Google login failed"}), 400
-
 
 @app.route('/search')
 def searchaddressUpdateList():
@@ -273,7 +289,7 @@ def upload_profile_pic():
         return {"message": "Upload to Cloudinary failed"}, 500
 
     try:
-        db.collection("usernames").document(username).update({
+        db.collection("users").document(username).update({
             "profilePic": image_url
         })
         return {"message": "Profile picture updated", "url": image_url}, 200
@@ -288,7 +304,7 @@ def get_profile_pic():
         return jsonify({"message": "Username required"}), 400
 
     try:
-        doc = db.collection("usernames").document(username).get()
+        doc = db.collection("users").document(username).get()
         if doc.exists:
             return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
         else:

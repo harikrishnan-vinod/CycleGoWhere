@@ -1,0 +1,42 @@
+.route-instruction-container {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 300px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 999;
+  color: black;
+  align-items: start;
+}
+
+.route-instruction-container h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.route-instruction-list {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.route-instruction-item {
+  margin-bottom: 12px;
+}
+
+.instruction-meta {
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.road-line {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+}

@@ -36,3 +36,7 @@ venv/
 */__pycache__/
 *.pyc
 *.pyo
+
+#ignore .pyc files and __pycache__/
+*.pyc
+__pycache__/

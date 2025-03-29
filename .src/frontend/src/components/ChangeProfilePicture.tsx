@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import "../components-css/changeProfilePicture.css";
+import { useNavigate } from "react-router-dom";
 
 function ChangeProfilePicture() {
+  const navigate = useNavigate();
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [fileChosen, setFileChosen] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -15,9 +18,11 @@ function ChangeProfilePicture() {
     if (!validTypes.includes(file.type)) {
       setError("Only JPG, PNG, or WEBP images are allowed.");
       setImage(null);
+      setFileChosen(false);
     } else {
       setError(null);
       setImage(file);
+      setFileChosen(true);
     }
   };
 
@@ -83,7 +88,7 @@ function ChangeProfilePicture() {
 
   return (
     <div className="change-profile-container">
-      <h1>Change Profile Picture</h1>
+      <header>PROFILE PICTURE</header>
 
       {profilePicUrl && (
         <div className="profile-pic-frame">
@@ -96,12 +101,30 @@ function ChangeProfilePicture() {
       )}
 
       <div className="upload-controls">
-        <input type="file" accept="image/*" onChange={handleImageChange} />
+        {/* Hidden file input */}
+        <input
+          id="file-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          style={{ display: "none" }}
+        />
+        {/* Custom label for file input */}
+        <label htmlFor="file-upload" className="custom-file-label">
+          {fileChosen ? "File Uploaded" : "Choose File"}
+        </label>
         <button
           onClick={handleUpload}
           className={`upload-button ${success ? "success" : ""}`}
         >
           {success ? "Image Uploaded" : "Upload"}
+        </button>
+        <button
+          onClick={() => navigate("/Settings")}
+          type="button"
+          className="cancel-btn"
+        >
+          {success ? "Back to Settings" : "Cancel"}
         </button>
       </div>
 
