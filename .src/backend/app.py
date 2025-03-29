@@ -69,6 +69,7 @@ def login():
     data = request.get_json()
     login_input = data.get("login")
     password = data.get("password")
+    # print(session)
     return login_controller.login(session, login_input, password)
     
 @app.route("/logout", methods=["POST"])

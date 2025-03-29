@@ -33,15 +33,21 @@ class LoginPageController:
                         username = doc_snapshot.id
                         break
 
-            session["user"] = email
+            # session["user"] = email
+            uid = user["localId"]
+            email = user["email"]
+            session[uid] = {username, email, }
+
+            print(f"user: {user}") #TODO: This is the UserUID in the firestor Can use this as key for user session
+            print(f"session{session}")
             ###TESTING###
-            uid = self.db_controller.get_uid_by_username(username) # TODO: Might not be necessary, remove?
-            user.set_username(username)
-            notification_enabled = self.db_controller.get_notifications_enabled(username)
-            profile_picture = self.db_controller.get_profile_picture(username)
-            settings = Settings(notification_enabled, profile_picture)
-            saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
-            activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+            # uid = self.db_controller.get_uid_by_username(username) # TODO: Might not be necessary, remove?
+            # user.set_username(username)
+            # notification_enabled = self.db_controller.get_notifications_enabled(username)
+            # profile_picture = self.db_controller.get_profile_picture(username)
+            # settings = Settings(notification_enabled, profile_picture)
+            # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+            # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
             #############
             return jsonify({
                 "message": "Login successful",
