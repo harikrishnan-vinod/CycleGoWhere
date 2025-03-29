@@ -95,7 +95,7 @@ function ChangePassword() {
               />
             </li>
             <button type="submit" className="submit-btn">
-              Change Password
+              {passwordChanged ? "Password Changed" : "Change Password"}
             </button>
             <button
               onClick={() => navigate("/Settings")}
@@ -106,6 +106,11 @@ function ChangePassword() {
             </button>
           </ul>
         </form>
+        {passwordChanged && (
+          <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
+            Password updated successfully!
+          </p>
+        )}
       </div>
     </div>
   );
