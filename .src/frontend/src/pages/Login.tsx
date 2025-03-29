@@ -28,7 +28,7 @@ function Login() {
 
       if (response.ok) {
         sessionStorage.setItem("email", result.email);
-        sessionStorage.setItem("userId", result.userId);
+        sessionStorage.setItem("userUID", result.userUID);
         sessionStorage.setItem("username", result.username);
         window.location.href = "/mainpage";
       } else {

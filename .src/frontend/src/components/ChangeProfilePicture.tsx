@@ -27,12 +27,12 @@ function ChangeProfilePicture() {
   };
 
   const fetchProfilePicture = async () => {
-    const username = sessionStorage.getItem("username");
-    if (!username) return;
+    const userUID = sessionStorage.getItem("userUID");
+    if (!userUID) return;
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:1234/get-profile-pic?username=${username}`
+        `http://127.0.0.1:1234/get-profile-pic?userUID=${userUID}`
       );
       const result = await response.json();
 
@@ -54,15 +54,15 @@ function ChangeProfilePicture() {
       return;
     }
 
-    const username = sessionStorage.getItem("username");
-    if (!username) {
-      setError("No username found in sessionStorage");
+    const userUID = sessionStorage.getItem("userUID");
+    if (!userUID) {
+      setError("No userId found in sessionStorage");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", image);
-    formData.append("username", username);
+    formData.append("userUID", userUID);
 
     try {
       const response = await fetch("http://127.0.0.1:1234/upload-profile-pic", {
