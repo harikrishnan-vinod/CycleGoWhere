@@ -13,17 +13,14 @@ function ChangeEmail() {
     e.preventDefault();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!email || !confirmEmail) {
       setError("Both email fields are required");
       return;
     }
-
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address");
       return;
     }
-
     if (email !== confirmEmail) {
       setError("Emails do not match");
       return;
@@ -31,7 +28,6 @@ function ChangeEmail() {
 
     const currentEmail = sessionStorage.getItem("email");
     const userUID = sessionStorage.getItem("userUID");
-
     if (!currentEmail || !userUID) {
       setError("User not authenticated");
       return;
@@ -40,9 +36,7 @@ function ChangeEmail() {
     try {
       const response = await fetch("http://127.0.0.1:1234/change-email", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currentEmail,
           newEmail: email,
@@ -101,9 +95,18 @@ function ChangeEmail() {
             >
               {emailChanged ? "Back to Settings" : "Cancel"}
             </button>
-            {error && <p style={{ color: "red" }}>{error}</p>}
           </ul>
         </form>
+        {emailChanged && (
+          <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
+            Email updated successfully!
+          </p>
+        )}
+        {error && (
+          <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

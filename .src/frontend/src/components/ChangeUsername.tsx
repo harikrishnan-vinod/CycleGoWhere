@@ -43,7 +43,7 @@ function ChangeUsername() {
       if (response.ok) {
         setUsernameChanged(true);
         setError(null);
-        sessionStorage.setItem("username", username); // optional: update sessionStorage
+        sessionStorage.setItem("username", username);
       } else {
         const result = await response.json();
         setError(result.message || "Failed to change username");
@@ -91,9 +91,18 @@ function ChangeUsername() {
             >
               {usernameChanged ? "Back to Settings" : "Cancel"}
             </button>
-            {error && <p style={{ color: "red" }}>{error}</p>}
           </ul>
         </form>
+        {usernameChanged && (
+          <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
+            Username updated successfully!
+          </p>
+        )}
+        {error && (
+          <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );
