@@ -35,6 +35,7 @@ venv/
 # environment variables
 *.env
 .env
+frontend/.env
 
 */__pycache__/
 *.pyc
