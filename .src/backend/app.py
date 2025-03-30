@@ -40,7 +40,7 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 
 app.config.update(
     SESSION_COOKIE_SAMESITE='None',  # Allow cookies for cross-origin requests
-    SESSION_COOKIE_SECURE=True,      # Ensure cookies are sent over HTTPS
+    SESSION_COOKIE_SECURE=False,      # Ensure cookies are sent over HTTPS
     PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Set session lifetime (optional)
 )
 
@@ -64,7 +64,6 @@ def login():
     login_input = data.get("login")
     password = data.get("password")
     return login_controller.login(session, login_input, password)
-
     
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -81,35 +80,7 @@ def register():
     first_name = data.get("firstName", "")
     last_name = data.get("lastName", "")
 
-    username_doc = db.collection("usernames").document(username).get()
-    if username_doc.exists:
-        return jsonify({"message": "Username already exists"}), 400
-
-    try:
-        user = pyrebase_auth.create_user_with_email_and_password(email, password)
-        user_UID = user["localId"]
-
-        db.collection("usernames").document(username).set({
-            "email": email,
-            "userUID": user_UID
-        })
-
-        db.collection("users").document(user_UID).set({
-            "email": email,
-            "username": username,
-            "firstName": first_name,
-            "lastName": last_name,
-            "profilePic": "",
-            "savedRoutes": ["", "", "", "", ""],
-            "notification_enabled": True,
-            "created_at": firestore.SERVER_TIMESTAMP
-        })
-
-        return jsonify({"message": "Registration successful!"}), 201
-
-    except Exception as e:
-        print(f"Error registering user: {e}")
-        return jsonify({"message": "Registration failed"}), 400
+    return login_controller.register(email, username, password, first_name, last_name)
 
 @app.route('/google-login')
 def google_login():
@@ -179,6 +150,7 @@ def google_callback():
                 "created_at": firestore.SERVER_TIMESTAMP
             })
 
+        # TODO: Change this to use session_controller
         session["user"] = email
         session["user_UID"] = user_UID
 
@@ -383,4 +355,4 @@ def change_username():
 
 
 if __name__ == "__main__":
-    app.run(port=1234, debug=True)
+    app.run(port=5000, debug=True)

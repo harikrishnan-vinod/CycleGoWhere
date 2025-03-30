@@ -1,14 +1,16 @@
 from flask import request, jsonify
-#from firebase_admin import auth as admin_auth
+from firebase_admin import auth as admin_auth
+from firebase_admin import firestore
+from Controllers.SessionController import SessionController
 from Entities.User import User
+from Entities.Settings import Settings
 from Entities.DatabaseController import DatabaseController
-from authentication import pyrebase_auth
 from authentication.authentication import pyrebase_auth
-
 
 class LoginPageController:
     def __init__(self):
         self.db_controller = DatabaseController()
+        self.session_controller = SessionController()
         self.auth = pyrebase_auth
         
     def login(self, session, login_input, password):
@@ -17,7 +19,7 @@ class LoginPageController:
                 email = login_input
             else:
                 # Lookup username → email
-                username_doc = self.db_controller.db.collection("usernames").document(login_input).get()
+                username_doc = self.db_controller.db.collection("usernames").document(login_input).get() # TODO: Use database_controller method instead
                 if username_doc.exists:
                     email = username_doc.to_dict().get("email")
                 else:
@@ -49,7 +51,30 @@ class LoginPageController:
                     "userUID": user_UID
                 })
 
-            # Store user info in session
+            # Store user info in session            
+            # Get user settings
+            settings = Settings(self.db_controller.get_notifications_enabled(user_UID),
+                                self.db_controller.get_profile_picture(user_UID))
+            
+            # Get user activities
+            # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+
+            # Get user saved routes
+            # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+            
+            # Create user object
+            user_obj = User(uid=user_UID,
+                            email=user["email"],
+                            username=username,
+                            settings=Settings(notification_enabled=settings.get_notification_enabled(),
+                                              profile_picture=settings.get_profile_picture()),
+                            # activities, #TODO: To be implemented
+                            # saved_routes
+                            )
+            print("User object created")
+
+            # Store user object in session
+            self.session_controller.set_user_session(user_obj)
             session["user"] = email
             session["user_UID"] = user_UID
             session["id_token"] = id_token
@@ -59,12 +84,18 @@ class LoginPageController:
                 "userUID": user_UID,
                 "email": email,
                 "username": username
-            })
+            }), 200
+        
         except Exception as e:
             print("Login failed:", str(e))
             return jsonify({"message": "Wrong username or password"}), 401
+
+    def logout(self, session):
+        session.pop("user", None)
+        session.pop("user_UID", None)
+        return jsonify({"message": "Logout successful"})
     
-    def register(self, email, username, password):
+    def register(self, email, username, password, first_name="", last_name=""):
         try:
             # Check if username exists in Firestore
             username_doc = self.db_controller.db.collection("usernames").document(username).get()
@@ -78,7 +109,13 @@ class LoginPageController:
             # Store user in Firestore
             self.db_controller.db.collection("users").document(user_UID).set({
                 "email": email,
-                "username": username
+                "username": username,
+                "firstName": first_name,
+                "lastName": last_name,
+                "profilePic": "",
+                "savedRoutes": ["", "", "", "", ""],
+                "notification_enabled": True,
+                "created_at": firestore.SERVER_TIMESTAMP
             })
             
             # Create username mapping
