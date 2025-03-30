@@ -33,8 +33,7 @@ package.jsonyarn.lock
 #virtual environment
 venv/
 # environment variables
-*.env
-.env
+.src\backend\.env
 frontend/.env
 
 */__pycache__/
