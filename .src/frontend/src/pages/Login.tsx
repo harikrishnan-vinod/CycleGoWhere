@@ -11,13 +11,15 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:1234";
+
   const handleSignIn = async (event: { preventDefault: () => void }) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:1234/auth", {
+      const response = await fetch(`${API_URL}/auth`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -30,7 +32,7 @@ function Login() {
         sessionStorage.setItem("email", result.email);
         sessionStorage.setItem("userUID", result.userUID);
         sessionStorage.setItem("username", result.username);
-        window.location.href = "/mainpage";
+        navigate("/mainpage");
       } else {
         setError(result.message || "Invalid credentials, try again!");
       }
@@ -92,9 +94,7 @@ function Login() {
           <button
             type="button"
             className="google-login-button"
-            onClick={() =>
-              (window.location.href = "http://127.0.0.1:1234/google-login")
-            }
+            onClick={() => (window.location.href = `${API_URL}/google-login`)}
           >
             <img
               src="https://developers.google.com/identity/images/g-logo.png"
