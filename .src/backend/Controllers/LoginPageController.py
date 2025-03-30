@@ -35,26 +35,31 @@ class LoginPageController:
                 username = user_data.get("username", "")
             else:
                 return jsonify({"message": "User record not found"}), 404
-            session["user"] = email
-            # email = user["email"]
-            # uid = user["localId"]
-            # settings = Settings(self.db_controller.get_notifications_enabled(username),
-            #                     self.db_controller.get_profile_picture(username))
+            
+            # Get user settings
+            settings = Settings(self.db_controller.get_notifications_enabled(user_UID),
+                                self.db_controller.get_profile_picture(user_UID))
+            
+            # Get user activities
             # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+
+            # Get user saved routes
             # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
             
             # Create user object
-            # user_obj = User(uid=user["localId"],
-            #                 email=user["email"],
-            #                 username=username,
-            #                 settings=Settings(notification_enabled=settings.get_notification_enabled()),
-            #                 # activities, #TODO: To be implemented
-            #                 # saved_routes
-            #                 )
-            # Store user object in session
-            # self.session_controller.set_user_session(user_obj)
+            user_obj = User(uid=user_UID,
+                            email=user["email"],
+                            username=username,
+                            settings=Settings(notification_enabled=settings.get_notification_enabled(),
+                                              profile_picture=settings.get_profile_picture()),
+                            # activities, #TODO: To be implemented
+                            # saved_routes
+                            )
+            print("User object created")
 
-            print(f"uid: {user['localId']}")
+            # Store user object in session
+            self.session_controller.set_user_session(user_obj)
+
             print(f"session: {session}")
 
             return jsonify({
@@ -67,15 +72,6 @@ class LoginPageController:
         except Exception as e:
             print("Login failed:", e)
             return jsonify({"message": "Wrong username or password"}), 401
-
- 
-        # try:
-        #     # Firebase authentication
-        #     user = auth.get_user_by_email(email)
-        #     # Return user data from database
-        #     return self.db_controller.get_user_by_id(user.UID)
-        # except Exception as e:
-        #     return {"error": str(e)}, 401
 
     def logout(self, session):
         session.pop("user", None)

@@ -7,8 +7,8 @@ class Settings:
     def to_dict(self):
         return {
             # "user": self.__user.to_dict() if self.__user else None,
-            "notification_enabled": self.__notification_enabled,
-            "profile_picture": self.__profile_picture
+            "notification_enabled": self.__notification_enabled if self.__notification_enabled else '',
+            "profile_picture": self.__profile_picture if self.__profile_picture else ''
         }
     
     @staticmethod

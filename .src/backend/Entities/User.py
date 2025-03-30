@@ -11,16 +11,16 @@ class User:
         self.__uid = uid
         self.__email = email
         self.__username = username
-        self.__setings = settings
+        self.__settings = settings
         # self.__activites = activities
         # self.__saved_routes = saved_routes
     
     def to_dict(self):
         return {
-            "uid": self.uid,
-            "email": self.email,
-            "username": self.username,
-            "settings": {} if self.settings is None else self.settings.to_dict(),
+            "uid": self.__uid,
+            "email": self.__email,
+            "username": self.__username,
+            "settings": {} if self.__settings is None else self.__settings.to_dict(),
             # "activities": [] if self.activities is None else [a.to_dict() for a in self.activities],
             # "saved_routes": [] if self.saved_routes is None else [r.to_dict() for r in self.saved]
         }

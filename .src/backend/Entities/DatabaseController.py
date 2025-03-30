@@ -56,7 +56,7 @@ class DatabaseController:
             return user_doc.to_dict().get('userUID')
         return None
     
-    def get_notifications_enabled(self, username: str):
+    def get_notifications_enabled(self, uid: str):
         """Retrieves a user's notification preferences.
         
         Args:
@@ -65,10 +65,13 @@ class DatabaseController:
         Returns:
             True if notifications are enabled
         """
-        user_doc = self.db.collection('users').document(username).get()
+        print(self.db.collection('users'))
+        print(self.db.collection('users').document(uid))
+        user_doc = self.db.collection('users').document(uid).get()
+        print(user_doc)
         return user_doc.to_dict().get('notification_enabled', True)
     
-    def get_profile_picture(self, username: str):
+    def get_profile_picture(self, uid: str):
         """Retrieves a user's profile picture URL.
         
         Args:
@@ -77,7 +80,7 @@ class DatabaseController:
         Returns:
             Profile picture URL
         """
-        user_doc = self.db.collection('users').document(username).get()
+        user_doc = self.db.collection('users').document(uid).get()
         return user_doc.to_dict().get('profilePic', '')
     
     def get_user_by_id(self, user_id: str) -> Optional[User]: # TODO: Fix this
@@ -97,7 +100,7 @@ class DatabaseController:
             settings = Settings()
             settings._user_id = user_id
             settings._email = data.get('email', '')
-            settings._password = data.get('password', '')
+            # settings._password = data.get('password', '')
             settings._app_notifications = data.get('notification_enabled', True)
             
             # Create user with basic info

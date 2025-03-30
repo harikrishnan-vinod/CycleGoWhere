@@ -7,9 +7,12 @@ class SessionController:
 
     @staticmethod
     def set_user_session(user):
-        session[user.uid]['email'] = user.get_email()
-        session[user.uid]['username'] = user.get_username()
-        session[user.uid]['settings'] = user.get_settings().to_dict()
+        if user.get_uid() not in session:
+            session[user.get_uid()] = {}
+            
+        session[user.get_uid()]['email'] = user.get_email()
+        session[user.get_uid()]['username'] = user.get_username()
+        session[user.get_uid()]['settings'] = user.get_settings().to_dict()
         # TODO: Implement methods to get activities and saved routes from the database
         # session[user.uid]['activities'] = [a.to_dict() for a in user.get_activities()]
         # session[user.uid]['saved_routes'] = [r.to_dict() for r in user.get_saved_routes()]
