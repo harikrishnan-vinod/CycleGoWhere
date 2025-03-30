@@ -59,7 +59,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
-cred = credentials.Certificate(".src/backend/work.json")
+cred = credentials.Certificate("work.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -375,6 +375,10 @@ def change_password():
     except Exception as e:
         print("Error changing password:", e)
         return jsonify({"message": "Authentication failed"}), 401
+
+
+
+
 
 
 if __name__ == "__main__":
