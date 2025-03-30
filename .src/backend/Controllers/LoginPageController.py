@@ -17,23 +17,24 @@ class LoginPageController:
         if "@" in login_input:
             email = login_input
         else:
+            # Lookup username → email
             username_doc = self.db_controller.db.collection("usernames").document(login_input).get() # TODO: Use database_controller method instead
-        if username_doc.exists:
-            email = username_doc.to_dict().get("email")
-        else:
-            return jsonify({"message": "Wrong username or password"}), 401
+            if username_doc.exists:
+                email = username_doc.to_dict().get("email")
+            else:
+                return jsonify({"message": "Wrong username or password"}), 401
 
         try:
             user = self.auth.sign_in_with_email_and_password(email, password)
-            username = login_input if "@" not in login_input else None
+            user_UID = user["localId"]
 
-            if username is None:
-                users_ref = self.db_controller.db.collection("usernames").stream()
-                for doc_snapshot in users_ref:
-                    doc = doc_snapshot.to_dict()
-                    if doc.get("email") == email:
-                        username = doc_snapshot.id
-                        break
+            # Get username from userUID document (new structure)
+            user_doc = self.db_controller.db.collection("users").document(user_UID).get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                username = user_data.get("username", "")
+            else:
+                return jsonify({"message": "User record not found"}), 404
             session["user"] = email
             # email = user["email"]
             # uid = user["localId"]
@@ -58,7 +59,7 @@ class LoginPageController:
 
             return jsonify({
                 "message": "Login successful",
-                "userId": user["localId"],
+                "userUID": user_UID,
                 "email": email,
                 "username": username
             }), 200
@@ -66,13 +67,13 @@ class LoginPageController:
         except Exception as e:
             print("Login failed:", e)
             return jsonify({"message": "Wrong username or password"}), 401
-            # return None, jsonify({"message": "Wrong username or password"}), 401
+
  
         # try:
         #     # Firebase authentication
         #     user = auth.get_user_by_email(email)
         #     # Return user data from database
-        #     return self.db_controller.get_user_by_id(user.uid)
+        #     return self.db_controller.get_user_by_id(user.UID)
         # except Exception as e:
         #     return {"error": str(e)}, 401
 
@@ -94,7 +95,7 @@ class LoginPageController:
             )
             
             # Create user in database
-            new_user = User(user.uid, email, username)
+            new_user = User(user.UID, email, username)
             self.db_controller.add_user(new_user)
             
             return {"message": "User created successfully"}, 201

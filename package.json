@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "firebase": "^11.5.0"
-  },
-  "devDependencies": {
-    "@types/leaflet-routing-machine": "^3.2.8"
-  }
-}
