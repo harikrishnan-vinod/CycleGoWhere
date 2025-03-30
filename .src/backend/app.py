@@ -6,6 +6,8 @@ from firebase_admin import credentials, firestore, auth as firebase_auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google.oauth2 import service_account
+from authentication.authentication import pyrebase_auth, firebase
+from authentication.authentication import admin_sdk_auth
 
 # Import controllers
 from Controllers.LoginPageController import LoginPageController
@@ -13,7 +15,7 @@ from Controllers.MainPageController import MainPageController
 from Controllers.ProfilePageController import ProfilePageController
 from Controllers.SavedRoutesController import SavedRoutesController
 from Controllers.SettingsPageController import SettingsPageController
-
+ 
 import time
 import requests
 import os
@@ -34,36 +36,23 @@ auth_token = {
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
-GOOGLE_CLIENT_ID = 'REMOVED'
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 
 app.config.update(
     SESSION_COOKIE_SAMESITE='None',  # Allow cookies for cross-origin requests
     SESSION_COOKIE_SECURE=True,      # Ensure cookies are sent over HTTPS
     PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Set session lifetime (optional)
 )
+
 cloudinary.config(
-  cloud_name = "dp75ekaxp",
-  api_key = "REMOVED",
-  api_secret = "REMOVED"
+  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"),
+  api_key = os.environ.get("CLOUDINARY_API_KEY"),
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-config = {
-    "apiKey": "REMOVED",
-    "authDomain": "REMOVED.firebaseapp.com",
-    "projectId": "REMOVED",
-    "storageBucket": "REMOVED",
-    "messagingSenderId": "REMOVED",
-    "appId": "1:REMOVED:web:496edabac517dfff8e3062",
-    "databaseURL": ""
-}
-firebase = pyrebase.initialize_app(config)
-auth = firebase.auth()
-
-cred = credentials.Certificate("work.json")
-firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-login_controller = LoginPageController(firebase)
+login_controller = LoginPageController()
 main_controller = MainPageController()
 profile_controller = ProfilePageController()
 saved_routes_controller = SavedRoutesController()
@@ -97,7 +86,7 @@ def register():
         return jsonify({"message": "Username already exists"}), 400
 
     try:
-        user = auth.create_user_with_email_and_password(email, password)
+        user = pyrebase_auth.create_user_with_email_and_password(email, password)
         user_UID = user["localId"]
 
         db.collection("usernames").document(username).set({
@@ -140,8 +129,8 @@ def google_callback():
 
     payload = {
         'code': code,
-        'client_id': 'REMOVED',
-        'client_secret': 'REMOVED',
+        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+        'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
         'redirect_uri': url_for('google_callback', _external=True),
         'grant_type': 'authorization_code'
     }
@@ -326,10 +315,10 @@ def change_password():
     new_password = data.get("newPassword")
 
     try:
-        user = auth.sign_in_with_email_and_password(email, old_password)
+        user = pyrebase_auth.sign_in_with_email_and_password(email, old_password)
 
         id_token = user["idToken"]
-        url = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=REMOVED"
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:update?key={os.environ.get('FIREBASE_API_KEY')}"
 
         payload = {
             "idToken": id_token,
