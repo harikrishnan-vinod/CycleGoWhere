@@ -189,6 +189,7 @@ def google_callback():
                 "created_at": firestore.SERVER_TIMESTAMP
             })
 
+        # TODO: Change this to use session_controller
         session["user"] = email
         session["user_id"] = user_uid
         return redirect('http://localhost:5173/mainpage')

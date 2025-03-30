@@ -2,6 +2,7 @@ import firebase_admin
 import pyrebase
 from flask import request, jsonify
 from firebase_admin import auth, credentials
+from Controllers.SessionController import SessionController
 from Entities.User import User
 from Entities.Settings import Settings
 from Entities.DatabaseController import DatabaseController
@@ -9,6 +10,7 @@ from Entities.DatabaseController import DatabaseController
 class LoginPageController:
     def __init__(self, firebase):
         self.db_controller = DatabaseController()
+        self.session_controller = SessionController()
         self.auth = firebase.auth()
         
     def login(self, session, login_input, password):
@@ -32,23 +34,28 @@ class LoginPageController:
                     if doc.get("email") == email:
                         username = doc_snapshot.id
                         break
-
-            # session["user"] = email
-            uid = user["localId"]
-            email = user["email"]
-            session[uid] = {username, email, }
-
-            print(f"user: {user}") #TODO: This is the UserUID in the firestor Can use this as key for user session
-            print(f"session{session}")
-            ###TESTING###
-            # uid = self.db_controller.get_uid_by_username(username) # TODO: Might not be necessary, remove?
-            # user.set_username(username)
-            # notification_enabled = self.db_controller.get_notifications_enabled(username)
-            # profile_picture = self.db_controller.get_profile_picture(username)
-            # settings = Settings(notification_enabled, profile_picture)
-            # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+            session["user"] = email
+            # email = user["email"]
+            # uid = user["localId"]
+            # settings = Settings(self.db_controller.get_notifications_enabled(username),
+            #                     self.db_controller.get_profile_picture(username))
             # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
-            #############
+            # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+            
+            # Create user object
+            # user_obj = User(uid=user["localId"],
+            #                 email=user["email"],
+            #                 username=username,
+            #                 settings=Settings(notification_enabled=settings.get_notification_enabled()),
+            #                 # activities, #TODO: To be implemented
+            #                 # saved_routes
+            #                 )
+            # Store user object in session
+            # self.session_controller.set_user_session(user_obj)
+
+            print(f"uid: {user['localId']}")
+            print(f"session: {session}")
+
             return jsonify({
                 "message": "Login successful",
                 "userId": user["localId"],
