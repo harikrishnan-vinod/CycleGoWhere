@@ -1,6 +1,7 @@
 import Navigate from "../components/Navigation";
 import "../pages-css/Profile.css";
 import DisplayProfile from "../components/DisplayProfile";
+import CyclingStatistics from "../components/CyclingStatistics";
 
 function Profile() {
   return <div>
@@ -8,7 +9,10 @@ function Profile() {
       <DisplayProfile />
     </div>
     <div>
-      <h1>Profile Page</h1>
+      <CyclingStatistics />
+    </div>
+
+    <div>
       <Navigate />
     </div>
   </div>;

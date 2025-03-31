@@ -24,7 +24,7 @@ const DisplayProfile: React.FC = () => {
                     setProfilePicUrl(profilePicResult.profilePic);
                 }
 
-                // Fetch username
+                // fetch username
                 const usernameResponse = await fetch(
                     `http://127.0.0.1:1234/get-username?userUID=${userUID}`
                 );
