@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "../components-css/changeProfilePicture.css";
 import { useNavigate } from "react-router-dom";
+import { Camera } from "lucide-react";
 
 function ChangeProfilePicture() {
   const navigate = useNavigate();
@@ -87,49 +88,65 @@ function ChangeProfilePicture() {
   };
 
   return (
-    <div className="change-profile-container">
-      <header>PROFILE PICTURE</header>
+    <div className="profile-pic-container">
+      <div className="profile-pic-card">
+        <div className="card-border-top"></div>
 
-      {profilePicUrl && (
-        <div className="profile-pic-frame">
-          <img
-            src={profilePicUrl}
-            alt="Profile"
-            className="profile-image-preview"
-          />
+        <div className="profile-pic-header">
+          <div className="profile-pic-icon">
+            <Camera size={24} />
+          </div>
+          <h2 className="profile-pic-title">Change Profile Picture</h2>
         </div>
-      )}
 
-      <div className="upload-controls">
-        {/* Hidden file input */}
-        <input
-          id="file-upload"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          style={{ display: "none" }}
-        />
-        {/* Custom label for file input */}
-        <label htmlFor="file-upload" className="custom-file-label">
-          {fileChosen ? "File Uploaded" : "Choose File"}
-        </label>
-        <button
-          onClick={handleUpload}
-          className={`upload-button ${success ? "success" : ""}`}
-        >
-          {success ? "Image Uploaded" : "Upload"}
-        </button>
-        <button
-          onClick={() => navigate("/Settings")}
-          type="button"
-          className="cancel-btn"
-        >
-          {success ? "Back to Settings" : "Cancel"}
-        </button>
+        <div className="profile-pic-content">
+          {profilePicUrl && (
+            <div className="profile-image-preview-container">
+              <img
+                src={profilePicUrl}
+                alt="Profile"
+                className="profile-image-preview"
+              />
+            </div>
+          )}
+
+          <div className="upload-controls">
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              style={{ display: "none" }}
+            />
+
+            <label htmlFor="file-upload" className="file-upload-label">
+              {fileChosen ? "File Selected" : "Choose Image"}
+            </label>
+
+            <div className="action-buttons">
+              <button
+                onClick={handleUpload}
+                className="submit-button"
+                disabled={!image}
+              >
+                {success ? "Image Uploaded" : "Upload Image"}
+              </button>
+
+              <button
+                onClick={() => navigate("/Settings")}
+                type="button"
+                className="cancel-button"
+              >
+                {success ? "Back to Settings" : "Cancel"}
+              </button>
+            </div>
+          </div>
+
+          {success && <div className="success-message">{success}</div>}
+
+          {error && <div className="error-message">{error}</div>}
+        </div>
       </div>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
     </div>
   );
 }

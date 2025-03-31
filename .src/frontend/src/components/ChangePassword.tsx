@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../components-css/changePassword.css";
+import { Lock } from "lucide-react";
 
 function ChangePassword() {
   interface PasswordData {
@@ -16,6 +17,7 @@ function ChangePassword() {
     confirmnewpassword: "",
   });
   const [passwordChanged, setPasswordChanged] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,89 +30,118 @@ function ChangePassword() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (password.newpassword === password.confirmnewpassword) {
-      try {
-        const response = await fetch("http://127.0.0.1:1234/change-password", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: sessionStorage.getItem("email"),
-            oldPassword: password.password,
-            newPassword: password.newpassword,
-          }),
-        });
+    if (
+      !password.password ||
+      !password.newpassword ||
+      !password.confirmnewpassword
+    ) {
+      setError("All password fields are required");
+      return;
+    }
 
-        if (response.ok) {
-          console.log("Password updated successfully!");
-          setPasswordChanged(true);
-        } else {
-          console.log("Error updating password.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
+    if (password.newpassword !== password.confirmnewpassword) {
+      setError("New passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:1234/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: sessionStorage.getItem("email"),
+          oldPassword: password.password,
+          newPassword: password.newpassword,
+        }),
+      });
+
+      if (response.ok) {
+        setPasswordChanged(true);
+        setError(null);
+      } else {
+        const result = await response.json();
+        setError(result.message || "Failed to change password");
       }
-    } else {
-      console.log("Passwords do not match");
+    } catch (error) {
+      setError("Something went wrong");
     }
   };
 
   return (
-    <div>
-      <div>
-        <header>PASSWORD</header>
-      </div>
-      <div>
+    <div className="password-container">
+      <div className="password-card">
+        <div className="card-border-top"></div>
+
+        <div className="password-header">
+          <div className="password-icon">
+            <Lock size={24} />
+          </div>
+          <h2 className="password-title">Change Password</h2>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <ul className="change-password">
-            <li>
+          <div className="form-fields">
+            <div className="form-group">
+              <label htmlFor="current-password">Current Password</label>
               <input
+                id="current-password"
                 type="password"
                 placeholder="Enter current password"
-                className="current-password"
-                onChange={handleChange}
                 name="password"
+                value={password.password}
+                onChange={handleChange}
                 required
               />
-            </li>
-            <li>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="new-password">New Password</label>
               <input
+                id="new-password"
                 type="password"
-                placeholder="New Password"
-                className="new-password"
-                onChange={handleChange}
+                placeholder="Enter new password"
                 name="newpassword"
-                required
-              />
-            </li>
-            <li>
-              <input
-                type="password"
-                placeholder="Confirm New Password"
-                className="new-password"
+                value={password.newpassword}
                 onChange={handleChange}
-                name="confirmnewpassword"
                 required
               />
-            </li>
-            <button type="submit" className="submit-btn">
-              {passwordChanged ? "Password Changed" : "Change Password"}
-            </button>
-            <button
-              onClick={() => navigate("/Settings")}
-              type="button"
-              className="cancel-btn"
-            >
-              {passwordChanged ? "Back to Settings" : "Cancel"}
-            </button>
-          </ul>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirm-password">Confirm New Password</label>
+              <input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirm your new password"
+                name="confirmnewpassword"
+                value={password.confirmnewpassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-buttons">
+              <button type="submit" className="submit-button">
+                {passwordChanged ? "Password Changed" : "Change Password"}
+              </button>
+              <button
+                onClick={() => navigate("/Settings")}
+                type="button"
+                className="cancel-button"
+              >
+                {passwordChanged ? "Back to Settings" : "Cancel"}
+              </button>
+            </div>
+          </div>
         </form>
+
         {passwordChanged && (
-          <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
-            Password updated successfully!
-          </p>
+          <div className="success-message">Password updated successfully!</div>
         )}
+
+        {error && <div className="error-message">{error}</div>}
       </div>
     </div>
   );
