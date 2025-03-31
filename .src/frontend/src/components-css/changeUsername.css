@@ -1,209 +1,209 @@
 /* Simplified changeUsername.css */
 :root {
-    --primary-color: #4a6fa5;
-    --blue-color: #3884bf;
-    --secondary-color: #ff6b6b;
-    --accent-color: #64d2ff;
-    --green-color: #43c782;
-    --background-color: #f5f7fa;
-    --card-background: #ffffff;
-    --text-color: #333333;
-    --text-secondary: #666666;
-    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-    --border-radius: 12px;
-    --success-color: #4caf50;
-    --error-color: #f44336;
-  }
-  
-  body {
-    background-color: var(--background-color);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-  
-  /* Main container with proper width */
+  --primary-color: #4a6fa5;
+  --blue-color: #3884bf;
+  --secondary-color: #ff6b6b;
+  --accent-color: #64d2ff;
+  --green-color: #43c782;
+  --background-color: #f5f7fa;
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --border-radius: 12px;
+  --success-color: #4caf50;
+  --error-color: #f44336;
+}
+
+body {
+  background-color: var(--background-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Main container with proper width */
+.username-container {
+  padding-bottom: 80px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 30px;
+  padding-left: 20px;
+  padding-right: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Username card styling */
+.username-card {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 35px;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add a gradient top border */
+.card-border-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, var(--blue-color), var(--secondary-color));
+}
+
+.username-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  justify-content: center;
+  text-align: center;
+}
+
+.username-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  margin-right: 16px;
+}
+
+.username-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+/* Form styling */
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.form-group label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-group input {
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.1);
+}
+
+.form-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.submit-button {
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #3a5a85;
+  transform: translateY(-2px);
+}
+
+.cancel-button {
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Message styling */
+.success-message,
+.error-message {
+  margin-top: 24px;
+  padding: 14px;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.success-message {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: var(--success-color);
+}
+
+.error-message {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--error-color);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
   .username-container {
-    padding-bottom: 80px;
-    max-width: 800px;
-    margin: 0 auto;
-    padding-top: 30px;
-    padding-left: 20px;
-    padding-right: 20px;
-    display: flex;
-    justify-content: center;
+    padding: 20px 16px 80px 16px;
   }
-  
-  /* Username card styling */
+
   .username-card {
-    background-color: var(--card-background);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 35px;
-    width: 100%;
-    max-width: 500px;
-    position: relative;
-    overflow: hidden;
+    padding: 25px 20px;
   }
-  
-  /* Add a gradient top border */
-  .card-border-top {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(to right, var(--blue-color), var(--secondary-color));
-  }
-  
-  .username-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 30px;
-    justify-content: center;
-    text-align: center;
-  }
-  
-  .username-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    color: white;
-    margin-right: 16px;
-  }
-  
+
   .username-title {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin: 0;
+    font-size: 22px;
   }
-  
-  /* Form styling */
-  .form-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-  
+
   .form-group label {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-size: 15px;
   }
-  
+
   .form-group input {
-    padding: 14px 16px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: var(--border-radius);
-    outline: none;
-    transition: border-color 0.2s;
+    padding: 12px 14px;
+    font-size: 15px;
   }
-  
-  .form-group input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.1);
-  }
-  
-  .form-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 16px;
-  }
-  
-  .submit-button {
-    padding: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
-  }
-  
-  .submit-button:hover {
-    background-color: #3a5a85;
-    transform: translateY(-2px);
-  }
-  
+
+  .submit-button,
   .cancel-button {
-    padding: 16px;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .cancel-button:hover {
-    background-color: #f5f5f5;
-  }
-  
-  /* Message styling */
-  .success-message,
-  .error-message {
-    margin-top: 24px;
     padding: 14px;
-    border-radius: var(--border-radius);
-    font-size: 16px;
-    font-weight: 500;
-    text-align: center;
+    font-size: 15px;
   }
-  
-  .success-message {
-    background-color: rgba(76, 175, 80, 0.1);
-    color: var(--success-color);
-  }
-  
-  .error-message {
-    background-color: rgba(244, 67, 54, 0.1);
-    color: var(--error-color);
-  }
-  
-  /* Media Queries */
-  @media (max-width: 768px) {
-    .username-container {
-      padding: 20px 16px 80px 16px;
-    }
-    
-    .username-card {
-      padding: 25px 20px;
-    }
-    
-    .username-title {
-      font-size: 22px;
-    }
-    
-    .form-group label {
-      font-size: 15px;
-    }
-    
-    .form-group input {
-      padding: 12px 14px;
-      font-size: 15px;
-    }
-    
-    .submit-button,
-    .cancel-button {
-      padding: 14px;
-      font-size: 15px;
-    }
-  }
+}

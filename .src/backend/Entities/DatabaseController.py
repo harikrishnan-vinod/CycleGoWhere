@@ -42,6 +42,7 @@ class DatabaseController:
         self.db = firestore.client()
     
     # User methods
+
     def get_uid_by_username(self, username: str) -> Optional[str]:
         """Retrieves a user's unique identifier by their username.
         

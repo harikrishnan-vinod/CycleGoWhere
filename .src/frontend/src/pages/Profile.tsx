@@ -1,6 +1,6 @@
 import Navigate from "../components/Navigation";
 import "../pages-css/Profile.css";
-import DisplayProfile from "../components/displayProfile";
+import DisplayProfile from "../components/DisplayProfile";
 
 function Profile() {
   return <div>

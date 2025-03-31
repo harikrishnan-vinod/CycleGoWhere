@@ -1,246 +1,258 @@
 /* Final Settings.css with larger fonts */
 :root {
-    --primary-color: #4a6fa5;
-    --blue-color: #3884bf;
-    --secondary-color: #ff6b6b;
-    --accent-color: #64d2ff;
-    --green-color: #43c782;
-    --background-color: #f5f7fa;
-    --card-background: #ffffff;
-    --text-color: #333333;
-    --text-secondary: #666666;
-    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-    --border-radius: 12px;
-  }
-  
-  body {
-    background-color: var(--background-color);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-  
-  /* Main container with proper width */
+  --primary-color: #4a6fa5;
+  --blue-color: #3884bf;
+  --secondary-color: #ff6b6b;
+  --accent-color: #64d2ff;
+  --green-color: #43c782;
+  --background-color: #f5f7fa;
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --border-radius: 12px;
+}
+
+body {
+  background-color: var(--background-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.settings-container {
+  padding-bottom: 80px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 30px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.settings-header-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  width: 100%;
+  position: relative;
+}
+
+.settings-title {
+  font-size: 32px;
+  /* Larger font size for title */
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+/* Logout button moved to the right */
+.logout-button {
+  position: absolute;
+  right: 0;
+  /* Move it all the way to the right */
+  background-color: white;
+  color: var(--secondary-color);
+  border: 1px solid var(--secondary-color);
+  border-radius: 30px;
+  padding: 8px 18px;
+  /* Slightly larger padding */
+  font-weight: 500;
+  font-size: 16px;
+  /* Larger font size for button */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 107, 107, 0.1);
+}
+
+/* Card with top border */
+.settings-card {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 35px;
+  /* More padding for more space */
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add a gradient top border */
+.card-border-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, var(--blue-color), var(--secondary-color));
+}
+
+.settings-card-title {
+  font-size: 24px;
+  /* Larger font size */
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.settings-card-description {
+  color: var(--text-secondary);
+  margin: 0 0 35px 0;
+  font-size: 18px;
+  /* Larger font size */
+  text-align: center;
+}
+
+/* Settings options */
+.settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* More space between options */
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  padding: 18px 0;
+  /* More padding */
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.settings-option:last-child {
+  border-bottom: none;
+}
+
+.option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  /* Larger icons */
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 22px;
+  /* More space between icon and text */
+  color: white;
+  flex-shrink: 0;
+}
+
+.option-icon.user {
+  background-color: var(--primary-color);
+}
+
+.option-icon.email {
+  background-color: var(--accent-color);
+}
+
+.option-icon.password {
+  background-color: var(--secondary-color);
+}
+
+.option-icon.profile {
+  background-color: var(--green-color);
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-title {
+  font-weight: 600;
+  font-size: 18px;
+  /* Larger font size */
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+
+.option-description {
+  font-size: 16px;
+  /* Larger font size */
+  color: var(--text-secondary);
+}
+
+/* Navigation bar at bottom */
+.navigation {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 65%;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 30px;
+  padding: 12px 0;
+  z-index: 100;
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  text-align: center;
+}
+
+.nav-item img {
+  width: 26px;
+  /* Slightly larger icons */
+  height: 26px;
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover img {
+  transform: translateY(-3px);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
   .settings-container {
-    padding-bottom: 80px;
-    max-width: 800px;
-    margin: 0 auto;
-    padding-top: 30px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 20px 16px 80px 16px;
   }
-  
-  /* Fixed header area with proper alignment */
-  .settings-header-area {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 30px;
-    width: 100%;
-    position: relative;
-  }
-  
+
   .settings-title {
-    font-size: 32px; /* Larger font size for title */
-    font-weight: 600;
-    color: var(--primary-color);
-    margin: 0;
+    font-size: 28px;
   }
-  
-  /* Logout button moved to the right */
+
   .logout-button {
-    position: absolute;
-    right: 0; /* Move it all the way to the right */
-    background-color: white;
-    color: var(--secondary-color);
-    border: 1px solid var(--secondary-color);
-    border-radius: 30px;
-    padding: 8px 18px; /* Slightly larger padding */
-    font-weight: 500;
-    font-size: 16px; /* Larger font size for button */
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .logout-button:hover {
-    background-color: rgba(255, 107, 107, 0.1);
-  }
-  
-  /* Card with top border */
-  .settings-card {
-    background-color: var(--card-background);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 35px; /* More padding for more space */
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  /* Add a gradient top border */
-  .card-border-top {
-    position: absolute;
-    top: 0;
-    left: 0;
+    padding: 6px 14px;
+    font-size: 15px;
     right: 0;
-    height: 4px;
-    background: linear-gradient(to right, var(--blue-color), var(--secondary-color));
   }
-  
+
+  .settings-card {
+    padding: 25px 20px;
+  }
+
   .settings-card-title {
-    font-size: 24px; /* Larger font size */
-    font-weight: 600;
-    margin: 0 0 10px 0;
-    color: var(--primary-color);
-    text-align: center;
+    font-size: 22px;
   }
-  
+
   .settings-card-description {
-    color: var(--text-secondary);
-    margin: 0 0 35px 0;
-    font-size: 18px; /* Larger font size */
-    text-align: center;
+    font-size: 16px;
   }
-  
-  /* Settings options */
-  .settings-options {
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* More space between options */
-  }
-  
-  .settings-option {
-    display: flex;
-    align-items: center;
-    padding: 18px 0; /* More padding */
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-  }
-  
-  .settings-option:last-child {
-    border-bottom: none;
-  }
-  
-  .option-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px; /* Larger icons */
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 22px; /* More space between icon and text */
-    color: white;
-    flex-shrink: 0;
-  }
-  
-  .option-icon.user {
-    background-color: var(--primary-color);
-  }
-  
-  .option-icon.email {
-    background-color: var(--accent-color);
-  }
-  
-  .option-icon.password {
-    background-color: var(--secondary-color);
-  }
-  
-  .option-icon.profile {
-    background-color: var(--green-color);
-  }
-  
-  .option-content {
-    flex: 1;
-  }
-  
+
   .option-title {
-    font-weight: 600;
-    font-size: 18px; /* Larger font size */
-    color: var(--text-color);
-    margin-bottom: 6px;
+    font-size: 17px;
   }
-  
+
   .option-description {
-    font-size: 16px; /* Larger font size */
-    color: var(--text-secondary);
+    font-size: 15px;
   }
-  
-  /* Navigation bar at bottom */
-  .navigation {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 65%;
-    background: white;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border-radius: 30px;
-    padding: 12px 0;
-    z-index: 100;
-  }
-  
-  .nav-bar {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    text-align: center;
-  }
-  
-  .nav-item img {
-    width: 26px; /* Slightly larger icons */
-    height: 26px;
-    transition: transform 0.2s ease;
-  }
-  
-  .nav-item:hover img {
-    transform: translateY(-3px);
-  }
-  
-  /* Media Queries */
-  @media (max-width: 768px) {
-    .settings-container {
-      padding: 20px 16px 80px 16px;
-    }
-    
-    .settings-title {
-      font-size: 28px;
-    }
-    
-    .logout-button {
-      padding: 6px 14px;
-      font-size: 15px;
-      right: 0;
-    }
-    
-    .settings-card {
-      padding: 25px 20px;
-    }
-    
-    .settings-card-title {
-      font-size: 22px;
-    }
-    
-    .settings-card-description {
-      font-size: 16px;
-    }
-    
-    .option-title {
-      font-size: 17px;
-    }
-    
-    .option-description {
-      font-size: 15px;
-    }
-  }
+}
