@@ -6,7 +6,7 @@ from Entities import SavedRoutes
 from Entities import Route
 
 class User:
-    def __init__(self, uid=None, email=None, username=None, 
+    def __init__(self, uid=None, email=None, username=None,
                  settings=None, activities=None, saved_routes=None):
         self.__uid = uid
         self.__email = email
@@ -19,7 +19,6 @@ class User:
         return {
             "uid": self.__uid,
             "email": self.__email,
-            "username": self.__username,
             "settings": {} if self.__settings is None else self.__settings.to_dict(),
             # "activities": [] if self.activities is None else [a.to_dict() for a in self.activities],
             # "saved_routes": [] if self.saved_routes is None else [r.to_dict() for r in self.saved]
@@ -47,7 +46,7 @@ class User:
     
     def get_username(self):
         return self.__username
-    
+        
     def get_settings(self):
         return self.__settings
     
