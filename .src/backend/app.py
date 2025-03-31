@@ -236,7 +236,6 @@ def searchaddressUpdateList():
 
     
     if fromAddress:
-        print("fromAddress received:", fromAddress)
         try:
             data = search.searchRequest(fromAddress,token)
             return data
@@ -246,7 +245,6 @@ def searchaddressUpdateList():
 
         
     if destAddress:
-        print("fromAddress received:", destAddress)
         try:
             data = search.searchRequest(destAddress,token)
             return data
@@ -275,7 +273,27 @@ def handlerouting():
 
     
     except Exception as e:
-        return jsonify({'error':'internal server error'}) 
+        return jsonify({'error':'internal server error'})
+    
+
+@app.route('/fetchWaterPoint', methods=["POST"])
+def getWaterPoint():
+    data = request.json
+    instructions = data.get("routeInstructions", [])
+
+    points = []
+    for step in instructions:
+        latlng_str = step[3]
+        if latlng_str:
+            try:
+                lat_str, lng_str = latlng_str.split(",")
+                lat, lng = float(lat_str), float(lng_str)
+                points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
+            except ValueError:
+                continue 
+        
+    result = search.findWaterPoints(points,csv_path="./helperFunctions/verified_points.csv")
+    return result
 
 
 def get_onemap_token():

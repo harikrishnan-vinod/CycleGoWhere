@@ -5,12 +5,14 @@ interface MapDrawerProps {
   setRouteGeometry: (geometry: string) => void;
   clearRoute: () => void;
   setRouteInstructions: (routeInstructions: any) => void;
+  setWaterPoints: (waterPoints: any) => void;
 }
 
 export default function MapDrawer({
   setRouteGeometry,
   clearRoute,
   setRouteInstructions,
+  setWaterPoints,
 }: MapDrawerProps) {
   interface searchData {
     fromAddress: string;
@@ -92,8 +94,34 @@ export default function MapDrawer({
       // Pass route_geometry to BaseMap and route_instructions
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
+
+      const waterPoints = await fetchWaterPoint(data.route_instructions);
+      setWaterPoints(waterPoints);
     } catch (error) {
       console.log("Submit error:", error);
+    }
+  };
+
+  //try to get water points along the way at each waypoint lat and long
+  //should return a array of json name, latitude and longitude
+  const fetchWaterPoint = async (e: any) => {
+    try {
+      const response = await fetch("http://127.0.0.1:1234/fetchWaterPoint", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ routeInstructions: e }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log("Response data:", result);
+      return result;
+    } catch (error) {
+      console.error("POST request failed:", error);
     }
   };
 
