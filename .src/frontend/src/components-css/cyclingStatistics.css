@@ -1,85 +1,38 @@
-/* CyclingStatistics.css */
-
-/* Main container for the activity post */
-.activity-container {
-    margin-left: -55%;
-    padding: 8%;
-    width: 200%;
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.date-bar-wrapper {
+    position: relative;
+    width: 100%;
     overflow: hidden;
-    background: rgb(229, 229, 229);
-}
-
-/* Top section with profile and date */
-.top-activity {
     display: flex;
-    padding: 1%;
+    align-items: center;
 }
 
-.profile-details {
-    padding: 1%;
-}
-
-.date-time {
-    color: #666;
-}
-
-.map-activity {
-    height: 250px;
-    background-color: #f5f5f5;
-}
-
-/* Statistics section */
-.activity-statistics {
-    display: flex;
-    justify-content: space-around;
-    padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.activity-statistics div {
-    text-align: center;
+.date-bar-container {
     flex: 1;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 5px;
 }
 
-.activity-statistics p {
-    margin: 0;
-    font-size: 0.9em;
-    color: #333;
-    font-weight: bold;
-
-}
-
-
-.actions-activity {
+.date-bar {
+    margin-top: 5%;
     display: flex;
-    padding-left: 80%;
+    gap: 1%;
 }
 
-.save-activity,
-.delete-activity {
-    padding: 8px;
+.date-item {
+    padding: 8px 12px;
+    background: #f0f0f0;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
     cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    min-width: 90px;
 }
 
-.save-activity:hover {
-    background-color: #f0f8ff;
-}
-
-.delete-activity:hover {
-    background-color: #fff0f0;
-}
-
-.save-activity img,
-.delete-activity img {
-    width: 30px;
-    height: 30px;
-}
-
-.save-activity {
-    margin-right: 10px;
+.today {
+    background: #2f81c8;
+    /* Highlight today's date */
+    font-weight: bold;
+    color: #333;
+    border-radius: 5px;
 }
