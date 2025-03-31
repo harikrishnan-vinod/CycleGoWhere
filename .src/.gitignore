@@ -35,6 +35,9 @@ venv/
 # environment variables
 .src\backend\.env
 frontend/.env
+*.env
+.env
+
 
 */__pycache__/
 *.pyc

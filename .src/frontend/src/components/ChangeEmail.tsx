@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../components-css/changeEmail.css";
+import { Mail } from "lucide-react";
 
 function ChangeEmail() {
   const navigate = useNavigate();
@@ -58,55 +59,63 @@ function ChangeEmail() {
   };
 
   return (
-    <div>
-      <div>
-        <header>EMAIL</header>
-      </div>
-      <div>
+    <div className="email-container">
+      <div className="email-card">
+        <div className="card-border-top"></div>
+
+        <div className="email-header">
+          <div className="email-icon">
+            <Mail size={24} />
+          </div>
+          <h2 className="email-title">Change Email</h2>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <ul className="change-email">
-            <li>
+          <div className="form-fields">
+            <div className="form-group">
+              <label htmlFor="new-email">New Email</label>
               <input
+                id="new-email"
                 type="email"
-                placeholder="New Email"
-                className="new-email"
+                placeholder="Enter new email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-            </li>
-            <li>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirm-email">Confirm New Email</label>
               <input
+                id="confirm-email"
                 type="email"
-                placeholder="Confirm New Email"
-                className="new-email"
+                placeholder="Confirm your new email address"
                 value={confirmEmail}
                 onChange={(e) => setConfirmEmail(e.target.value)}
                 required
               />
-            </li>
-            <button type="submit" className="submit-btn">
-              {emailChanged ? "Email Changed" : "Change Email"}
-            </button>
-            <button
-              onClick={() => navigate("/Settings")}
-              type="button"
-              className="cancel-btn"
-            >
-              {emailChanged ? "Back to Settings" : "Cancel"}
-            </button>
-          </ul>
+            </div>
+
+            <div className="form-buttons">
+              <button type="submit" className="submit-button">
+                {emailChanged ? "Email Changed" : "Change Email"}
+              </button>
+              <button
+                onClick={() => navigate("/Settings")}
+                type="button"
+                className="cancel-button"
+              >
+                {emailChanged ? "Back to Settings" : "Cancel"}
+              </button>
+            </div>
+          </div>
         </form>
+
         {emailChanged && (
-          <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
-            Email updated successfully!
-          </p>
+          <div className="success-message">Email updated successfully!</div>
         )}
-        {error && (
-          <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
-            {error}
-          </p>
-        )}
+
+        {error && <div className="error-message">{error}</div>}
       </div>
     </div>
   );

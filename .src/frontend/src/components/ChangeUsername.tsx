@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../components-css/changeEmail.css";
+import "../components-css/changeUsername.css";
+import { User } from "lucide-react";
 
 function ChangeUsername() {
   const navigate = useNavigate();
@@ -54,55 +55,63 @@ function ChangeUsername() {
   };
 
   return (
-    <div>
-      <div>
-        <header>USERNAME</header>
-      </div>
-      <div>
+    <div className="username-container">
+      <div className="username-card">
+        <div className="card-border-top"></div>
+
+        <div className="username-header">
+          <div className="username-icon">
+            <User size={24} />
+          </div>
+          <h2 className="username-title">Change Username</h2>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <ul className="change-email">
-            <li>
+          <div className="form-fields">
+            <div className="form-group">
+              <label htmlFor="new-username">New Username</label>
               <input
+                id="new-username"
                 type="text"
-                placeholder="New Username"
-                className="new-email"
+                placeholder="Enter new username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
-            </li>
-            <li>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirm-username">Confirm New Username</label>
               <input
+                id="confirm-username"
                 type="text"
-                placeholder="Confirm New Username"
-                className="new-email"
+                placeholder="Confirm your new username"
                 value={confirmUsername}
                 onChange={(e) => setConfirmUsername(e.target.value)}
                 required
               />
-            </li>
-            <button type="submit" className="submit-btn">
-              {usernameChanged ? "Username Changed" : "Change Username"}
-            </button>
-            <button
-              onClick={() => navigate("/Settings")}
-              type="button"
-              className="cancel-btn"
-            >
-              {usernameChanged ? "Back to Settings" : "Cancel"}
-            </button>
-          </ul>
+            </div>
+
+            <div className="form-buttons">
+              <button type="submit" className="submit-button">
+                {usernameChanged ? "Username Changed" : "Change Username"}
+              </button>
+              <button
+                onClick={() => navigate("/Settings")}
+                type="button"
+                className="cancel-button"
+              >
+                {usernameChanged ? "Back to Settings" : "Cancel"}
+              </button>
+            </div>
+          </div>
         </form>
+
         {usernameChanged && (
-          <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
-            Username updated successfully!
-          </p>
+          <div className="success-message">Username updated successfully!</div>
         )}
-        {error && (
-          <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
-            {error}
-          </p>
-        )}
+
+        {error && <div className="error-message">{error}</div>}
       </div>
     </div>
   );

@@ -1,27 +1,200 @@
-.change-email {
+/* changeEmail.css */
+:root {
+    --primary-color: #4a6fa5;
+    --blue-color: #3884bf;
+    --secondary-color: #ff6b6b;
+    --accent-color: #64d2ff;
+    --background-color: #f5f7fa;
+    --card-background: #ffffff;
+    --text-color: #333333;
+    --text-secondary: #666666;
+    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    --border-radius: 12px;
+    --success-color: #4caf50;
+    --error-color: #f44336;
+  }
+  
+  body {
+    background-color: var(--background-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .email-container {
+    padding-bottom: 80px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-top: 30px;
+    padding-left: 20px;
+    padding-right: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .email-card {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 35px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-border-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, var(--blue-color), var(--secondary-color));
+  }
+  
+  .email-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    justify-content: center;
+  }
+  
+  .email-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    margin-right: 16px;
+  }
+  
+  .email-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+  }
+  
+  .form-fields {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    list-style: none;
-}
-
-
-.change-email input {
-    width: 300px;
-    height: 50px;
-    font-size: 1.2rem;
-    padding: 10px;
-    border: 2px solid #ccc;
-    border-radius: 10px;
+    gap: 24px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-group label {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  
+  .form-group input {
+    padding: 14px 16px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
     outline: none;
-    text-align: left;
-}
-
-.change-email input:focus {
-    border-color: #007bff;
-}
-
-.change-username button:hover {
-    transform: scale(1.05);
-}
+    transition: border-color 0.2s;
+  }
+  
+  .form-group input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(100, 210, 255, 0.1);
+  }
+  
+  .form-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .submit-button {
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background-color: var(--accent-color);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+  }
+  
+  .submit-button:hover {
+    background-color: #4bb8e8;
+    transform: translateY(-2px);
+  }
+  
+  .cancel-button {
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .cancel-button:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .success-message,
+  .error-message {
+    margin-top: 24px;
+    padding: 14px;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .success-message {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--success-color);
+  }
+  
+  .error-message {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: var(--error-color);
+  }
+  
+  @media (max-width: 768px) {
+    .email-container {
+      padding: 20px 16px 80px 16px;
+    }
+    
+    .email-card {
+      padding: 25px 20px;
+    }
+    
+    .email-title {
+      font-size: 22px;
+    }
+    
+    .form-group label {
+      font-size: 15px;
+    }
+    
+    .form-group input {
+      padding: 12px 14px;
+      font-size: 15px;
+    }
+    
+    .submit-button,
+    .cancel-button {
+      padding: 14px;
+      font-size: 15px;
+    }
+  }
