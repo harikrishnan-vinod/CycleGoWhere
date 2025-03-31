@@ -19,6 +19,8 @@ export default function BaseMap() {
 
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
+  const [waterPoints, setWaterPoints] = useState<any[]>([]);
+  const waterPointMarkersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -52,7 +54,7 @@ export default function BaseMap() {
     if (!mapRef.current || !routeGeometry) return;
 
     const latlngs = polyline
-      .decode(routeGeometry, 5) // precision
+      .decode(routeGeometry, 5) // set to precision 5 if not the program bricks
       .map(([lat, lng]) => L.latLng(lat, lng));
 
     if (polylineLayerRef.current) {
@@ -96,6 +98,40 @@ export default function BaseMap() {
     }
   };
 
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove existing waterpoint markers
+    waterPointMarkersRef.current.forEach((marker) =>
+      mapRef.current!.removeLayer(marker)
+    );
+    waterPointMarkersRef.current = [];
+
+    if (!waterPoints || waterPoints.length === 0) return;
+
+    const markers: L.Marker[] = waterPoints.map((point) => {
+      const marker = L.marker([point.lat, point.lng], {
+        title: point.name,
+        icon: L.icon({
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+          iconSize: [25, 25],
+          iconAnchor: [12, 24],
+          popupAnchor: [0, -20],
+        }),
+      }).addTo(mapRef.current!);
+
+      marker.bindPopup(`
+        <b>${point.name}</b><br/>
+        Distance: ${point.distance_km} km
+      `);
+
+      return marker;
+    });
+
+    // Save references to clean up later
+    waterPointMarkersRef.current = markers;
+  }, [waterPoints]);
+
   return (
     <div className="basemap-container">
       <div id="mapdiv" className="map-fullscreen" />
@@ -104,6 +140,7 @@ export default function BaseMap() {
         setRouteGeometry={setRouteGeometry}
         clearRoute={clearRoute}
         setRouteInstructions={setRouteInstructions}
+        setWaterPoints={setWaterPoints}
       />
 
       <RouteInstructionsList routeInstructions={routeInstructions} />
