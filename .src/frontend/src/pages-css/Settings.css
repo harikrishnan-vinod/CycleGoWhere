@@ -14,63 +14,43 @@
 }
 
 body {
-  background-color: var(--background-color);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  padding: 0;
+  overflow-y: auto;
 }
 
 .settings-container {
-  padding-bottom: 80px;
-  max-width: 800px;
-  margin: 0 auto;
-  padding-top: 30px;
-  padding-left: 20px;
-  padding-right: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .settings-header-area {
+  /*log out */
+  padding-top: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 30px;
-  width: 100%;
   position: relative;
-}
 
-.settings-title {
-  font-size: 32px;
-  /* Larger font size for title */
-  font-weight: 600;
-  color: var(--primary-color);
-  margin: 0;
 }
 
 /* Logout button moved to the right */
 .logout-button {
-  position: absolute;
-  right: 0;
-  /* Move it all the way to the right */
+  position: relative;
   background-color: white;
   color: var(--secondary-color);
   border: 1px solid var(--secondary-color);
   border-radius: 30px;
-  padding: 8px 18px;
-  /* Slightly larger padding */
-  font-weight: 500;
   font-size: 16px;
-  /* Larger font size for button */
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
 }
 
 .logout-button:hover {
   background-color: rgba(255, 107, 107, 0.1);
 }
 
-/* Card with top border */
 .settings-card {
   background-color: var(--card-background);
   border-radius: var(--border-radius);
@@ -79,7 +59,6 @@ body {
   /* More padding for more space */
   width: 100%;
   position: relative;
-  overflow: hidden;
 }
 
 /* Add a gradient top border */

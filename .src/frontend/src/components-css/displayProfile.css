@@ -1,13 +1,14 @@
 .profile-pic-content {
-    position: fixed;
-    top: 3%;
-    left: 3%;
-    z-index: 10;
+    margin-top: 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-.profile-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1%;
+.username-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-align: center;
 }

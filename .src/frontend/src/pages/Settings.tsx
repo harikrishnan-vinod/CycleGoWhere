@@ -5,21 +5,20 @@ import Navigate from "../components/Navigation";
 import { User, Mail, Lock, Camera, LogOut } from "lucide-react";
 import DisplayProfile from "../components/DisplayProfile";
 
-
 function Settings() {
   const navigate = useNavigate();
 
   return (
     <div className="settings-container">
-      <div> <DisplayProfile /> </div>
+      <DisplayProfile />
+
       <div className="settings-header-area">
-        <h1 className="settings-title">Settings</h1>
         <button
           className="logout-button"
           onClick={() => navigate("/logout")}
           aria-label="Log out"
         >
-          <LogOut size={18} />
+          <LogOut />
           <span>Log Out</span>
         </button>
       </div>
