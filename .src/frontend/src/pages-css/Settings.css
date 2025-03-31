@@ -1,5 +1,4 @@
-/* Final Settings.css with larger fonts */
-:root {
+root {
   --primary-color: #4a6fa5;
   --blue-color: #3884bf;
   --secondary-color: #ff6b6b;
@@ -13,12 +12,11 @@
   --border-radius: 12px;
 }
 
-body {
-  overflow-y: auto;
-}
+
 
 .settings-container {
   width: 100%;
+  padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;

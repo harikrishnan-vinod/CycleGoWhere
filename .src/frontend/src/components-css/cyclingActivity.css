@@ -1,0 +1,71 @@
+.activity-container {
+    width: 500px;
+    padding: 3%;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+
+}
+
+.top-activity {
+    display: flex;
+    padding: 1%;
+}
+
+.profile-details {
+    padding: 1%;
+}
+
+.date-time {
+    color: #666;
+}
+
+.map-activity {
+    height: 250px;
+    background-color: #f5f5f5;
+}
+
+.activity-statistics {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+
+.activity-statistics p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #333;
+    font-weight: bold;
+
+}
+
+
+.actions-activity {
+    display: flex;
+    padding-left: 80%;
+}
+
+.save-activity,
+.delete-activity {
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.save-activity:hover {
+    background-color: #f0f8ff;
+}
+
+.delete-activity:hover {
+    background-color: #fff0f0;
+}
+
+.save-activity img,
+.delete-activity img {
+    width: 30px;
+    height: 30px;
+}

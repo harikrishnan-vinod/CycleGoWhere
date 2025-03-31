@@ -15,6 +15,7 @@ import ChangeUsername from "./components/ChangeUsername";
 import ChangeEmail from "./components/ChangeEmail";
 import ChangePassword from "./components/ChangePassword";
 import ChangeProfilePicture from "./components/ChangeProfilePicture";
+import PersonalBest from "./components/PersonalBest";
 
 import "./App.css";
 
@@ -37,6 +38,7 @@ function App() {
           path="/changeProfilePicture"
           element={<ChangeProfilePicture />}
         />
+        <Route path="/PersonalBest" element={<PersonalBest />} />
       </Routes>
     </Router>
   );
