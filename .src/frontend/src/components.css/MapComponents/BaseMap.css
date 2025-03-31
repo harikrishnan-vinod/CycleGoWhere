@@ -11,3 +11,16 @@ body,
   top: 0;
   left: 0;
 }
+
+.map-fullscreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.navigation {
+  z-index: 9999; /* apparently the higher this is, it'll overshadow any other attribute*/
+}
+

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import "../components-css/changeProfilePicture.css";
+import { useNavigate } from "react-router-dom";
 
 function ChangeProfilePicture() {
+  const navigate = useNavigate();
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [fileChosen, setFileChosen] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -15,19 +18,21 @@ function ChangeProfilePicture() {
     if (!validTypes.includes(file.type)) {
       setError("Only JPG, PNG, or WEBP images are allowed.");
       setImage(null);
+      setFileChosen(false);
     } else {
       setError(null);
       setImage(file);
+      setFileChosen(true);
     }
   };
 
   const fetchProfilePicture = async () => {
-    const username = sessionStorage.getItem("username");
-    if (!username) return;
+    const userUID = sessionStorage.getItem("userUID");
+    if (!userUID) return;
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:1234/get-profile-pic?username=${username}`
+        `http://127.0.0.1:1234/get-profile-pic?userUID=${userUID}`
       );
       const result = await response.json();
 
@@ -49,15 +54,15 @@ function ChangeProfilePicture() {
       return;
     }
 
-    const username = sessionStorage.getItem("username");
-    if (!username) {
-      setError("No username found in sessionStorage");
+    const userUID = sessionStorage.getItem("userUID");
+    if (!userUID) {
+      setError("No userId found in sessionStorage");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", image);
-    formData.append("username", username);
+    formData.append("userUID", userUID);
 
     try {
       const response = await fetch("http://127.0.0.1:1234/upload-profile-pic", {
@@ -83,7 +88,7 @@ function ChangeProfilePicture() {
 
   return (
     <div className="change-profile-container">
-      <h1>Change Profile Picture</h1>
+      <header>PROFILE PICTURE</header>
 
       {profilePicUrl && (
         <div className="profile-pic-frame">
@@ -96,12 +101,30 @@ function ChangeProfilePicture() {
       )}
 
       <div className="upload-controls">
-        <input type="file" accept="image/*" onChange={handleImageChange} />
+        {/* Hidden file input */}
+        <input
+          id="file-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          style={{ display: "none" }}
+        />
+        {/* Custom label for file input */}
+        <label htmlFor="file-upload" className="custom-file-label">
+          {fileChosen ? "File Uploaded" : "Choose File"}
+        </label>
         <button
           onClick={handleUpload}
           className={`upload-button ${success ? "success" : ""}`}
         >
           {success ? "Image Uploaded" : "Upload"}
+        </button>
+        <button
+          onClick={() => navigate("/Settings")}
+          type="button"
+          className="cancel-btn"
+        >
+          {success ? "Back to Settings" : "Cancel"}
         </button>
       </div>
 

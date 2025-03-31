@@ -7,7 +7,7 @@
     margin: 0 auto;
     font-family: Arial, sans-serif;
 }
-  
+
 h1 {
     margin-bottom: 24px;
 }
@@ -28,49 +28,42 @@ h1 {
     object-fit: cover;
 }
 
-
+.custom-file-label {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    text-align: center;
+  }  
 
 .upload-controls {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     gap: 10px;
     margin-bottom: 16px;
     margin-top: 12px;
 }
 
-
-
 .upload-button {
-    padding: 10px 20px;
     font-weight: bold;
+    font-size: 1.5rem;
     border: none;
-    border-radius: 5px;
-    background-color: #3f51b5;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #193b87, #3884bf);
     color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    width: 253px; 
-    margin: 0px; 
-    display: block; 
-    position: static; 
-}
-
-
-
-.upload-button {
-    padding: 10px 20px;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    background-color: #3f51b5;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    width: 320px;
+    height: 55px;
 }
 
 .upload-button:hover {
-    background-color: #2c3e91;
+    background: #0c4768;
+    transform: scale(1.05);
 }
 
 .upload-button.success {
@@ -81,7 +74,14 @@ h1 {
     background-color: #3e8e41;
 }
 
+.cancel-btn {
+    background: red;
+    color: white;
+    border-radius: 10px;
+    font-size: 1rem;
+    width: 80%;
+}
 
-
-  
-  
+.cancel-btn:hover {
+    background: rgb(142, 9, 8);
+}

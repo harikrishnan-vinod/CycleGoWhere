@@ -1,25 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import polyline from "@mapbox/polyline";
-import RouteInstructionList from "./RouteInstructionsList";
+
+import RouteInstructionsList from "./RouteInstructionsList";
+import MapDrawer from "./MapDrawer";
+import Navigate from "../../components/Navigation";
 
 import "../../components.css/MapComponents/BaseMap.css";
-import MapDrawer from "./MapDrawer";
 
 export default function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
   const startMarkerRef = useRef<L.Marker | null>(null);
   const endMarkerRef = useRef<L.Marker | null>(null);
   const polylineLayerRef = useRef<L.Polyline | null>(null);
+
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
   const waterPointMarkersRef = useRef<L.Marker[]>([]);
 
-  // Initialize the map
   useEffect(() => {
     if (mapRef.current) return;
 
@@ -48,17 +50,15 @@ export default function BaseMap() {
     mapRef.current = map;
   }, []);
 
-  // Render route when geometry updates
   useEffect(() => {
     if (!mapRef.current || !routeGeometry) return;
 
-    // Decode the polyline with appropriate precision
     const latlngs = polyline
       .decode(routeGeometry, 5) // set to precision 5 if not the program bricks
       .map(([lat, lng]) => L.latLng(lat, lng));
 
-    // Clear the previous polyline if exists
     if (polylineLayerRef.current) {
+      polylineLayerRef.current.remove();
       polylineLayerRef.current.remove();
     }
     if (startMarkerRef.current) {
@@ -70,37 +70,29 @@ export default function BaseMap() {
       endMarkerRef.current = null;
     }
 
-    // Create a new polyline for the new route
-    const polylineLayer = L.polyline(latlngs, {
+    const newPolyline = L.polyline(latlngs, {
       color: "blue",
       weight: 5,
     }).addTo(mapRef.current);
+    polylineLayerRef.current = newPolyline;
 
-    // Store the reference to the polyline
-    polylineLayerRef.current = polylineLayer;
-
-    //add start marker to map
-    const startMarker = L.marker(latlngs[0], {
-      title: "Start",
-    }).addTo(mapRef.current);
+    const startMarker = L.marker(latlngs[0], { title: "Start" }).addTo(
+      mapRef.current
+    );
     startMarker.bindPopup("Start").openPopup();
     startMarkerRef.current = startMarker;
 
-    // add end marker to map
     const endMarker = L.marker(latlngs[latlngs.length - 1], {
       title: "Destination",
     }).addTo(mapRef.current);
     endMarker.bindPopup("Destination");
     endMarkerRef.current = endMarker;
 
-    // Fit map bounds to the route
-    mapRef.current.fitBounds(polylineLayer.getBounds());
+    mapRef.current.fitBounds(newPolyline.getBounds());
   }, [routeGeometry]);
 
   const clearRoute = () => {
-    setRouteGeometry(null); // Clear the route geometry state
-
-    // Remove the polyline from the map
+    setRouteGeometry(null);
     if (polylineLayerRef.current) {
       polylineLayerRef.current.remove(); // Remove the polyline layer
       polylineLayerRef.current = null; // Reset the reference
@@ -142,14 +134,8 @@ export default function BaseMap() {
   }, [waterPoints]);
 
   return (
-    <>
-      <div
-        id="mapdiv"
-        style={{
-          height: "100vh",
-          width: "100%",
-        }}
-      ></div>
+    <div className="basemap-container">
+      <div id="mapdiv" className="map-fullscreen" />
 
       <MapDrawer
         setRouteGeometry={setRouteGeometry}
@@ -157,7 +143,10 @@ export default function BaseMap() {
         setRouteInstructions={setRouteInstructions}
         setWaterPoints={setWaterPoints}
       />
-      <RouteInstructionList routeInstructions={routeInstructions} />
-    </>
+
+      <RouteInstructionsList routeInstructions={routeInstructions} />
+
+      <Navigate />
+    </div>
   );
 }

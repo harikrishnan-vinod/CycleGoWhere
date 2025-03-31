@@ -6,6 +6,8 @@ from firebase_admin import credentials, firestore, auth as firebase_auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google.oauth2 import service_account
+from authentication.authentication import pyrebase_auth, firebase
+from authentication.authentication import admin_sdk_auth
 
 # Import controllers
 from Controllers.LoginPageController import LoginPageController
@@ -13,7 +15,7 @@ from Controllers.MainPageController import MainPageController
 from Controllers.ProfilePageController import ProfilePageController
 from Controllers.SavedRoutesController import SavedRoutesController
 from Controllers.SettingsPageController import SettingsPageController
-
+ 
 import time
 import requests
 import os
@@ -34,36 +36,23 @@ auth_token = {
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
 CORS(app, resources={r"/*": {"origins": "http://localhost:*"}}, supports_credentials=True)
-GOOGLE_CLIENT_ID = 'REMOVED'
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 
 app.config.update(
     SESSION_COOKIE_SAMESITE='None',  # Allow cookies for cross-origin requests
-    SESSION_COOKIE_SECURE=True,      # Ensure cookies are sent over HTTPS
+    SESSION_COOKIE_SECURE=False,      # Ensure cookies are sent over HTTPS
     PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Set session lifetime (optional)
 )
+
 cloudinary.config(
-  cloud_name = "dp75ekaxp",
-  api_key = "REMOVED",
-  api_secret = "REMOVED"
+  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"),
+  api_key = os.environ.get("CLOUDINARY_API_KEY"),
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-config = {
-    "apiKey": "REMOVED",
-    "authDomain": "REMOVED.firebaseapp.com",
-    "projectId": "REMOVED",
-    "storageBucket": "REMOVED",
-    "messagingSenderId": "REMOVED",
-    "appId": "1:REMOVED:web:496edabac517dfff8e3062",
-    "databaseURL": ""
-}
-firebase = pyrebase.initialize_app(config)
-auth = firebase.auth()
-
-cred = credentials.Certificate("work.json")
-firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-login_controller = LoginPageController(firebase)
+login_controller = LoginPageController()
 main_controller = MainPageController()
 profile_controller = ProfilePageController()
 saved_routes_controller = SavedRoutesController()
@@ -75,45 +64,11 @@ def login():
     login_input = data.get("login")
     password = data.get("password")
     return login_controller.login(session, login_input, password)
-
-    if "@" in login_input:
-        email = login_input
-    else:
-        username_doc = db.collection("usernames").document(login_input).get()
-        if username_doc.exists:
-            email = username_doc.to_dict().get("email")
-        else:
-            return jsonify({"message": "Wrong username or password"}), 401
-
-    try:
-        user = auth.sign_in_with_email_and_password(email, password)
-
-
-        username = login_input if "@" not in login_input else None
-
-        if username is None:
-            users_ref = db.collection("usernames").stream()
-            for doc_snapshot in users_ref:
-                doc = doc_snapshot.to_dict()
-                if doc.get("email") == email:
-                    username = doc_snapshot.id
-                    break
-
-        session["user"] = email
-        return jsonify({
-            "message": "Login successful",
-            "userId": user["localId"],
-            "email": email,
-            "username": username
-        })
-    except Exception as e:
-        print("Login failed:", e)
-        return jsonify({"message": "Wrong username or password"}), 401
     
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("user", None)
-    session.pop("user_id", None)
+    session.pop("user_UID", None)
     return jsonify({"message": "Logout successful"})
 
 @app.route("/register", methods=['POST'])
@@ -125,35 +80,7 @@ def register():
     first_name = data.get("firstName", "")
     last_name = data.get("lastName", "")
 
-    username_doc = db.collection("usernames").document(username).get()
-    if username_doc.exists:
-        return jsonify({"message": "Username already exists"}), 400
-
-    try:
-        user = auth.create_user_with_email_and_password(email, password)
-        user_uid = user["localId"]
-
-        db.collection("usernames").document(username).set({
-            "email": email,
-            "userUID": user_uid
-        })
-
-        db.collection("users").document(username).set({
-            "email": email,
-            "username": username,
-            "firstName": first_name,
-            "profilePic": "",
-            "lastName": last_name,
-            "savedRoutes": ["", "", "", "", ""],
-            "notification_enabled": True,
-            "created_at": firestore.SERVER_TIMESTAMP
-        })
-
-        return jsonify({"message": "Registration successful!"}), 201
-
-    except Exception as e:
-        print(f"Error registering user: {e}")
-        return jsonify({"message": "Registration failed"}), 400
+    return login_controller.register(email, username, password, first_name, last_name)
 
 @app.route('/google-login')
 def google_login():
@@ -173,8 +100,8 @@ def google_callback():
 
     payload = {
         'code': code,
-        'client_id': 'REMOVED',
-        'client_secret': 'REMOVED',
+        'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+        'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
         'redirect_uri': url_for('google_callback', _external=True),
         'grant_type': 'authorization_code'
     }
@@ -191,42 +118,46 @@ def google_callback():
         )
 
         email = id_info.get('email')
-        user_uid = id_info.get('sub')
+        user_UID = id_info.get('sub')
         full_name = id_info.get('name', '')
         name_parts = full_name.split(" ", 1)
         first_name = name_parts[0] if len(name_parts) > 0 else ""
         last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-        user_doc = db.collection("users").where("email", "==", email).get()
-        if not user_doc:
-            username = email.split('@')[0]  
-            username_count = 0
+        user_doc = db.collection("users").document(user_UID).get()
+        if not user_doc.exists:
+            username = email.split('@')[0]
             base_username = username
+            counter = 0
+
             while db.collection("usernames").document(username).get().exists:
-                username_count += 1
-                username = f"{base_username}{username_count}"
+                counter += 1
+                username = f"{base_username}{counter}"
 
             db.collection("usernames").document(username).set({
                 "email": email,
-                "userUID": user_uid
+                "userUID": user_UID
             })
 
-            db.collection("users").document(username).set({
+            db.collection("users").document(user_UID).set({
                 "email": email,
                 "username": username,
                 "firstName": first_name,
-                "profilePic":"",
                 "lastName": last_name,
+                "profilePic": "",
                 "savedRoutes": ["", "", "", "", ""],
                 "notification_enabled": True,
                 "created_at": firestore.SERVER_TIMESTAMP
             })
 
+        # TODO: Change this to use session_controller
         session["user"] = email
-        session["user_id"] = user_uid
+        session["user_UID"] = user_UID
+
         return redirect('http://localhost:5173/mainpage')
 
     return jsonify({"message": "Google login failed"}), 400
+
 
 @app.route('/search')
 def searchaddressUpdateList():
@@ -326,11 +257,11 @@ def get_onemap_token():
 
 @app.route("/upload-profile-pic", methods=["POST"])
 def upload_profile_pic():
-    if 'file' not in request.files or 'username' not in request.form:
-        return {"message": "Missing file or username"}, 400
+    if 'file' not in request.files or 'userUID' not in request.form:
+        return {"message": "Missing file or userUID"}, 400
 
     file = request.files['file']
-    username = request.form['username']
+    user_UID = request.form['userUID']
 
     try:
         result = cloudinary.uploader.upload(file, folder="profilePictures")
@@ -340,22 +271,23 @@ def upload_profile_pic():
         return {"message": "Upload to Cloudinary failed"}, 500
 
     try:
-        db.collection("users").document(username).update({
+        db.collection("users").document(user_UID).update({
             "profilePic": image_url
         })
         return {"message": "Profile picture updated", "url": image_url}, 200
     except Exception as e:
         print("Firestore update failed:", e)
         return {"message": "Failed to update Firestore"}, 500
+
     
 @app.route("/get-profile-pic")
 def get_profile_pic():
-    username = request.args.get("username")
-    if not username:
-        return jsonify({"message": "Username required"}), 400
+    user_UID = request.args.get("userUID") 
+    if not user_UID:
+        return jsonify({"message": "User UID required"}), 400
 
     try:
-        doc = db.collection("users").document(username).get()
+        doc = db.collection("users").document(user_UID).get()
         if doc.exists:
             return jsonify({"profilePic": doc.to_dict().get("profilePic")}), 200
         else:
@@ -363,6 +295,7 @@ def get_profile_pic():
     except Exception as e:
         print("Error fetching profile picture:", e)
         return jsonify({"message": "Server error"}), 500
+
     
 @app.route("/change-password", methods=["POST"])
 def change_password():
@@ -372,10 +305,10 @@ def change_password():
     new_password = data.get("newPassword")
 
     try:
-        user = auth.sign_in_with_email_and_password(email, old_password)
+        user = pyrebase_auth.sign_in_with_email_and_password(email, old_password)
 
         id_token = user["idToken"]
-        url = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=REMOVED"
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:update?key={os.environ.get('FIREBASE_API_KEY')}"
 
         payload = {
             "idToken": id_token,
@@ -393,10 +326,50 @@ def change_password():
     except Exception as e:
         print("Error changing password:", e)
         return jsonify({"message": "Authentication failed"}), 401
+    
+@app.route("/change-email", methods=["POST"])
+def change_email():
+    data = request.get_json()
+    UID = data.get("userUID")
+    new_email = data.get("newEmail")
 
+    try:
+        firebase_auth.update_user(UID, email=new_email)
+        db.collection("users").document(UID).update({"email": new_email})
+        users_ref = db.collection("usernames").where("userUID", "==", UID).stream()
+        for doc_snapshot in users_ref:
+            db.collection("usernames").document(doc_snapshot.id).update({"email": new_email})
 
+        return jsonify({"message": "Email updated"}), 200
+    except Exception as e:
+        print("Email change failed:", e)
+        return jsonify({"message": "Failed to update email"}), 500
 
+@app.route("/change-username", methods=["POST"])
+def change_username():
+    data = request.get_json()
+    UID = data.get("userUID")
+    new_username = data.get("newUsername")
 
+    if db.collection("usernames").document(new_username).get().exists:
+        return jsonify({"message": "Username already exists"}), 400
+
+    try:
+        user_doc = db.collection("users").document(UID).get()
+        if user_doc.exists:
+            old_username = user_doc.to_dict().get("username")
+            db.collection("usernames").document(old_username).delete()
+            db.collection("usernames").document(new_username).set({
+                "email": user_doc.to_dict().get("email"),
+                "userUID": UID
+            })
+            db.collection("users").document(UID).update({"username": new_username})
+            return jsonify({"message": "Username updated"}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print("Username change failed:", e)
+        return jsonify({"message": "Update failed"}), 500
 
 
 if __name__ == "__main__":

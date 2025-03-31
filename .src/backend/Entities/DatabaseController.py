@@ -42,7 +42,43 @@ class DatabaseController:
         self.db = firestore.client()
     
     # User methods
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
+    def get_uid_by_username(self, username: str) -> Optional[str]:
+        """Retrieves a user's unique identifier by their username.
+        
+        Args:
+            username: Username to search for
+            
+        Returns:
+            User ID if found, None otherwise
+        """
+        user_doc = self.db.collection('usernames').document(username).get()
+        if user_doc.exists:
+            return user_doc.to_dict().get('userUID')
+        return None
+    
+    def get_notifications_enabled(self, uid: str):
+        """Retrieves a user's notification preferences."""
+        try:
+            user_doc = self.db.collection('users').document(uid).get()
+            if user_doc.exists:
+                return user_doc.to_dict().get('notification_enabled', True)
+            return True  # Default value if document doesn't exist
+        except Exception as e:
+            print(f"Error getting notification settings: {e}")
+            return True
+    
+    def get_profile_picture(self, uid: str):
+        """Retrieves a user's profile picture URL."""
+        try:
+            user_doc = self.db.collection('users').document(uid).get()
+            if user_doc.exists:
+                return user_doc.to_dict().get('profilePic', '')
+            return ''  # Default empty string if document doesn't exist
+        except Exception as e:
+            print(f"Error getting profile picture: {e}")
+            return ''  # Default to empty string on error
+    
+    def get_user_by_id(self, user_id: str) -> Optional[User]: # TODO: Fix this
         """Retrieves a user by their ID.
         
         Args:
@@ -59,7 +95,7 @@ class DatabaseController:
             settings = Settings()
             settings._user_id = user_id
             settings._email = data.get('email', '')
-            settings._password = data.get('password', '')
+            # settings._password = data.get('password', '')
             settings._app_notifications = data.get('notification_enabled', True)
             
             # Create user with basic info
