@@ -3,12 +3,15 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Navigate from "../components/Navigation";
 import { User, Mail, Lock, Camera, LogOut } from "lucide-react";
+import DisplayProfile from "../components/DisplayProfile";
+
 
 function Settings() {
   const navigate = useNavigate();
 
   return (
     <div className="settings-container">
+      <div> <DisplayProfile /> </div>
       <div className="settings-header-area">
         <h1 className="settings-title">Settings</h1>
         <button

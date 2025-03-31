@@ -1,0 +1,13 @@
+.profile-pic-content {
+    position: fixed;
+    top: 3%;
+    left: 3%;
+    z-index: 10;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1%;
+}
