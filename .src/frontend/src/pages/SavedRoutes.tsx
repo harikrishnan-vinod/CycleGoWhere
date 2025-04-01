@@ -3,7 +3,7 @@ import React from 'react';
 import { useState } from "react";
 import { UserRoundCheck, Lock } from "lucide-react";
 import Navigate from "../components/Navigation";
-import DisplayProfile from "../components/DisplayProfile";
+import DisplayProfile from "../components/displayProfile";
 
 
 function SavedRoutes() {
