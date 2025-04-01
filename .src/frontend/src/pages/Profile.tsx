@@ -25,7 +25,7 @@ function Profile() {
       <div className="pb-container">
         Personal Best:
         <Link to='/PersonalBest' >
-          <img src={next} />
+          <img className="icon-btn" src={next} />
         </Link>
       </div>
     </div>
