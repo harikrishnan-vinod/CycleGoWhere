@@ -1,14 +1,16 @@
+// MapDrawer.tsx
 import { useState } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
 
 interface MapDrawerProps {
   setRouteGeometry: (geometry: string) => void;
   clearRoute: () => void;
-  setRouteInstructions: (routeInstructions: any) => void;
-  setWaterPoints: (waterPoints: any) => void;
+  setRouteInstructions: (instructions: any[]) => void;
+  setWaterPoints: (points: any[]) => void;
+  setRouteMeta: (dist: number, startPost: string, endPost: string) => void;
 }
 
-interface searchData {
+interface SearchData {
   fromAddress: string;
   destAddress: string;
 }
@@ -18,58 +20,42 @@ export default function MapDrawer({
   clearRoute,
   setRouteInstructions,
   setWaterPoints,
+  setRouteMeta,
 }: MapDrawerProps) {
-  const [isOpen, setIsOpen] = useState(true); // open by default
-
-  const [formData, setFormData] = useState<searchData>({
+  const [isOpen, setIsOpen] = useState(true);
+  const [formData, setFormData] = useState<SearchData>({
     fromAddress: "",
     destAddress: "",
   });
-
   const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
   const [destSuggestions, setDestSuggestions] = useState<any[]>([]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (!value.trim()) {
-      if (name === "fromAddress") {
-        setFromSuggestions([]);
-      } else {
-        setDestSuggestions([]);
-      }
+      if (name === "fromAddress") setFromSuggestions([]);
+      else setDestSuggestions([]);
       return;
     }
 
     try {
       const url = new URL("http://127.0.0.1:1234/search");
       url.searchParams.append(name, value);
-
       const response = await fetch(url.toString());
       if (!response.ok) throw new Error("Failed to fetch suggestions");
-
       const data = await response.json();
       const trimmedResults = data.results.slice(0, 5);
-
-      if (name === "fromAddress") {
-        setFromSuggestions(trimmedResults);
-      } else {
-        setDestSuggestions(trimmedResults);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+      if (name === "fromAddress") setFromSuggestions(trimmedResults);
+      else setDestSuggestions(trimmedResults);
+    } catch {}
   };
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     clearRoute();
-    setRouteInstructions(null);
+    setRouteInstructions([]);
 
     try {
       const url = new URL("http://127.0.0.1:1234/route");
@@ -78,44 +64,41 @@ export default function MapDrawer({
 
       const response = await fetch(url.toString());
       if (!response.ok) throw new Error("Failed to fetch route");
-
       const data = await response.json();
+
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
 
-      const waterPoints = await fetchWaterPoint(data.route_instructions);
-      setWaterPoints(waterPoints);
-    } catch (error) {
-      console.log("Submit error:", error);
-    }
+      setIsOpen(false);
+
+      const waterData = await fetchWaterPoint(data.route_instructions);
+      if (waterData) setWaterPoints(waterData);
+
+      if (data.route_summary) {
+        setRouteMeta(
+          data.route_summary.total_distance || 0,
+          data.route_summary.start_postal || formData.fromAddress,
+          data.route_summary.end_postal || formData.destAddress
+        );
+      }
+    } catch {}
   };
 
-  //try to get water points along the way at each waypoint lat and long
-  //should return a array of json name, latitude and longitude
-  const fetchWaterPoint = async (e: any) => {
+  const fetchWaterPoint = async (instructions: any[]) => {
     try {
       const response = await fetch("http://127.0.0.1:1234/fetchWaterPoint", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ routeInstructions: e }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routeInstructions: instructions }),
       });
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const result = await response.json();
-      console.log("Response data:", result);
-      return result;
-    } catch (error) {
-      console.error("POST request failed:", error);
-    }
+      return await response.json();
+    } catch {}
   };
 
   return (
     <>
-      {/* Drawer */}
       <div className={`drawer ${isOpen ? "open" : ""}`}>
         <div className="drawer-content">
           <input
@@ -170,12 +153,8 @@ export default function MapDrawer({
             GO
           </button>
         </div>
-
-        {/* Dash at the bottom of the drawer to close it */}
         <div className="drag-bar" onClick={() => setIsOpen(!isOpen)} />
       </div>
-
-      {/* Dash at the top of the screen to open it (only if closed) */}
       {!isOpen && (
         <div className="pull-tab-closed" onClick={() => setIsOpen(true)} />
       )}

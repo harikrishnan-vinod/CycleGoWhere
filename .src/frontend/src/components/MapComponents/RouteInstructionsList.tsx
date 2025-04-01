@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+// RouteInstructionsList.tsx
+import React, { useState, forwardRef } from "react";
 import "../../components.css/MapComponents/RouteInstructionList.css";
 
 interface RouteInstructionListProps {
   routeInstructions: any[];
 }
 
-const RouteInstructionList: React.FC<RouteInstructionListProps> = ({
-  routeInstructions,
-}) => {
+// Use React.forwardRef so the parent (BaseMap) can attach a ref
+const RouteInstructionsList = forwardRef<
+  HTMLDivElement,
+  RouteInstructionListProps
+>(({ routeInstructions }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!routeInstructions || routeInstructions.length === 0) {
@@ -15,7 +18,7 @@ const RouteInstructionList: React.FC<RouteInstructionListProps> = ({
   }
 
   return (
-    <div className="route-instruction-container">
+    <div className="route-instruction-container" ref={ref}>
       <div
         className="route-instruction-header"
         onClick={() => setIsOpen(!isOpen)}
@@ -23,7 +26,6 @@ const RouteInstructionList: React.FC<RouteInstructionListProps> = ({
           cursor: "pointer",
           background: "#f0f0f0",
           padding: "10px",
-          borderBottom: isOpen ? "1px solid #ccc" : "none",
         }}
       >
         <h3 style={{ margin: 0 }}>Route Instructions {isOpen ? "▲" : "▼"}</h3>
@@ -44,6 +46,8 @@ const RouteInstructionList: React.FC<RouteInstructionListProps> = ({
       )}
     </div>
   );
-};
+});
 
-export default RouteInstructionList;
+RouteInstructionsList.displayName = "RouteInstructionsList";
+
+export default RouteInstructionsList;
