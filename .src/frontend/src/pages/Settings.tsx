@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Navigate from "../components/Navigation";
 import { User, Mail, Lock, Camera, LogOut } from "lucide-react";
-import DisplayProfile from "../components/DisplayProfile";
+import DisplayProfile from "../components/displayProfile";
 
 function Settings() {
   const navigate = useNavigate();
