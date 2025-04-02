@@ -97,37 +97,45 @@ class LoginPageController:
     
     def register(self, email, username, password, first_name="", last_name=""):
         try:
-            # Check if username exists in Firestore
             username_doc = self.db_controller.db.collection("usernames").document(username).get()
             if username_doc.exists:
                 return jsonify({"message": "Username already exists"}), 400
-                
-            # Create user with Pyrebase
+
             user = self.auth.create_user_with_email_and_password(email, password)
             user_UID = user["localId"]
-            
-            # Store user in Firestore
-            self.db_controller.db.collection("users").document(user_UID).set({
+
+            # Create user profile doc
+            user_data = {
                 "email": email,
                 "username": username,
                 "firstName": first_name,
                 "lastName": last_name,
                 "profilePic": "",
-                "savedRoutes": ["", "", "", "", ""],
                 "notification_enabled": True,
                 "created_at": firestore.SERVER_TIMESTAMP
-            })
-            
-            # Create username mapping
+            }
+
+            self.db_controller.db.collection("users").document(user_UID).set(user_data)
+
             self.db_controller.db.collection("usernames").document(username).set({
                 "email": email,
                 "userUID": user_UID
             })
+
             
+            self.db_controller.db.collection("users").document(user_UID).collection("savedRoutes").document("dummyRoute").set({"initial": True})
+            self.db_controller.db.collection("users").document(user_UID).collection("savedRoutes").document("dummyRoute").delete()
+
+            self.db_controller.db.collection("users").document(user_UID).collection("activities").document("dummyActivity").set({"initial": True})
+            self.db_controller.db.collection("users").document(user_UID).collection("activities").document("dummyActivity").delete()
+
             return jsonify({"message": "User created successfully", "userUID": user_UID}), 201
+
         except Exception as e:
             print("Registration failed:", str(e))
             return jsonify({"message": "Unable to register: " + str(e)}), 400
+
+
     
     def forgot_password(self, email):
         try:
