@@ -391,7 +391,7 @@ def change_username():
     except Exception as e:
         print("Username change failed:", e)
         return jsonify({"message": "Update failed"}), 500
-    
+
 @app.route("/save-route", methods=["POST"])
 def save_route():
     data = request.get_json()
@@ -443,15 +443,41 @@ def get_saved_routes():
         print("Error fetching routes:", e)
         return jsonify({"message": "Could not fetch saved routes"}), 500
 
+
 @app.route("/save-activity", methods=["POST"])
 def save_activity():
     data = request.get_json()
     user_uid = data.get("userUID")
-    activity_data = data.get("activityData")  # Should include route name, time taken, start/end points, notes, etc.
-
+    activity_data = data.get("activityData")
     try:
-        activity_ref = db.collection("users").document(user_uid).collection("activities")
-        activity_ref.add(activity_data)
+        decoded_points = polyline.decode(activity_data["route_geometry"], 5)
+        geo_points = []
+        for lat, lng in decoded_points:
+            geo_points.append(firestore.GeoPoint(lat, lng))
+
+        instructions_converted = []
+        for row in activity_data["route_instructions"]:
+            instructions_converted.append({
+                "direction": row[0],
+                "road": row[1],
+                "distance": row[5],
+                "latLng": row[3]
+            })
+
+        doc_data = {
+            "activityName": activity_data["activityName"],
+            "notes": activity_data["notes"],
+            "distance": activity_data["distance"],
+            "startPostal": activity_data["startPostal"],
+            "endPostal": activity_data["endPostal"],
+            "routePath": geo_points,
+            "instructions": instructions_converted,
+            "startLocation": firestore.GeoPoint(decoded_points[0][0], decoded_points[0][1]),
+            "endLocation": firestore.GeoPoint(decoded_points[-1][0], decoded_points[-1][1]),
+            "createdAt": firestore.SERVER_TIMESTAMP
+        }
+
+        db.collection("users").document(user_uid).collection("activities").add(doc_data)
         return jsonify({"message": "Activity saved"}), 200
     except Exception as e:
         print("Error saving activity:", e)
@@ -468,8 +494,6 @@ def get_activities():
     except Exception as e:
         print("Error getting activities:", e)
         return jsonify({"message": "Could not fetch activities"}), 500
-
-
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)

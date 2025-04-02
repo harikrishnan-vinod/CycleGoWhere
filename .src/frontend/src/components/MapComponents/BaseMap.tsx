@@ -15,18 +15,30 @@ function BaseMap() {
   const startMarkerRef = useRef<L.Marker | null>(null);
   const endMarkerRef = useRef<L.Marker | null>(null);
 
+  // ROUTE STATES
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [routeName, setRouteName] = useState("");
-  const [notes, setNotes] = useState("");
-
   const [distance, setDistance] = useState<number>(0);
   const [startPostal, setStartPostal] = useState("");
   const [endPostal, setEndPostal] = useState("");
 
+  // SAVE ROUTE MODAL
+  const [routeModalOpen, setRouteModalOpen] = useState(false);
+  const [routeName, setRouteName] = useState("");
+  const [notes, setNotes] = useState("");
+
+  // ACTIVITY STATES
+  const [activityStarted, setActivityStarted] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // SAVE ACTIVITY MODAL
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activityName, setActivityName] = useState("");
+  const [activityDescription, setActivityDescription] = useState("");
+
+  // MAP SETUP
   useEffect(() => {
     if (mapRef.current) return;
     const sw = L.latLng(1.144, 103.535);
@@ -53,6 +65,7 @@ function BaseMap() {
     mapRef.current = map;
   }, []);
 
+  // DRAW / REMOVE ROUTE
   useEffect(() => {
     if (!mapRef.current || !routeGeometry) return;
     const latlngs = polyline
@@ -92,6 +105,7 @@ function BaseMap() {
     mapRef.current.fitBounds(newPolyline.getBounds());
   }, [routeGeometry]);
 
+  // WATER POINTS
   useEffect(() => {
     if (!mapRef.current) return;
     waterPoints.forEach((wp) => {
@@ -109,25 +123,49 @@ function BaseMap() {
     });
   }, [waterPoints]);
 
-  const handleSetRouteMeta = (
+  // SET ROUTE META
+  function handleSetRouteMeta(
     dist: number,
     startPost: string,
     endPost: string
-  ) => {
+  ) {
     setDistance(dist);
     setStartPostal(startPost);
     setEndPostal(endPost);
-  };
+  }
 
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
+  // START/STOP ACTIVITY
+  function handleStartActivity() {
+    if (!activityStarted) {
+      setActivityStarted(true);
+      setElapsedSeconds(0);
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+  }
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
+  function handleStopActivity() {
+    if (activityStarted) {
+      setActivityStarted(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setActivityModalOpen(true);
+    }
+  }
 
-  const handleSaveRoute = async () => {
+  // SAVE ROUTE
+  function openRouteModal() {
+    setRouteModalOpen(true);
+  }
+
+  function closeRouteModal() {
+    setRouteModalOpen(false);
+  }
+
+  async function handleSaveRoute() {
     const userUID = sessionStorage.getItem("userUID") || "";
     const routeData = {
       routeName,
@@ -147,7 +185,7 @@ function BaseMap() {
       });
       if (res.ok) {
         alert("Route saved successfully");
-        setModalOpen(false);
+        setRouteModalOpen(false);
         setRouteName("");
         setNotes("");
       } else {
@@ -156,11 +194,61 @@ function BaseMap() {
     } catch {
       alert("Error saving route");
     }
-  };
+  }
 
-  const handleEndActivity = () => {
+  // END ACTIVITY (clears instructions)
+  function handleEndActivity() {
     setRouteInstructions([]);
-  };
+  }
+
+  // SAVE ACTIVITY
+  async function handleConfirmActivity() {
+    const userUID = sessionStorage.getItem("userUID") || "";
+    const activityData = {
+      activityName,
+      notes: activityDescription,
+      distance,
+      route_geometry: routeGeometry,
+      route_instructions: routeInstructions,
+      startPostal,
+      endPostal,
+      timeTaken: elapsedSeconds,
+    };
+
+    try {
+      const res = await fetch("http://127.0.0.1:1234/save-activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userUID, activityData }),
+      });
+      if (res.ok) {
+        alert("Activity saved successfully");
+        setActivityModalOpen(false);
+        setActivityName("");
+        setActivityDescription("");
+        setElapsedSeconds(0);
+      } else {
+        alert("Failed to save activity");
+      }
+    } catch {
+      alert("Error saving activity");
+    }
+  }
+
+  function handleCancelActivity() {
+    setActivityModalOpen(false);
+    setElapsedSeconds(0);
+  }
+
+  function formatTime(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(
+      2,
+      "0"
+    )}:${String(s).padStart(2, "0")}`;
+  }
 
   return (
     <div className="basemap-container">
@@ -176,18 +264,45 @@ function BaseMap() {
 
       <RouteInstructionsList routeInstructions={routeInstructions} />
 
+      {/* BOTTOM-RIGHT BUTTONS */}
       {routeInstructions.length > 0 && (
         <div className="bottom-right-buttons">
-          <button onClick={handleOpenModal} className="save-button">
+          <button onClick={openRouteModal} className="save-button">
             Save Route
           </button>
           <button onClick={handleEndActivity} className="end-button">
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* BOTTOM-LEFT BUTTONS */}
+      {!activityStarted && (
+        <div className="bottom-left-buttons">
+          <button
+            onClick={handleStartActivity}
+            className="start-activity-button"
+          >
+            Start Activity
+          </button>
+        </div>
+      )}
+      {activityStarted && (
+        <div className="bottom-left-buttons">
+          <div className="activity-timer">
+            Time: {formatTime(elapsedSeconds)}
+          </div>
+          <button
+            onClick={handleStopActivity}
+            className="cancel-activity-button"
+          >
             End Activity
           </button>
         </div>
       )}
 
-      {modalOpen && (
+      {/* SAVE ROUTE MODAL */}
+      {routeModalOpen && (
         <div className="modal-overlay">
           <div className="modal-box">
             <h3>Route Name</h3>
@@ -215,7 +330,50 @@ function BaseMap() {
               <button onClick={handleSaveRoute} className="confirm-button">
                 Confirm Save
               </button>
-              <button onClick={handleCloseModal} className="cancel-button">
+              <button
+                onClick={() => setRouteModalOpen(false)}
+                className="cancel-button"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SAVE ACTIVITY MODAL */}
+      {activityModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h3>Activity Name</h3>
+            <div className="modal-input-box">
+              <input
+                type="text"
+                className="modal-input"
+                placeholder="Your activity name"
+                value={activityName}
+                onChange={(e) => setActivityName(e.target.value)}
+              />
+            </div>
+
+            <h3>Description</h3>
+            <div className="modal-textarea-box">
+              <textarea
+                className="modal-textarea"
+                placeholder="Describe your activity"
+                value={activityDescription}
+                onChange={(e) => setActivityDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="modal-buttons">
+              <button
+                onClick={handleConfirmActivity}
+                className="confirm-button"
+              >
+                Confirm Save
+              </button>
+              <button onClick={handleCancelActivity} className="cancel-button">
                 Cancel
               </button>
             </div>
