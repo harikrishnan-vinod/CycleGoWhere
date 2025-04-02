@@ -36,7 +36,7 @@ class LoginPageController:
             # Get id token for session
             id_token = user['idToken']
 
-            # Get username from userUID document
+            # Get username from userUID document TODO: Use database_controller method instead
             user_doc = self.db_controller.db.collection("users").document(user_UID).get()
             if user_doc.exists:
                 user_data = user_doc.to_dict()
@@ -78,7 +78,7 @@ class LoginPageController:
     def register(self, email, username, password, first_name="", last_name=""):
         try:
             # Check if username exists in Firestore
-            username_doc = self.db_controller.db.collection("usernames").document(username).get()
+            username_doc = self.db_controller.db.collection("usernames").document(username).get() # TODO: Create a method in database controller to do this
             if username_doc.exists:
                 return jsonify({"message": "Username already exists"}), 400
                 
@@ -87,7 +87,7 @@ class LoginPageController:
             user_UID = user["localId"]
             
             # Store user in Firestore
-            self.db_controller.db.collection("users").document(user_UID).set({
+            self.db_controller.db.collection("users").document(user_UID).set({ # TODO: Create a method in database controller to do this
                 "email": email,
                 "username": username,
                 "firstName": first_name,
@@ -98,7 +98,7 @@ class LoginPageController:
                 "created_at": firestore.SERVER_TIMESTAMP
             })
             
-            # Create username mapping
+            # Create username mapping TODO: Create a method in database controller to do this
             self.db_controller.db.collection("usernames").document(username).set({
                 "email": email,
                 "userUID": user_UID

@@ -50,7 +50,7 @@ cloudinary.config(
   api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-db = firestore.client()
+db = firestore.client() # TODO: Move this to DatabaseController
 
 login_controller = LoginPageController()
 main_controller = MainPageController()
@@ -151,7 +151,6 @@ def google_callback():
                 "created_at": firestore.SERVER_TIMESTAMP
             })
 
-        # TODO: Change this to use session_controller
         session["user"] = email
         session["user_UID"] = user_UID
 
