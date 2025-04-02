@@ -53,7 +53,7 @@ class LoginPageController:
                     "username": username
                 })
                 
-                # Create username mapping
+                # Create username mapping TODO: Use database_controller method instead
                 self.db_controller.db.collection("usernames").document(username).set({
                     "email": email,
                     "userUID": user_UID
