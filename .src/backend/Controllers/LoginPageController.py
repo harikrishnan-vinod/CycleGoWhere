@@ -13,7 +13,6 @@ import os
 class LoginPageController:
     def __init__(self):
         self.db_controller = DatabaseController()
-        self.session_controller = SessionController()
         self.auth = pyrebase_auth
         
     def login(self, session, login_input, password):
