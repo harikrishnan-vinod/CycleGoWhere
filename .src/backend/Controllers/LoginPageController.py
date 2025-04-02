@@ -4,7 +4,6 @@ from firebase_admin import firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
-from Controllers.SessionController import SessionController
 from Entities.User import User
 from Entities.Settings import Settings
 from Entities.DatabaseController import DatabaseController
