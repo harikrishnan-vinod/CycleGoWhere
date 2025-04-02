@@ -3,4 +3,19 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+root {
+  --primary-color: #4a6fa5;
+  --blue-color: #3884bf;
+  --secondary-color: #ff6b6b;
+  --accent-color: #64d2ff;
+  --green-color: #43c782;
+  --background-color: #f5f7fa;
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --border-radius: 12px;
 }
