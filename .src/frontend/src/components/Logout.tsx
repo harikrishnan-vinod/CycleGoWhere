@@ -21,7 +21,7 @@ function Logout() {
 
         // Clear client-side storage
         sessionStorage.clear();
-        localStorage.clear();
+        sessionStorage.clear();
         document.cookie.split(";").forEach((cookie) => {
           const cookieName = cookie.split("=")[0].trim();
           document.cookie = `${cookieName}=;expires=${new Date().toUTCString()};path=/;domain=localhost`;

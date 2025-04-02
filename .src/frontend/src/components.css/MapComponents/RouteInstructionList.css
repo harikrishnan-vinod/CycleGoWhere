@@ -40,3 +40,26 @@
   padding: 0;
   line-height: 1.2;
 }
+
+.route-button {
+  background-color: #00cc66;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.route-button:hover {
+  background-color: #00b359;
+}
+
+.route-button.end {
+  background-color: #ff4444;
+}
+
+.route-button.end:hover {
+  background-color: #cc0000;
+}

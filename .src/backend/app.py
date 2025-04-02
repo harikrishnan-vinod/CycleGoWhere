@@ -2,6 +2,7 @@ from flask import Flask, session, request, jsonify, redirect, url_for
 from flask_cors import CORS
 import pyrebase
 import firebase_admin
+import polyline
 from firebase_admin import credentials, firestore, auth as firebase_auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
@@ -94,6 +95,7 @@ def google_login():
     )
     return redirect(google_auth_url)
 
+
 @app.route('/google-callback')
 def google_callback():
     code = request.args.get('code')
@@ -130,7 +132,6 @@ def google_callback():
             username = email.split('@')[0]
             base_username = username
             counter = 0
-
             while db.collection("usernames").document(username).get().exists:
                 counter += 1
                 username = f"{base_username}{counter}"
@@ -140,16 +141,20 @@ def google_callback():
                 "userUID": user_UID
             })
 
-            db.collection("users").document(user_UID).set({
+            user_data = {
                 "email": email,
                 "username": username,
                 "firstName": first_name,
                 "lastName": last_name,
                 "profilePic": "",
-                "savedRoutes": ["", "", "", "", ""],
                 "notification_enabled": True,
                 "created_at": firestore.SERVER_TIMESTAMP
-            })
+            }
+
+            db.collection("users").document(user_UID).set(user_data)
+
+            db.collection("users").document(user_UID).collection("savedRoutes").document("placeholder").set({"placeholder": True})
+            db.collection("users").document(user_UID).collection("activities").document("placeholder").set({"placeholder": True})
 
         session["user"] = email
         session["user_UID"] = user_UID
@@ -157,7 +162,6 @@ def google_callback():
         return redirect('http://localhost:5173/mainpage')
 
     return jsonify({"message": "Google login failed"}), 400
-
 
 @app.route('/search')
 def searchaddressUpdateList():
@@ -388,6 +392,84 @@ def change_username():
     except Exception as e:
         print("Username change failed:", e)
         return jsonify({"message": "Update failed"}), 500
+    
+@app.route("/save-route", methods=["POST"])
+def save_route():
+    data = request.get_json()
+    user_uid = data.get("userUID")
+    route_data = data.get("routeData")
+    try:
+        decoded_points = polyline.decode(route_data["route_geometry"], 5)
+        geo_points = []
+        for lat, lng in decoded_points:
+            geo_points.append(firestore.GeoPoint(lat, lng))
+
+        instructions_converted = []
+        for row in route_data["route_instructions"]:
+            instructions_converted.append({
+                "direction": row[0],
+                "road": row[1],
+                "distance": row[5],
+                "latLng": row[3]
+            })
+
+        doc_data = {
+            "routeName": route_data["routeName"],
+            "notes": route_data["notes"],
+            "distance": route_data["distance"],
+            "startPostal": route_data["startPostal"],
+            "endPostal": route_data["endPostal"],
+            "routePath": geo_points,
+            "instructions": instructions_converted,
+            "startLocation": firestore.GeoPoint(decoded_points[0][0], decoded_points[0][1]),
+            "endLocation": firestore.GeoPoint(decoded_points[-1][0], decoded_points[-1][1]),
+            "lastUsedAt": firestore.SERVER_TIMESTAMP
+        }
+
+        db.collection("users").document(user_uid).collection("savedRoutes").add(doc_data)
+        return jsonify({"message": "Route saved successfully"}), 200
+    except Exception as e:
+        print("Error saving route:", e)
+        return jsonify({"message": "Failed to save route"}), 500
+
+
+@app.route("/get-saved-routes", methods=["GET"])
+def get_saved_routes():
+    user_uid = request.args.get("userUID")
+    try:
+        routes_ref = db.collection("users").document(user_uid).collection("savedRoutes").stream()
+        routes = [{**r.to_dict(), "id": r.id} for r in routes_ref]
+        return jsonify(routes), 200
+    except Exception as e:
+        print("Error fetching routes:", e)
+        return jsonify({"message": "Could not fetch saved routes"}), 500
+
+@app.route("/save-activity", methods=["POST"])
+def save_activity():
+    data = request.get_json()
+    user_uid = data.get("userUID")
+    activity_data = data.get("activityData")  # Should include route name, time taken, start/end points, notes, etc.
+
+    try:
+        activity_ref = db.collection("users").document(user_uid).collection("activities")
+        activity_ref.add(activity_data)
+        return jsonify({"message": "Activity saved"}), 200
+    except Exception as e:
+        print("Error saving activity:", e)
+        return jsonify({"message": "Failed to save activity"}), 500
+
+
+@app.route("/get-activities", methods=["GET"])
+def get_activities():
+    user_uid = request.args.get("userUID")
+    try:
+        act_ref = db.collection("users").document(user_uid).collection("activities").stream()
+        activities = [{**a.to_dict(), "id": a.id} for a in act_ref]
+        return jsonify(activities), 200
+    except Exception as e:
+        print("Error getting activities:", e)
+        return jsonify({"message": "Could not fetch activities"}), 500
+
 
 
 if __name__ == "__main__":

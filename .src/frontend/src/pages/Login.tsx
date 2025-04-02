@@ -13,35 +13,35 @@ function Login() {
 
   const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:1234";
 
-  const handleSignIn = async (event: { preventDefault: () => void }) => {
+  function handleSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch(`${API_URL}/auth`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ login, password }),
+    fetch(`${API_URL}/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ login, password }),
+    })
+      .then(async (response) => {
+        const result = await response.json();
+        if (response.ok) {
+          sessionStorage.setItem("email", result.email);
+          sessionStorage.setItem("userUID", result.userUID);
+          sessionStorage.setItem("username", result.username);
+          navigate("/mainpage");
+        } else {
+          setError(result.message || "Invalid credentials, try again!");
+        }
+      })
+      .catch(() => {
+        setError("Error: Unable to sign in");
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        sessionStorage.setItem("email", result.email);
-        sessionStorage.setItem("userUID", result.userUID);
-        sessionStorage.setItem("username", result.username);
-        navigate("/mainpage");
-      } else {
-        setError(result.message || "Invalid credentials, try again!");
-      }
-    } catch (error) {
-      setError("Error: Unable to sign in");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }
 
   return (
     <div className="login-page-container">
