@@ -30,9 +30,16 @@
 }
 
 .today {
-    background: #2f81c8;
+    background: #abd1f2;
     /* Highlight today's date */
     font-weight: bold;
     color: #333;
     border-radius: 5px;
+}
+
+.date-item:hover {
+    transform: scale(1.05);
+    background: black;
+    color: white;
+
 }
