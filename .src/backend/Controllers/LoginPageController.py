@@ -19,11 +19,15 @@ class LoginPageController:
                 email = login_input
             else:
                 # Lookup username → email
-                username_doc = self.db_controller.db.collection("usernames").document(login_input).get() # TODO: Use database_controller method instead
-                if username_doc.exists:
-                    email = username_doc.to_dict().get("email")
-                else:
+                email = self.db_controller.get_email_by_username(login_input)
+                if email is None:
                     return jsonify({"message": "Wrong username or password"}), 401
+            
+                # username_doc = self.db_controller.db.collection("usernames").document(login_input).get() # TODO: Use database_controller method instead
+                # if username_doc.exists:
+                #     email = username_doc.to_dict().get("email")
+                # else:
+                #     return jsonify({"message": "Wrong username or password"}), 401
 
             # Authenticate with Firebase
             user = self.auth.sign_in_with_email_and_password(email, password)
@@ -49,32 +53,8 @@ class LoginPageController:
                 self.db_controller.db.collection("usernames").document(username).set({
                     "email": email,
                     "userUID": user_UID
-                })
+                })           
 
-            # Store user info in session            
-            # Get user settings
-            settings = Settings(self.db_controller.get_notifications_enabled(user_UID),
-                                self.db_controller.get_profile_picture(user_UID))
-            
-            # Get user activities
-            # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
-
-            # Get user saved routes
-            # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
-            
-            # Create user object
-            user_obj = User(uid=user_UID,
-                            email=user["email"],
-                            username=username,
-                            settings=Settings(notification_enabled=settings.get_notification_enabled(),
-                                              profile_picture=settings.get_profile_picture()),
-                            # activities, #TODO: To be implemented
-                            # saved_routes
-                            )
-            print("User object created")
-
-            # Store user object in session
-            self.session_controller.set_user_session(user_obj)
             session["user"] = email
             session["user_UID"] = user_UID
             session["id_token"] = id_token

@@ -1,12 +1,12 @@
 class Settings:
-    def __init__(self, notification_enabled=True, profile_picture=None):
-        # self.__user = user
+    def __init__(self, user_UID=None, notification_enabled=True, profile_picture=None):
+        self.__user_UID = user_UID
         self.__notification_enabled = notification_enabled
         self.__profile_picture = profile_picture
     
     def to_dict(self):
         return {
-            # "user": self.__user.to_dict() if self.__user else None,
+            "userUID": self.__user_UID.to_dict() if self.__user_UID else None,
             "notification_enabled": self.__notification_enabled if self.__notification_enabled else '',
             "profile_picture": self.__profile_picture if self.__profile_picture else ''
         }
@@ -14,7 +14,7 @@ class Settings:
     @staticmethod
     def from_dict(data):
         return Settings(
-            # user=data.from_dict(data.get("user")),
+            user_UID=data.from_dict(data.get("userUID")),
             notification_enabled=data.get("notification_enabled", True),
             profile_picture=data.get("profile_picture")
         )

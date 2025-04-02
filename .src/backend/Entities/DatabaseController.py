@@ -26,22 +26,37 @@ class DatabaseController:
     
     def __init__(self):
         """Initialize the database connection"""
-        # config = {
-        #     "apiKey": "REMOVED",
-        #     "authDomain": "REMOVED.firebaseapp.com",
-        #     "projectId": "REMOVED",
-        #     "storageBucket": "REMOVED",
-        #     "messagingSenderId": "REMOVED",
-        #     "appId": "1:REMOVED:web:496edabac517dfff8e3062",
-        #     "databaseURL": ""
-        # }
-        # self.firebase = pyrebase.initialize_app(config)
-        # self.auth = self.firebase.auth()
-        # self.cred = credentials.Certificate(Path(__file__).parent.parent / 'work.json')
-        # firebase_admin.initialize_app(self.cred)
         self.db = firestore.client()
     
     # User methods
+
+    def get_email_by_username(self, username: str) -> Optional[str]:
+        """Retrieves an email address by username.
+        
+        Args:
+            username: Username to search for
+            
+        Returns:
+            Email address if found, None otherwise
+        """
+        user_doc = self.db.collection('usernames').document(username).get()
+        if user_doc.exists:
+            return user_doc.to_dict().get('email')
+        return None
+
+    def get_username_by_uid(self, uid: str) -> Optional[str]:
+        """Retrieves a username by user ID.
+        
+        Args:
+            uid: Unique user identifier
+            
+        Returns:
+            Username if found, None otherwise
+        """
+        user_doc = self.db.collection('users').document(uid).get()
+        if user_doc.exists:
+            return user_doc.to_dict().get('username')
+        return None
 
     def get_uid_by_username(self, username: str) -> Optional[str]:
         """Retrieves a user's unique identifier by their username.
@@ -79,45 +94,47 @@ class DatabaseController:
             print(f"Error getting profile picture: {e}")
             return ''  # Default to empty string on error
     
-    def get_user_by_id(self, user_id: str) -> Optional[User]: # TODO: Fix this
+    def get_user_by_uid(self, user_UID: str) -> Optional[User]: # TODO: Fix this
         """Retrieves a user by their ID.
         
         Args:
-            user_id: Unique user identifier
+            user_UID: Unique user identifier
             
         Returns:
             User object if found, None otherwise
         """
-        user_doc = self.db.collection('usernames').document(user_id).get()
-        if user_doc.exists:
-            data = user_doc.to_dict()
+        # Get username from user document
+        username = self.get_username_by_uid(user_UID)
+
+        # Get email from usernames document
+        email = self.get_email_by_username(username) if username else None
+
+        # Get user settings
+        settings = Settings(user_UID,
+                            self.get_notifications_enabled(user_UID),
+                            self.get_profile_picture(user_UID))
+        
+        # Get user activities
+        # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+
+        # Get user saved routes
+        # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+        
+        # Generated?    
+        # # Get user filters
+        # filters = Filters()
+        # filters_data = data.get('filters', {})
+        # filters._show_water_point = filters_data.get('show_water_point', False)
+        # filters._show_repair_shop = filters_data.get('show_repair_shop', False)
+        # user.filters = filters
             
-            # Get user settings
-            settings = Settings()
-            settings._user_id = user_id
-            settings._email = data.get('email', '')
-            # settings._password = data.get('password', '')
-            settings._app_notifications = data.get('notification_enabled', True)
-            
-            # Create user with basic info
-            user = User(
-                user_id=user_id,
-                email=data.get('email', ''),
-                password=data.get('password', '')
-            )
-            
-            # Set user settings
-            user.settings = settings
-            
-            # Get user filters
-            filters = Filters()
-            filters_data = data.get('filters', {})
-            filters._show_water_point = filters_data.get('show_water_point', False)
-            filters._show_repair_shop = filters_data.get('show_repair_shop', False)
-            user.filters = filters
-            
-            return user
-        return None
+        return User(uid=user_UID,
+                    email=email,
+                    username=username,
+                    settings=settings,
+                    # activities, #TODO: To be implemented
+                    # saved_routes
+                    )
     
     def username_exists(self, username: str) -> bool:
         """Checks if a username is already taken.

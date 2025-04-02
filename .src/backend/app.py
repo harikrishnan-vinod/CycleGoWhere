@@ -67,16 +67,17 @@ def login():
     
 @app.route("/logout", methods=["POST"])
 def logout():
-    session.pop("user", None)
-    session.pop("user_UID", None)
-    return jsonify({"message": "Logout successful"})
+    return login_controller.logout(session)
+    # session.pop("user", None)
+    # session.pop("user_UID", None)
+    # return jsonify({"message": "Logout successful"})
 
 @app.route("/register", methods=['POST'])
 def register():
     data = request.get_json()
     email = data.get("email")
     username = data.get("username")
-    password = data.get("password")
+    password = data.get("password") # TODO: Hash password before storing (frontend should do this)
     first_name = data.get("firstName", "")
     last_name = data.get("lastName", "")
 
