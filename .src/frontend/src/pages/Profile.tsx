@@ -3,8 +3,6 @@ import "../pages-css/Profile.css";
 import DisplayProfile from "../components/displayProfile";
 import CyclingActivity from "../components/CyclingActivity";
 import CyclingStatistics from "../components/CyclingStatistics";
-import { Link } from "react-router-dom";
-import next from "../assets/next.png";
 
 function Profile() {
   return (
@@ -22,12 +20,6 @@ function Profile() {
               <p>Number of Rides:</p>
             </ul>
           </div>
-        </div>
-        <div className="pb-container">
-          Personal Best:
-          <Link to="/PersonalBest">
-            <img src={next} />
-          </Link>
         </div>
       </div>
       <div className="activities-list">
