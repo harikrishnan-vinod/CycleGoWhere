@@ -1,5 +1,5 @@
 class Settings:
-    def __init__(self, user_UID=None, notification_enabled=True, profile_picture=None):
+    def __init__(self, user_UID=None, notification_enabled=True, profile_picture=''):
         self.__user_UID = user_UID
         self.__notification_enabled = notification_enabled
         self.__profile_picture = profile_picture
@@ -7,16 +7,16 @@ class Settings:
     def to_dict(self):
         return {
             "userUID": self.__user_UID.to_dict() if self.__user_UID else None,
-            "notification_enabled": self.__notification_enabled if self.__notification_enabled else '',
+            "notification_enabled": self.__notification_enabled if self.__notification_enabled else None,
             "profile_picture": self.__profile_picture if self.__profile_picture else ''
         }
     
     @staticmethod
     def from_dict(data):
         return Settings(
-            user_UID=data.from_dict(data.get("userUID")),
-            notification_enabled=data.get("notification_enabled", True),
-            profile_picture=data.get("profile_picture")
+            user_UID=data.from_dict(data.get("userUID")) if "userUID" in data else None,
+            notification_enabled=data.get("notification_enabled", True) if "notification_enabled" in data else True,
+            profile_picture=data.get("profile_picture") if "profile_picture" in data else ''
         )
     
     # Getters and Setters

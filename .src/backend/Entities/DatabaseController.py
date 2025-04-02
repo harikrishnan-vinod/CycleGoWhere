@@ -30,6 +30,20 @@ class DatabaseController:
     
     # User methods
 
+    def get_user_document(self, uid: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a user document by user ID.
+        
+        Args:
+            uid: Unique user identifier
+            
+        Returns:
+            User document if found, None otherwise
+        """
+        user_doc = self.db.collection('users').document(uid).get()
+        if user_doc.exists:
+            return user_doc
+        return None
+
     def get_email_by_username(self, username: str) -> Optional[str]:
         """Retrieves an email address by username.
         
@@ -136,6 +150,18 @@ class DatabaseController:
                     # saved_routes
                     )
     
+    def user_exists(self, uid: str) -> bool:
+        """Checks if a user exists in the database.
+        
+        Args:
+            uid: Unique user identifier
+            
+        Returns:
+            True if user exists, False otherwise
+        """
+        user_doc = self.db.collection('users').document(uid).get()
+        return user_doc.exists
+
     def username_exists(self, username: str) -> bool:
         """Checks if a username is already taken.
         
@@ -145,8 +171,8 @@ class DatabaseController:
         Returns:
             True if username exists
         """
-        users = self.db.collection('users').where('username', '==', username).get()
-        return len(users) > 0
+        user_doc = self.db.collection('usernames').document(username).get()
+        return user_doc.exists
     
     def email_exists(self, email: str) -> bool:
         """Checks if an email is already registered.
@@ -170,14 +196,25 @@ class DatabaseController:
             True if successful
         """
         try:
-            # Create basic user document
+            self.db.collection('usernames').document(user.get_username()).set({
+                'email': user.get_email(),
+                'userUID': user.get_uid()
+            })
+
             user_data = {
-                'email': user.email,
-                'password': user.password,
-                'notification_enabled': user.settings._app_notifications if user.settings else True
+                'email': user.get_email(),
+                'username': user.get_username(),
+                'firstName': user.get_first_name(),
+                'lastName': user.get_last_name(),
+                'profilePic': user.get_settings().get_profile_picture() if user.get_settings() else '',
+                'notification_enabled': user.get_settings().get_notification_enabled() if user.get_settings() else True,
+                'created_at': firestore.SERVER_TIMESTAMP,
             }
+            print(f"user_data: {user_data}")
+            self.db.collection('users').document(user.get_uid()).set(user_data)
+            self.db.collection('users').document(user.get_uid()).collection('savedRoutes').document("placeholder").set({"placeholder": True})
+            self.db.collection('users').document(user.get_uid()).collection('activities').document("placeholder").set({"placeholder": True})
             
-            self.db.collection('users').document(user.user_id).set(user_data)
             return True
         except Exception as e:
             print(f"Error adding user: {e}")

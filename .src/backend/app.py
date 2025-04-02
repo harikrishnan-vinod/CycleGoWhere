@@ -86,6 +86,7 @@ def register():
 
 @app.route('/google-login')
 def google_login():
+    return login_controller.google_login(GOOGLE_CLIENT_ID)
     google_auth_url = (
         f"https://accounts.google.com/o/oauth2/v2/auth?"
         f"client_id={GOOGLE_CLIENT_ID}&"
@@ -98,6 +99,11 @@ def google_login():
 
 @app.route('/google-callback')
 def google_callback():
+    code = request.args.get('code')
+    return login_controller.google_callback(session,
+                                            code,
+                                            os.environ.get('GOOGLE_CLIENT_ID'),
+                                            os.environ.get('GOOGLE_CLIENT_SECRET'))
     code = request.args.get('code')
     token_url = 'https://oauth2.googleapis.com/token'
 
