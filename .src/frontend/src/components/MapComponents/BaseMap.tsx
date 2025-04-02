@@ -7,25 +7,31 @@ import polyline from "@mapbox/polyline";
 import Navigate from "../../components/Navigation";
 import MapDrawer from "./MapDrawer";
 import RouteInstructionsList from "./RouteInstructionsList";
+import RouteLayer from "./RouteLayer";
+import WaterPointsLayer from "./WaterPointsLayer";
+import TimerControls from "./TimerControls";
+import SaveRouteModal from "./SaveRouteModal";
+import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
 
 function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
-  const polylineLayerRef = useRef<L.Polyline | null>(null);
-  const startMarkerRef = useRef<L.Marker | null>(null);
-  const endMarkerRef = useRef<L.Marker | null>(null);
-
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [routeName, setRouteName] = useState("");
-  const [notes, setNotes] = useState("");
-
   const [distance, setDistance] = useState<number>(0);
   const [startPostal, setStartPostal] = useState("");
   const [endPostal, setEndPostal] = useState("");
+  const [routeModalOpen, setRouteModalOpen] = useState(false);
+  const [routeName, setRouteName] = useState("");
+  const [notes, setNotes] = useState("");
+  const [activityStarted, setActivityStarted] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activityName, setActivityName] = useState("");
+  const [activityDescription, setActivityDescription] = useState("");
+  const [activityStartTime, setActivityStartTime] = useState<Date | null>(null);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -53,81 +59,43 @@ function BaseMap() {
     mapRef.current = map;
   }, []);
 
-  useEffect(() => {
-    if (!mapRef.current || !routeGeometry) return;
-    const latlngs = polyline
-      .decode(routeGeometry, 5)
-      .map(([lat, lng]) => L.latLng(lat, lng));
-
-    if (polylineLayerRef.current) {
-      polylineLayerRef.current.remove();
-      polylineLayerRef.current = null;
-    }
-    if (startMarkerRef.current) {
-      startMarkerRef.current.remove();
-      startMarkerRef.current = null;
-    }
-    if (endMarkerRef.current) {
-      endMarkerRef.current.remove();
-      endMarkerRef.current = null;
-    }
-
-    const newPolyline = L.polyline(latlngs, { color: "blue", weight: 5 }).addTo(
-      mapRef.current!
-    );
-    polylineLayerRef.current = newPolyline;
-
-    const startMarker = L.marker(latlngs[0], { title: "Start" }).addTo(
-      mapRef.current!
-    );
-    startMarker.bindPopup("Start").openPopup();
-    startMarkerRef.current = startMarker;
-
-    const endMarker = L.marker(latlngs[latlngs.length - 1], {
-      title: "Destination",
-    }).addTo(mapRef.current!);
-    endMarker.bindPopup("Destination");
-    endMarkerRef.current = endMarker;
-
-    mapRef.current.fitBounds(newPolyline.getBounds());
-  }, [routeGeometry]);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-    waterPoints.forEach((wp) => {
-      const marker = L.marker([wp.lat, wp.lng], {
-        title: wp.name,
-        icon: L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-          iconSize: [25, 25],
-          iconAnchor: [12, 24],
-          popupAnchor: [0, -20],
-        }),
-      }).addTo(mapRef.current!);
-
-      marker.bindPopup(`<b>${wp.name}</b><br/>Distance: ${wp.distance_km} km`);
-    });
-  }, [waterPoints]);
-
-  const handleSetRouteMeta = (
+  function handleSetRouteMeta(
     dist: number,
     startPost: string,
     endPost: string
-  ) => {
+  ) {
     setDistance(dist);
     setStartPostal(startPost);
     setEndPostal(endPost);
-  };
+  }
 
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
+  function handleStartActivity() {
+    if (!activityStarted) {
+      setActivityStarted(true);
+      setElapsedSeconds(0);
+      setActivityStartTime(new Date());
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+  }
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
+  function handleStopActivity() {
+    if (activityStarted) {
+      setActivityStarted(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setActivityModalOpen(true);
+    }
+  }
 
-  const handleSaveRoute = async () => {
+  function handleEndActivity() {
+    setRouteInstructions([]);
+  }
+
+  async function handleSaveRoute() {
     const userUID = sessionStorage.getItem("userUID") || "";
     const routeData = {
       routeName,
@@ -147,7 +115,7 @@ function BaseMap() {
       });
       if (res.ok) {
         alert("Route saved successfully");
-        setModalOpen(false);
+        setRouteModalOpen(false);
         setRouteName("");
         setNotes("");
       } else {
@@ -156,11 +124,46 @@ function BaseMap() {
     } catch {
       alert("Error saving route");
     }
-  };
+  }
 
-  const handleEndActivity = () => {
-    setRouteInstructions([]);
-  };
+  async function handleConfirmActivity() {
+    const userUID = sessionStorage.getItem("userUID") || "";
+    const activityData = {
+      activityName,
+      notes: activityDescription,
+      distance,
+      route_geometry: routeGeometry,
+      route_instructions: routeInstructions,
+      startPostal,
+      endPostal,
+      timeTaken: elapsedSeconds,
+      startTime: activityStartTime?.toISOString(),
+    };
+
+    try {
+      const res = await fetch("http://127.0.0.1:1234/save-activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userUID, activityData }),
+      });
+      if (res.ok) {
+        alert("Activity saved successfully");
+        setActivityModalOpen(false);
+        setActivityName("");
+        setActivityDescription("");
+        setElapsedSeconds(0);
+      } else {
+        alert("Failed to save activity");
+      }
+    } catch {
+      alert("Error saving activity");
+    }
+  }
+
+  function handleCancelActivity() {
+    setActivityModalOpen(false);
+    setElapsedSeconds(0);
+  }
 
   return (
     <div className="basemap-container">
@@ -176,51 +179,52 @@ function BaseMap() {
 
       <RouteInstructionsList routeInstructions={routeInstructions} />
 
+      <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
+      <WaterPointsLayer map={mapRef.current} waterPoints={waterPoints} />
+
       {routeInstructions.length > 0 && (
         <div className="bottom-right-buttons">
-          <button onClick={handleOpenModal} className="save-button">
+          <button
+            onClick={() => setRouteModalOpen(true)}
+            className="save-button"
+          >
             Save Route
           </button>
           <button onClick={handleEndActivity} className="end-button">
-            End Activity
+            Cancel
           </button>
         </div>
       )}
 
-      {modalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>Route Name</h3>
-            <div className="modal-input-box">
-              <input
-                type="text"
-                className="modal-input"
-                placeholder="Your route name"
-                value={routeName}
-                onChange={(e) => setRouteName(e.target.value)}
-              />
-            </div>
+      {routeInstructions.length > 0 && (
+        <TimerControls
+          activityStarted={activityStarted}
+          elapsedSeconds={elapsedSeconds}
+          onStart={handleStartActivity}
+          onStop={handleStopActivity}
+        />
+      )}
 
-            <h3>Notes</h3>
-            <div className="modal-textarea-box">
-              <textarea
-                className="modal-textarea"
-                placeholder="Notes about your route"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
+      {routeModalOpen && (
+        <SaveRouteModal
+          routeName={routeName}
+          notes={notes}
+          onNameChange={setRouteName}
+          onNotesChange={setNotes}
+          onConfirm={handleSaveRoute}
+          onCancel={() => setRouteModalOpen(false)}
+        />
+      )}
 
-            <div className="modal-buttons">
-              <button onClick={handleSaveRoute} className="confirm-button">
-                Confirm Save
-              </button>
-              <button onClick={handleCloseModal} className="cancel-button">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+      {routeInstructions.length > 0 && activityModalOpen && (
+        <SaveActivityModal
+          activityName={activityName}
+          activityDescription={activityDescription}
+          onConfirm={handleConfirmActivity}
+          onCancel={handleCancelActivity}
+          onChangeActivityName={setActivityName}
+          onChangeActivityDescription={setActivityDescription}
+        />
       )}
 
       <Navigate />
