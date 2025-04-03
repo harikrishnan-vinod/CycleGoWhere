@@ -93,6 +93,6 @@ def getWaterPoint():
                 points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
             except ValueError:
                 continue 
-        
+    print("Finding Water points")
     result = MainPageController.findWaterPoints(points)
-    return result
+    return result   

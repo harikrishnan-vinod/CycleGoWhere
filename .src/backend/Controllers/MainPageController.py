@@ -120,7 +120,7 @@ class MainPageController:
         nearby = []
         seen = set()
 
-        with open("./ParkData/verified_points.csv", newline='', encoding='utf-8') as csvfile:
+        with open("./Controllers/ParkData/verified_points.csv", newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
