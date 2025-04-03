@@ -1,71 +1,151 @@
-from flask import request, jsonify
-from Entities.Route import Route
-from Entities.Location import Location
+from flask import jsonify
+import requests
+from math import radians, sin, cos, sqrt, atan2
+import csv
 from Entities.DatabaseController import DatabaseController
+
+def haversine(lat1, lon1, lat2, lon2):
+    """Calculate Haversine distance between two lat/lng points in kilometers."""
+    R = 6371  # Earth radius in km
+    d_lat = radians(lat2 - lat1)
+    d_lon = radians(lon2 - lon1)
+    a = sin(d_lat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c
 
 class MainPageController:
     def __init__(self):
         self.db_controller = DatabaseController()
     
-    def search_route(self, from_location, to_location, user_id):
+    @staticmethod
+    def searchRequest(searchVal,token):
         try:
-            # Process locations
-            start = Location(from_location["name"], from_location["latitude"], from_location["longitude"])
-            end = Location(to_location["name"], to_location["latitude"], to_location["longitude"])
-            
-            # Generate route using external API or algorithm
-            # This would be replaced with actual API call
-            route = Route(start, end)
-            
-            # Save to recent searches
-            self.db_controller.add_recent_search(user_id, route)
-            
-            return route.to_dict()
-        except Exception as e:
-            return {"error": str(e)}, 400
-    
-    def filter_map(self, filter_options):
-        try:
-            # Query filtered facilities
-            facilities = []
-            
-            if filter_options.get("water_coolers"):
-                facilities.extend(self.db_controller.get_facilities("water_cooler"))
-                
-            if filter_options.get("bike_repair"):
-                facilities.extend(self.db_controller.get_facilities("bike_repair"))
-                
-            if filter_options.get("bike_park"):
-                facilities.extend(self.db_controller.get_facilities("bike_park"))
-                
-            return {"facilities": facilities}
-        except Exception as e:
-            return {"error": str(e)}, 400
-    
-    def navigate_route(self, route_id, user_id):
-        try:
-            route = self.db_controller.get_route(route_id)
-            
-            # Get facilities along route
-            facilities = self.db_controller.get_facilities_along_route(route)
-            
-            # Check weather for route
-            weather = self.check_weather(route)
-            
-            return {
-                "route": route.to_dict(),
-                "facilities": facilities,
-                "weather": weather
+            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
+            params = {
+                "searchVal": f"{searchVal}",
+                "returnGeom": "Y",
+                "getAddrDetails": "Y",
             }
+            headers = {
+                "Authorization": f"Bearer {token}"
+            }
+
+            response = requests.get(
+            url,
+            params=params,
+            headers=headers
+            )
+            data = response.json()
+            data["results"] = data.get("results", [])[:5]
+            print(data)
+            return jsonify(data)
+            
         except Exception as e:
-            return {"error": str(e)}, 400
+            return jsonify({'error':'internal server error'})
     
-    def check_weather(self, route):
-        # Mock weather API call
-        # Would be replaced with actual weather API
-        return {
-            "condition": "clear",
-            "temperature": 28,
-            "uv_index": 6,
-            "rain_probability": 10
+
+    #function to find and return name,latitude and longitude from giving searchVal  
+    @staticmethod      
+    def searchAndReturnLL(searchVal,token):
+        try:
+            url = "https://www.onemap.gov.sg/api/common/elastic/search?"
+            params = {
+                "searchVal": f"{searchVal}",
+                "returnGeom": "Y",
+                "getAddrDetails": "Y",
+            }
+            headers = {
+                "Authorization": f"Bearer {token}"
+            }
+
+            response = requests.get(
+            url,
+            params=params,
+            headers=headers
+            )
+            data = response.json()
+            data["results"] = data.get("results", [])[:1]
+            if data.get("results"):
+                first = data["results"][0]
+                extracted = {
+                "address": first.get("ADDRESS"),
+                "latitude": first.get("LATITUDE"),
+                "longitude": first.get("LONGITUDE")
+            }
+            else:
+                print("No results found.")    
+            
+            return jsonify(extracted)
+            
+        except Exception as e:
+            return jsonify({'error':'internal server error'})
+        
+
+    #function to query OneMap API for routing information using the combined_address
+    @staticmethod
+    def getRouting(combined_address,token):
+
+        fromAddress = combined_address["from"]
+        destAddress = combined_address["destination"]
+        start_coords = f"{fromAddress['latitude']},{fromAddress['longitude']}"
+        end_coords = f"{destAddress['latitude']},{destAddress['longitude']}"
+
+        url="https://www.onemap.gov.sg/api/public/routingsvc/route"
+        params={
+            "start": f"{start_coords}",
+            "end": f"{end_coords}",
+            "routeType":"cycle"
         }
+        headers ={
+            "Authorization": f"{token}"
+        }
+
+        response = requests.get(url,params=params,headers=headers)
+        data = response.json()
+        return data
+
+    @staticmethod
+    def findWaterPoints(route_points,radius_km=0.5):
+        """
+        Load waterpoints from a CSV and return those within radius_km of any route point.
+
+        Args:
+            route_points: List of (lat, lng) tuples.
+            csv_path: Path to the waterpoints CSV file.
+            radius_km: Proximity threshold in kilometers.
+
+        Returns:
+            List of waterpoint dicts within range.
+        """
+        nearby = []
+        seen = set()
+
+        with open("./Controllers/ParkData/verified_points.csv", newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                try:
+                    wp_name = row["Name"]
+                    wp_lat = float(row["Latitude"])
+                    wp_lng = float(row["Longitude"])
+                    #wp_description = row.get("Description", "")
+                    #wp_type = row.get("Type", "")
+
+                    for lat, lng in route_points:
+                        distance = haversine(lat, lng, wp_lat, wp_lng)
+                        if distance <= radius_km:
+                            key = (wp_name, wp_lat, wp_lng)
+                            if key not in seen:
+                                seen.add(key)
+                                nearby.append({
+                                    "name": wp_name,
+                                    "lat": wp_lat,
+                                    "lng": wp_lng,
+                                    #"description": wp_description,
+                                    #"type": wp_type,
+                                    "distance_km": round(distance, 3),
+                                })
+                            break  # No need to check more route points for this wp
+                except (ValueError, KeyError):
+                    continue  # Skip invalid rows
+
+        return nearby

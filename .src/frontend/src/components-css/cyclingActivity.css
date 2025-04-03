@@ -24,6 +24,7 @@
 .map-activity {
     height: 250px;
     background-color: #f5f5f5;
+    z-index: 0;
 }
 
 .activity-statistics {
@@ -69,3 +70,24 @@
     width: 30px;
     height: 30px;
 }
+.map-activity {
+  pointer-events: none;
+}
+
+.activity-header {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  
+  .activity-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 4px;
+  }
+  
+  .activity-date {
+    font-size: 0.85em;
+    color: #888;
+  }
+  
