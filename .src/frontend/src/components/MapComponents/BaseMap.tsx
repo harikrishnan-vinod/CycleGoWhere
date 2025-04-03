@@ -5,7 +5,6 @@ import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import polyline from "@mapbox/polyline";
 import Navigate from "../../components/Navigation";
-import MapDrawer from "./MapDrawer";
 import RouteInstructionsList from "./RouteInstructionsList";
 import RouteLayer from "./RouteLayer";
 import WaterPointsLayer from "./WaterPointsLayer";
@@ -13,9 +12,13 @@ import TimerControls from "./TimerControls";
 import SaveRouteModal from "./SaveRouteModal";
 import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
+import MapDrawer, { MapDrawerRef } from "./MapDrawer";
 
 function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
+  const mapDrawerRef = useRef<MapDrawerRef>(null);
+  const waterPointMarkersRef = useRef<L.Marker[]>([]);
+
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
@@ -27,14 +30,15 @@ function BaseMap() {
   const [notes, setNotes] = useState("");
   const [activityStarted, setActivityStarted] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [activityName, setActivityName] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
   const [activityStartTime, setActivityStartTime] = useState<Date | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (mapRef.current) return;
+
     const sw = L.latLng(1.144, 103.535);
     const ne = L.latLng(1.494, 104.502);
     const bounds = L.latLngBounds(sw, ne);
@@ -57,6 +61,25 @@ function BaseMap() {
     ).addTo(map);
 
     mapRef.current = map;
+
+    const saved = sessionStorage.getItem("savedRouteToStart");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      sessionStorage.removeItem("savedRouteToStart");
+
+      setRouteGeometry(parsed.route_geometry);
+      setRouteInstructions(parsed.route_instructions || []);
+      setDistance(parsed.distance || 0);
+      setStartPostal(parsed.startPostal || "");
+      setEndPostal(parsed.endPostal || "");
+      setActivityStarted(true);
+      setActivityStartTime(new Date());
+      setElapsedSeconds(0);
+
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    }
   }, []);
 
   function handleSetRouteMeta(
@@ -93,6 +116,18 @@ function BaseMap() {
 
   function handleEndActivity() {
     setRouteInstructions([]);
+    setRouteGeometry(null);
+    setDistance(0);
+    setElapsedSeconds(0);
+    setActivityStarted(false);
+    setStartPostal("");
+    setEndPostal("");
+    setRouteName("");
+    setNotes("");
+    setActivityName("");
+    setActivityDescription("");
+    setWaterPoints([]);
+    mapDrawerRef.current?.resetInputs();
   }
 
   async function handleSaveRoute() {
@@ -113,11 +148,11 @@ function BaseMap() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userUID, routeData }),
       });
+
       if (res.ok) {
         alert("Route saved successfully");
         setRouteModalOpen(false);
-        setRouteName("");
-        setNotes("");
+        handleEndActivity();
       } else {
         alert("Failed to save route");
       }
@@ -146,12 +181,11 @@ function BaseMap() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userUID, activityData }),
       });
+
       if (res.ok) {
         alert("Activity saved successfully");
         setActivityModalOpen(false);
-        setActivityName("");
-        setActivityDescription("");
-        setElapsedSeconds(0);
+        handleEndActivity();
       } else {
         alert("Failed to save activity");
       }
@@ -163,6 +197,7 @@ function BaseMap() {
   function handleCancelActivity() {
     setActivityModalOpen(false);
     setElapsedSeconds(0);
+    handleEndActivity();
   }
 
   return (
@@ -170,17 +205,22 @@ function BaseMap() {
       <div id="mapdiv" className="map-fullscreen" />
 
       <MapDrawer
+        ref={mapDrawerRef}
         setRouteGeometry={setRouteGeometry}
         clearRoute={() => setRouteGeometry(null)}
         setRouteInstructions={setRouteInstructions}
         setWaterPoints={setWaterPoints}
         setRouteMeta={handleSetRouteMeta}
+        mapInstance={mapRef.current}
       />
 
       <RouteInstructionsList routeInstructions={routeInstructions} />
-
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
-      <WaterPointsLayer map={mapRef.current} waterPoints={waterPoints} />
+      <WaterPointsLayer
+        map={mapRef.current}
+        waterPoints={waterPoints}
+        markersRef={waterPointMarkersRef}
+      />
 
       {routeInstructions.length > 0 && (
         <div className="bottom-right-buttons">
@@ -216,7 +256,7 @@ function BaseMap() {
         />
       )}
 
-      {routeInstructions.length > 0 && activityModalOpen && (
+      {activityModalOpen && (
         <SaveActivityModal
           activityName={activityName}
           activityDescription={activityDescription}

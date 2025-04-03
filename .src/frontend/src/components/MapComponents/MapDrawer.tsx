@@ -1,5 +1,4 @@
-// MapDrawer.tsx
-import { useState } from "react";
+import { useState, useImperativeHandle, forwardRef } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
 
 interface MapDrawerProps {
@@ -8,6 +7,7 @@ interface MapDrawerProps {
   setRouteInstructions: (instructions: any[]) => void;
   setWaterPoints: (points: any[]) => void;
   setRouteMeta: (dist: number, startPost: string, endPost: string) => void;
+  mapInstance: L.Map | null;
 }
 
 interface SearchData {
@@ -15,13 +15,19 @@ interface SearchData {
   destAddress: string;
 }
 
-export default function MapDrawer({
-  setRouteGeometry,
-  clearRoute,
-  setRouteInstructions,
-  setWaterPoints,
-  setRouteMeta,
-}: MapDrawerProps) {
+export type MapDrawerRef = {
+  resetInputs: () => void;
+};
+
+const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
+  const {
+    setRouteGeometry,
+    clearRoute,
+    setRouteInstructions,
+    setWaterPoints,
+    setRouteMeta,
+  } = props;
+
   const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState<SearchData>({
     fromAddress: "",
@@ -29,6 +35,14 @@ export default function MapDrawer({
   });
   const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
   const [destSuggestions, setDestSuggestions] = useState<any[]>([]);
+
+  useImperativeHandle(ref, () => ({
+    resetInputs: () => {
+      setFormData({ fromAddress: "", destAddress: "" });
+      setFromSuggestions([]);
+      setDestSuggestions([]);
+    },
+  }));
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -68,7 +82,6 @@ export default function MapDrawer({
 
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
-
       setIsOpen(false);
 
       const waterData = await fetchWaterPoint(data.route_instructions);
@@ -160,4 +173,6 @@ export default function MapDrawer({
       )}
     </>
   );
-}
+});
+
+export default MapDrawer;

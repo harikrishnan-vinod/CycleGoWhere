@@ -2,6 +2,8 @@ import traceback
 from flask import Blueprint, app,request,jsonify
 import polyline
 from .services import db, firestore_module as firestore
+import polyline
+import datetime
 
 
 savedroutes_bp = Blueprint("savedroutes",__name__)
@@ -66,18 +68,38 @@ def save_route():
         traceback.print_exc()
         return jsonify({"message": "Failed to save route"}), 500
     
-    
 @savedroutes_bp.route("/get-saved-routes", methods=["GET"])
 def get_saved_routes():
     user_uid = request.args.get("userUID")
     try:
         routes_ref = db.collection("users").document(user_uid).collection("savedRoutes").stream()
-        routes = [{**r.to_dict(), "id": r.id} for r in routes_ref]
+
+        routes = []
+        for r in routes_ref:
+            raw_data = r.to_dict()
+            serializable_data = to_serializable(raw_data)
+
+            route_path = serializable_data.get("routePath", [])
+            if route_path and isinstance(route_path, list):
+                try:
+                    latlngs = [
+                        (pt["latitude"], pt["longitude"]) for pt in route_path
+                    ]
+                    encoded = polyline.encode(latlngs, 5)
+                    serializable_data["route_geometry"] = encoded
+                except Exception as e:
+                    print("⚠️ Failed to encode polyline:", e)
+                    serializable_data["route_geometry"] = None
+
+            serializable_data["id"] = r.id
+            routes.append(serializable_data)
+
         return jsonify(routes), 200
+
     except Exception as e:
         print("Error fetching routes:", e)
         return jsonify({"message": "Could not fetch saved routes"}), 500
-    
+
 
 @savedroutes_bp.route("/save-activity", methods=["POST"])
 def save_activity():
@@ -86,25 +108,38 @@ def save_activity():
     activity_data = data.get("activityData")
     start_time_str = activity_data.get("startTime")
     start_time = None
+
     if start_time_str:
         try:
-            start_time = datetime.fromisoformat(start_time_str)
-        except Exception as e:
-            print("Invalid startTime format:", e)
+            # Try full ISO 8601 with microseconds
+            start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f")
+        except ValueError:
+            try:
+                # Fallback without microseconds
+                start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
+            except Exception as e:
+                print("Invalid startTime format fallback:", e)
+
     try:
         decoded_points = polyline.decode(activity_data["route_geometry"], 5)
-        geo_points = []
-        for lat, lng in decoded_points:
-            geo_points.append(firestore.GeoPoint(lat, lng))
+        geo_points = [firestore.GeoPoint(lat, lng) for lat, lng in decoded_points]
 
         instructions_converted = []
         for row in activity_data["route_instructions"]:
-            instructions_converted.append({
-                "direction": row[0],
-                "road": row[1],
-                "distance": row[5],
-                "latLng": row[3]
-            })
+            if isinstance(row, dict):
+                instructions_converted.append({
+                    "direction": row.get("direction"),
+                    "road": row.get("road"),
+                    "distance": row.get("distance"),
+                    "latLng": row.get("latLng")
+                })
+            elif isinstance(row, list):
+                instructions_converted.append({
+                    "direction": row[0],
+                    "road": row[1],
+                    "distance": row[5],
+                    "latLng": row[3]
+                })
 
         doc_data = {
             "activityName": activity_data["activityName"],
@@ -116,15 +151,19 @@ def save_activity():
             "routePath": geo_points,
             "startTime": start_time,
             "instructions": instructions_converted,
-            "startLocation": firestore.GeoPoint(decoded_points[0][0], decoded_points[0][1]),
-            "endLocation": firestore.GeoPoint(decoded_points[-1][0], decoded_points[-1][1]),
+            "startLocation": firestore.GeoPoint(*decoded_points[0]),
+            "endLocation": firestore.GeoPoint(*decoded_points[-1]),
             "createdAt": firestore.SERVER_TIMESTAMP
         }
+
         db.collection("users").document(user_uid).collection("activities").add(doc_data)
         return jsonify({"message": "Activity saved"}), 200
+
     except Exception as e:
         print("Error saving activity:", e)
+        traceback.print_exc()
         return jsonify({"message": "Failed to save activity"}), 500
+
     
 
 @savedroutes_bp.route("/get-activities", methods=["GET"])  
@@ -142,8 +181,20 @@ def get_activities():
     except Exception as e:
         print("Error getting activities:", e)
         return jsonify({"message": "Could not fetch activities"}), 500
-
     
+@savedroutes_bp.route("/update-last-used", methods=["POST"])
+def update_last_used():
+    user_uid = request.args.get("userUID")
+    route_id = request.args.get("routeId")
+    try:
+        route_ref = db.collection("users").document(user_uid).collection("savedRoutes").document(route_id)
+        route_ref.update({"lastUsedAt": firestore.SERVER_TIMESTAMP})
+        return jsonify({"message": "Last used updated"}), 200
+    except Exception as e:
+        print("Error updating last used:", e)
+        return jsonify({"message": "Failed to update last used"}), 500
+
+ 
 def to_serializable(doc_dict):
     for key, value in doc_dict.items():
         if isinstance(value, firestore.GeoPoint):
