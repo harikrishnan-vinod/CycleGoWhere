@@ -36,25 +36,7 @@ function CyclingActivity({ activity }: ActivityProps) {
     )}:${String(s).padStart(2, "0")}`;
   };
 
-  useEffect(() => {
-    const displayUsername = async () => {
-      const userUID = sessionStorage.getItem("userUID");
-      if (!userUID) return;
-      try {
-        const response = await fetch(
-          `http://127.0.0.1:1234/get-username?userUID=${userUID}`
-        );
-        const data = await response.json();
-        if (response.ok && data.username) {
-          setUsername(data.username);
-        }
-      } catch (err) {
-        console.error("Error fetching username:", err);
-      }
-    };
 
-    displayUsername();
-  }, []);
 
   useEffect(() => {
     if (
@@ -152,19 +134,6 @@ function CyclingActivity({ activity }: ActivityProps) {
 
       <div className="map-activity" ref={mapRef} />
 
-      <div className="activity-statistics">
-        <div className="distance">
-          <p>Distance: {(distance / 1000).toFixed(2)} km</p>
-        </div>
-        <div className="duration">
-          <p>Duration: {formatDuration(timeTaken)}</p>
-        </div>
-        <div className="average-speed">
-          <p>
-            Avg Speed: {((distance * 3.6) / timeTaken || 0).toFixed(2)} km/h
-          </p>
-        </div>
-      </div>
 
       <div style={{ padding: "0.5rem 1rem" }}>
         <p style={{ margin: 0 }}>{activity.notes}</p>

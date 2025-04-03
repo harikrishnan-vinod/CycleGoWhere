@@ -21,9 +21,6 @@ def login():
 @login_bp.route("/logout", methods=["POST"])
 def logout():
     return login_controller.logout(session)
-    # session.pop("user", None)
-    # session.pop("user_UID", None)
-    # return jsonify({"message": "Logout successful"})
 
 @login_bp.route("/register", methods=['POST'])
 def register():
