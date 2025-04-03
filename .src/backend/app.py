@@ -7,8 +7,6 @@ from google.oauth2 import service_account
 from authentication.authentication import pyrebase_auth, firebase
 from authentication.authentication import admin_sdk_auth
 
- 
-
 import os
 from dotenv import load_dotenv
 from datetime import timedelta

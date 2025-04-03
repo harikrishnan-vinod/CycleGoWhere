@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import requests
-from services import db , cloudinary, pyrebase_auth, firebase_auth
+from .services import db , cloudinary, pyrebase_auth, firebase_auth
 import os
 
 setting_bp = Blueprint("setting",__name__)
