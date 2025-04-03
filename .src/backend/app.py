@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 import cloudinary
-import cloudinary.uploader
 
 #load routes
 from routes.login_routes import login_bp
