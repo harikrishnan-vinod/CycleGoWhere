@@ -104,6 +104,7 @@ def google_callback():
                                             code,
                                             os.environ.get('GOOGLE_CLIENT_ID'),
                                             os.environ.get('GOOGLE_CLIENT_SECRET'))
+    # Will be ignored and removed in the future
     code = request.args.get('code')
     token_url = 'https://oauth2.googleapis.com/token'
 

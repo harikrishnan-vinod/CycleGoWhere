@@ -24,12 +24,6 @@ class LoginPageController:
                 email = self.db_controller.get_email_by_username(login_input)
                 if email is None:
                     return jsonify({"message": "Wrong username or password"}), 401
-            
-                # username_doc = self.db_controller.db.collection("usernames").document(login_input).get() # TODO: Use database_controller method instead
-                # if username_doc.exists:
-                #     email = username_doc.to_dict().get("email")
-                # else:
-                #     return jsonify({"message": "Wrong username or password"}), 401
 
             # Authenticate with Firebase
             user = self.auth.sign_in_with_email_and_password(email, password)
