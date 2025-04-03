@@ -32,11 +32,9 @@ function CyclingActivity({ activity }: ActivityProps) {
   const distance = activity?.distance || 0;
   const activityName = activity?.activityName || "Untitled Ride";
   const notes = activity?.notes || "";
-  const startTimeSec =
-    activity?.startTime?.seconds || activity?.createdAt?.seconds || 0;
-  const startTimeObj = new Date(startTimeSec * 1000);
-  const startTimeStr = startTimeSec
-    ? startTimeObj.toLocaleString()
+  const startTimeRaw = activity?.startTime || activity?.createdAt;
+  const startTimeStr = startTimeRaw
+    ? new Date(startTimeRaw).toLocaleString()
     : "Date not available";
 
   useEffect(() => {
