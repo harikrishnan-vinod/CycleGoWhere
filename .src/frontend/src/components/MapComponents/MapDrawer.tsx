@@ -163,7 +163,7 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
           </ul>
 
           <button type="button" className="go-button" onClick={handleSubmit}>
-            GO
+            Show Route
           </button>
         </div>
         <div className="drag-bar" onClick={() => setIsOpen(!isOpen)} />

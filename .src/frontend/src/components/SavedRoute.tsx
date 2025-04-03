@@ -1,4 +1,4 @@
-import "../components-css/savedActivity.css";
+import "../components-css/savedRoute.css";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
