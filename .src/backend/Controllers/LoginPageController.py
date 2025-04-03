@@ -7,7 +7,7 @@ from google.auth.transport import requests as google_requests
 from Entities.User import User
 from Entities.Settings import Settings
 from Entities.DatabaseController import DatabaseController
-from authentication.authentication import pyrebase_auth
+from routes.services import pyrebase_auth
 import os
 
 class LoginPageController:
