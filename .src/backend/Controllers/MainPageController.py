@@ -3,6 +3,7 @@ import requests
 from math import radians, sin, cos, sqrt, atan2
 import csv
 from Entities.DatabaseController import DatabaseController
+import os
 
 def haversine(lat1, lon1, lat2, lon2):
     """Calculate Haversine distance between two lat/lng points in kilometers."""
@@ -105,7 +106,7 @@ class MainPageController:
         return data
 
     @staticmethod
-    def findWaterPoints(route_points,radius_km=0.5):
+    def findWaterPoints(route_points,radius_km=0.5): #TODO: Use filter entity?
         """
         Load waterpoints from a CSV and return those within radius_km of any route point.
 
@@ -149,3 +150,190 @@ class MainPageController:
                     continue  # Skip invalid rows
 
         return nearby
+    
+    def findBikeParking(route_points,radius_km=0.5): #TODO: Use Filter entity?
+        nearby = []
+        seen = set()
+        # Define CSV file name
+        csv_filename = "./Controllers/ParkData/bicycle_parking.csv"
+        if not os.path.isfile(csv_filename):
+            # Create the file if it doesn't exist
+            with open(csv_filename, mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+
+        with open(csv_filename, mode="r", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            headers = next(reader, None)  # Skip header row
+            if headers is None:
+                # Only fetch from API if "Bicycle Parking" is NOT in CSV
+                
+                print("Fetching bicycle parking data from API...")
+
+                # Define Overpass API Query for Bicycle Parking
+                query = """
+                [out:json];
+                area["name"="Singapore"]->.searchArea;
+                (
+                node["amenity"="bicycle_parking"](area.searchArea);
+                way["amenity"="bicycle_parking"](area.searchArea);
+                relation["amenity"="bicycle_parking"](area.searchArea);
+                );
+                out center;
+                """
+
+                # Send request to Overpass API
+                url = "https://overpass-api.de/api/interpreter"
+                response = requests.get(url, params={"data": query})
+                data = response.json()
+
+                # Extract relevant information
+                bicycle_parking_spots = []
+                for element in data["elements"]:
+                    name = element["tags"].get("name", "Unnamed Bicycle Parking")
+                    lat = element.get("lat", element["center"]["lat"] if "center" in element else None)
+                    lon = element.get("lon", element["center"]["lon"] if "center" in element else None)
+                    capacity = element["tags"].get("capacity", "Unknown Capacity")
+                    covered = element["tags"].get("covered", "Unknown")
+
+                    # Create description field
+                    description = f"Capacity: {capacity}, Covered: {covered}"
+
+                    # Append to list
+                    bicycle_parking_spots.append([name, lat, lon, description, "Bicycle Parking"])
+
+                # Append data to CSV
+                with open(csv_filename, mode="a", newline="", encoding="utf-8") as file:
+                    print("Writing rows...")
+                    writer = csv.writer(file)
+
+                    # Write headers only if file does not exist
+                    if not os.path.isfile(csv_filename) or os.stat(csv_filename).st_size == 0:
+                        writer.writerow(["Name", "Latitude", "Longitude", "Description", "Type"])
+
+                    writer.writerows(bicycle_parking_spots)
+
+                # print(f"Successfully appended {len(bicycle_parking_spots)} bicycle parking locations to {csv_filename}")
+
+            else:
+                print("Bicycle Parking data already exists in the CSV. Skipping API request.")
+
+        with open("csv_filename", newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                try:
+                    bp_name = row["Name"]
+                    bp_lat = float(row["Latitude"])
+                    bp_lng = float(row["Longitude"])
+                    #wp_description = row.get("Description", "")
+                    #wp_type = row.get("Type", "")
+
+                    for lat, lng in route_points:
+                        distance = haversine(lat, lng, bp_lat, bp_lng)
+                        if distance <= radius_km:
+                            key = (bp_name, bp_lat, bp_lng)
+                            if key not in seen:
+                                seen.add(key)
+                                nearby.append({
+                                    "name": bp_name,
+                                    "lat": bp_lat,
+                                    "lng": bp_lng,
+                                    #"description": wp_description,
+                                    #"type": wp_type,
+                                    "distance_km": round(distance, 3),
+                                })
+                            break  # No need to check more route points for this wp
+                except (ValueError, KeyError):
+                    continue  # Skip invalid rows
+
+        return nearby
+    
+    def findBikeShops(route_points, radius_km=0.5):
+        """
+        Load bike shop data from a CSV and return shops near the route.
+
+        Args:
+            route_points (list): List of (lat, lon) tuples representing the route.
+            radius_km (float): Radius to consider a shop as "nearby".
+
+        Returns:
+            List of nearby bike shops.
+        """
+        nearby = []
+        seen = set()
+        csv_filename = "./Controllers/ParkData/bicycle_shops.csv"
+        
+        if not os.path.isfile(csv_filename):
+            with open(csv_filename, mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(["Name", "Latitude", "Longitude", "Description", "Type"])
+        
+        # Check if bicycle shop data already exists in CSV
+        with open(csv_filename, mode="r", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            headers = next(reader, None)
+            if headers and any(row[4] == "Bicycle Shop" for row in reader):
+                print("Bicycle Shop data already exists in the CSV. Skipping API request.")
+            else:
+                print("Fetching bicycle shop data from API...")
+                
+                # Overpass API query for bicycle shops
+                query = """
+                [out:json];
+                area["name"="Singapore"]->.searchArea;
+                (
+                node["shop"="bicycle"](area.searchArea);
+                way["shop"="bicycle"](area.searchArea);
+                relation["shop"="bicycle"](area.searchArea);
+                );
+                out center;
+                """
+                
+                url = "https://overpass-api.de/api/interpreter"
+                response = requests.get(url, params={"data": query})
+                data = response.json()
+                
+                bicycle_shops = []
+                for element in data["elements"]:
+                    name = element["tags"].get("name", "Unnamed Bicycle Shop")
+                    lat = element.get("lat", element["center"]["lat"] if "center" in element else None)
+                    lon = element.get("lon", element["center"]["lon"] if "center" in element else None)
+                    street = element["tags"].get("addr:street", "Unknown Street")
+                    housenumber = element["tags"].get("addr:housenumber", "Unknown Number")
+                    
+                    description = f"Address: {housenumber} {street}"
+                    bicycle_shops.append([name, lat, lon, description, "Bicycle Shop"])
+                
+                # Append data to CSV
+                with open(csv_filename, mode="a", newline="", encoding="utf-8") as file:
+                    writer = csv.writer(file)
+                    writer.writerows(bicycle_shops)
+                
+                # print(f"Successfully appended {len(bicycle_shops)} bicycle shop locations to {csv_filename}")
+        
+        # Load bicycle shop data and find nearby shops
+        with open(csv_filename, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                try:
+                    shop_name = row["Name"]
+                    shop_lat = float(row["Latitude"])
+                    shop_lng = float(row["Longitude"])
+                    
+                    for lat, lng in route_points:
+                        distance = haversine(lat, lng, shop_lat, shop_lng)
+                        if distance <= radius_km:
+                            key = (shop_name, shop_lat, shop_lng)
+                            if key not in seen:
+                                seen.add(key)
+                                nearby.append({
+                                    "name": shop_name,
+                                    "lat": shop_lat,
+                                    "lng": shop_lng,
+                                    "distance_km": round(distance, 3),
+                                })
+                            break  # No need to check more route points for this shop
+                except (ValueError, KeyError):
+                    continue  # Skip invalid rows
+        
+        return nearby
+            

@@ -95,4 +95,42 @@ def getWaterPoint():
                 continue 
     print("Finding Water points")
     result = MainPageController.findWaterPoints(points)
-    return result   
+    return result
+
+@search_bp.route('/fetchBicyclePark', methods=["POST"])
+def getBicyclePark():
+    data = request.json
+    instructions = data.get("routeInstructions", [])
+
+    points = []
+    for step in instructions:
+        latlng_str = step[3]
+        if latlng_str:
+            try:
+                lat_str, lng_str = latlng_str.split(",")
+                lat, lng = float(lat_str), float(lng_str)
+                points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
+            except ValueError:
+                continue 
+    print("Finding Water points")
+    result = MainPageController.findBikeParking(points)
+    return result
+
+@search_bp.route('/fetchBicycleShop', methods=["POST"])
+def getBicycleShop():
+    data = request.json
+    instructions = data.get("routeInstructions", [])
+
+    points = []
+    for step in instructions:
+        latlng_str = step[3]
+        if latlng_str:
+            try:
+                lat_str, lng_str = latlng_str.split(",")
+                lat, lng = float(lat_str), float(lng_str)
+                points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
+            except ValueError:
+                continue 
+    print("Finding Water points")
+    result = MainPageController.findBikeShops(points)
+    return result 
