@@ -8,38 +8,46 @@
 
 .date-bar-container {
     flex: 1;
-    overflow-x: auto;
+    overflow-x: hidden;
     scroll-behavior: smooth;
     padding: 5px;
 }
 
+/* Styles for the date bar container */
 .date-bar {
-    margin-top: 5%;
-    display: flex;
-    gap: 1%;
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
+/* Styles for each date item */
 .date-item {
-    padding: 8px 12px;
-    background: #f0f0f0;
-    border-radius: 5px;
-    font-size: 14px;
-    text-align: center;
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 2px;
     cursor: pointer;
-    min-width: 90px;
-}
-
-.today {
-    background: #abd1f2;
-    /* Highlight today's date */
-    font-weight: bold;
-    color: #333;
     border-radius: 5px;
+    background-color: #f1f1f1;
+    color: #000;
+    transition: background-color 0.3s ease;
+    /* Smooth transition for background color */
 }
 
-.date-item:hover {
-    transform: scale(1.05);
-    background: black;
+/* Highlighting the selected date item */
+.date-item.selected {
+    background-color: #000000;
     color: white;
+    ;
+}
 
+/* Optional: Add hover effect for better UX */
+.date-item:hover {
+    background-color: #000000;
+    color: white;
+}
+
+
+.week-range h4 {
+    color: rgb(65, 118, 156);
+    gap: 10px;
+    font-size: 2rem;
 }

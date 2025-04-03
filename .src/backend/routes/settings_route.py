@@ -32,6 +32,7 @@ def upload_profile_pic():
         return {"message": "Failed to update Firestore"}, 500
 
 
+# get first name
 @setting_bp.route("/get-username")
 def get_username():
     user_UID = request.args.get("userUID")
@@ -41,7 +42,7 @@ def get_username():
     try:
         doc = db.collection("users").document(user_UID).get()
         if doc.exists:
-            return jsonify({"username": doc.to_dict().get("username")}), 200
+            return jsonify({"username": doc.to_dict().get("firstName")}), 200
         else:
             return jsonify({"message": "User not found"}), 404
     except Exception as e:

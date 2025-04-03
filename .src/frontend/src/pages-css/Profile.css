@@ -34,7 +34,6 @@ body {
 }
 
 .profile-container {
-    height: 100vh;
     flex-direction: column;
     overflow-y: auto;
     padding: 20px;

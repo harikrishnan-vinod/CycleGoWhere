@@ -19,12 +19,18 @@ function Profile() {
         );
         if (!res.ok) throw new Error("Failed to get activities");
         let data = await res.json();
-        console.log("Activities fetched:", data);
 
         data.sort((a: any, b: any) => {
-          const tA = a.createdAt?.seconds || 0;
-          const tB = b.createdAt?.seconds || 0;
-          return tB - tA;
+          const getTime = (entry: any) => {
+            if (entry.createdAt?.seconds) {
+              return entry.createdAt.seconds * 1000;
+            }
+            if (entry.createdAt) {
+              return new Date(entry.createdAt).getTime();
+            }
+            return 0;
+          };
+          return getTime(b) - getTime(a);
         });
 
         setActivities(data);
@@ -36,23 +42,14 @@ function Profile() {
     fetchActivities();
   }, []);
 
+
   return (
     <div className="profile-container">
       <DisplayProfile />
 
       <div className="cycling-statistics">
         <CyclingStatistics />
-        <div className="statistics-list-container">
-          <ul className="statistics-list">
-            <p>Today: </p>
-            <p>This Week:</p>
-            <p>This Month:</p>
-            <p>Total Time</p>
-            <p>Number of Rides:</p>
-          </ul>
-        </div>
       </div>
-
       <div className="activities-list">
         {activities.map((activity) => (
           <CyclingActivity key={activity.id} activity={activity} />
