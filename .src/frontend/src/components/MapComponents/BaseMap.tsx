@@ -19,7 +19,7 @@ function BaseMap() {
   const mapRef = useRef<L.Map | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
-  const userMarkerRef = { current: null as L.Marker | null };
+  const userMarkerRef = useRef<L.Marker | null>(null);
 
   // for instructions
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
@@ -47,6 +47,18 @@ function BaseMap() {
     iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
     popupAnchor: [0, -32], // point from which the popup should open relative to the iconAnchor
   });
+
+  // mock locations from 637035 to 648310
+  const mockLocations = [
+    { lat: 1.354011, lng: 103.688962 },
+    { lat: 1.34711, lng: 103.689724 },
+    { lat: 1.346981, lng: 103.689855 },
+    { lat: 1.337923, lng: 103.695839 },
+    { lat: 1.337623, lng: 103.696449 },
+    { lat: 1.337617, lng: 103.697322 },
+  ];
+
+  const locationIndexRef = useRef(0);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -91,63 +103,60 @@ function BaseMap() {
         timeout: 5000,
       }
     );
-
-    // Poll for location every 3 seconds
-    const intervalId = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const map = mapRef.current;
-          if (!map) return;
-
-          // Update or create marker
-          if (userMarkerRef.current) {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
-          } else {
-            const marker = L.marker([latitude, longitude], { icon: userIcon })
-              .addTo(map)
-              .bindPopup("You are here")
-              .openPopup();
-            userMarkerRef.current = marker;
-          }
-
-          // === Proximity check to next route instruction ===
-          if (
-            routeInstructions.length > 0 &&
-            currentInstructionIndex < routeInstructions.length
-          ) {
-            const currentPos = L.latLng(latitude, longitude);
-            const nextStep = routeInstructions[currentInstructionIndex];
-            const nextPos = L.latLng(nextStep.lat, nextStep.lng); // adjust keys if needed
-
-            const distance = currentPos.distanceTo(nextPos); // in meters
-
-            if (distance <= 20) {
-              console.log(
-                `Arrived at waypoint ${currentInstructionIndex}:`,
-                nextStep
-              );
-
-              // Move to next instruction
-              setCurrentInstructionIndex((prev) => prev + 1);
-            }
-          }
-        },
-        (error) => {
-          console.error("Polling geolocation error:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-        }
-      );
-    }, 3000); // every 3 seconds
-
-    // Cleanup
-    return () => {
-      clearInterval(intervalId);
-    };
   }, []);
+
+  const updateLocation = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    const index = locationIndexRef.current;
+    const { lat, lng } = mockLocations[index];
+
+    console.log("📍 Moving to index:", index, "Location:", lat, lng);
+
+    locationIndexRef.current = (index + 1) % mockLocations.length;
+
+    if (mapRef.current) {
+      const map = mapRef.current;
+
+      // === Remove previous marker ===
+      if (userMarkerRef.current) {
+        map.removeLayer(userMarkerRef.current);
+        userMarkerRef.current = null; // ✅ Clear reference
+      }
+
+      // === Add new marker ===
+      const marker = L.marker([lat, lng], { icon: userIcon })
+        .addTo(map)
+        .bindPopup("You are here")
+        .openPopup();
+
+      userMarkerRef.current = marker;
+      map.setView([lat, lng], 16);
+
+      // === Proximity check ===
+      if (
+        routeInstructions.length > 0 &&
+        currentInstructionIndex < routeInstructions.length
+      ) {
+        const currentPos = L.latLng(lat, lng);
+        const nextStep = routeInstructions[currentInstructionIndex];
+        const [latStr, lngStr] = nextStep[3].split(",");
+        const nextPos = L.latLng(parseFloat(latStr), parseFloat(lngStr));
+
+        const distance = currentPos.distanceTo(nextPos);
+
+        if (distance <= 20) {
+          console.log(
+            `✅ Arrived at waypoint ${currentInstructionIndex}:`,
+            nextStep
+          );
+          setCurrentInstructionIndex((prev) => prev + 1);
+        } else {
+          console.log(`📏 ${distance.toFixed(2)}m to next waypoint`);
+        }
+      }
+    }
+  };
 
   function handleSetRouteMeta(
     dist: number,
@@ -271,6 +280,10 @@ function BaseMap() {
 
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
       <WaterPointsLayer map={mapRef.current} waterPoints={waterPoints} />
+
+      <div className="next-location-button">
+        <button onClick={updateLocation}>Next Location</button>
+      </div>
 
       {routeInstructions.length > 0 && (
         <div className="bottom-right-buttons">
