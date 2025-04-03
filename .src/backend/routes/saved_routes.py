@@ -72,13 +72,12 @@ def save_activity():
         print("Error saving activity:", e)
         return jsonify({"message": "Failed to save activity"}), 500
 
-
 @savedroutes_bp.route("/get-activities", methods=["GET"])
 def get_activities():
     user_uid = request.args.get("userUID")
     try:
         act_ref = db.collection("users").document(user_uid).collection("activities").stream()
-        activities = [{**a.to_dict(), "id": a.id} for a in act_ref]
+        activities = [{**a.to_dict(), "id": a.id, "timestamp": a.get("timestamp", {"seconds": 0})} for a in act_ref]
         return jsonify(activities), 200
     except Exception as e:
         print("Error getting activities:", e)

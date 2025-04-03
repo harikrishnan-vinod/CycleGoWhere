@@ -29,17 +29,19 @@
     min-width: 90px;
 }
 
-.today {
-    background: #abd1f2;
-    /* Highlight today's date */
-    font-weight: bold;
-    color: #333;
-    border-radius: 5px;
-}
-
 .date-item:hover {
     transform: scale(1.05);
     background: black;
     color: white;
+}
 
+.date-item.selected {
+    background-color: black;
+    color: white;
+}
+
+.date-item.today {
+    background-color: blue;
+    color: white;
+    font-weight: bold;
 }
