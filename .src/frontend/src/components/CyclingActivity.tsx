@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import "../components-css/cyclingActivity.css";
-import { Camera } from "lucide-react";
-import { Link } from "react-router-dom";
 import L from "leaflet";
+import SaveIcon from "../assets/savedroutesicon.png";
+import SaveRouteModal from "./MapComponents/SaveRouteModal";
 import polyline from "@mapbox/polyline";
 
 interface ActivityProps {
@@ -14,10 +14,17 @@ function CyclingActivity({ activity }: ActivityProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
 
-  // decode geometry if present
-  const routeGeometry =
-    activity?.route_geometry || activity?.route_geometryString;
+  const [showModal, setShowModal] = useState(false);
+  const [modalRouteName, setModalRouteName] = useState("");
+  const [modalNotes, setModalNotes] = useState("");
+
   const timeTaken = activity?.duration || activity?.timeTaken || 0;
+  const distance = activity?.distance || 0;
+  const activityName = activity?.activityName || "Untitled Ride";
+  const startTimeRaw = activity?.startTime || activity?.createdAt;
+  const startTimeStr = startTimeRaw
+    ? new Date(startTimeRaw).toLocaleString()
+    : "Date not available";
 
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -29,34 +36,26 @@ function CyclingActivity({ activity }: ActivityProps) {
     )}:${String(s).padStart(2, "0")}`;
   };
 
-  const distance = activity?.distance || 0;
-  const activityName = activity?.activityName || "Untitled Ride";
-  const notes = activity?.notes || "";
-  const startTimeRaw = activity?.startTime || activity?.createdAt;
-  const startTimeStr = startTimeRaw
-    ? new Date(startTimeRaw).toLocaleString()
-    : "Date not available";
-
   useEffect(() => {
     const displayUsername = async () => {
       const userUID = sessionStorage.getItem("userUID");
       if (!userUID) return;
       try {
-        const usernameResponse = await fetch(
+        const response = await fetch(
           `http://127.0.0.1:1234/get-username?userUID=${userUID}`
         );
-        const usernameResult = await usernameResponse.json();
-        if (usernameResponse.ok && usernameResult.username) {
-          setUsername(usernameResult.username);
+        const data = await response.json();
+        if (response.ok && data.username) {
+          setUsername(data.username);
         }
       } catch (err) {
-        console.error("Error fetching profile data:", err);
+        console.error("Error fetching username:", err);
       }
     };
+
     displayUsername();
   }, []);
 
-  // Setup a small Leaflet map for the route
   useEffect(() => {
     if (
       !mapRef.current ||
@@ -89,15 +88,62 @@ function CyclingActivity({ activity }: ActivityProps) {
       }
     ).addTo(leafletMapRef.current);
 
-    const latlngs = activity.routePath.map(
-      (gp: any) => L.latLng(gp.latitude, gp.longitude) // uses the newly serialized lat/lng
+    const latlngs = activity.routePath.map((gp: any) =>
+      L.latLng(gp.latitude, gp.longitude)
     );
-
     const poly = L.polyline(latlngs, { color: "blue", weight: 4 }).addTo(
       leafletMapRef.current
     );
     leafletMapRef.current.fitBounds(poly.getBounds());
   }, [activity]);
+
+  const handleSaveRoute = async () => {
+    const userUID = sessionStorage.getItem("userUID");
+
+    const latlngArray = activity.routePath?.map((pt: any) => [
+      pt.latitude,
+      pt.longitude,
+    ]);
+
+    if (!latlngArray || latlngArray.length === 0) {
+      alert("No route path available to save.");
+      return;
+    }
+
+    // ✅ Fix #3: Encode the latlngs into polyline format before sending
+    const encodedPolyline = polyline.encode(latlngArray, 5);
+
+    const routeData = {
+      routeName: modalRouteName,
+      notes: modalNotes,
+      distance,
+      startPostal: activity.startPostal,
+      endPostal: activity.endPostal,
+      route_geometry: encodedPolyline, // <-- This is now properly encoded
+      route_instructions: activity.instructions,
+    };
+
+    try {
+      const res = await fetch("http://127.0.0.1:1234/save-route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userUID, routeData }),
+      });
+
+      if (res.ok) {
+        alert("Route saved successfully!");
+        setShowModal(false);
+        setModalRouteName("");
+        setModalNotes("");
+      } else {
+        alert("Failed to save route.");
+      }
+    } catch (err) {
+      console.error("Error saving route:", err);
+      alert("Error saving route.");
+    }
+  };
+
   return (
     <div className="activity-container">
       <div className="activity-header">
@@ -109,24 +155,50 @@ function CyclingActivity({ activity }: ActivityProps) {
 
       <div className="activity-statistics">
         <div className="distance">
-          <p>Distance: {distance} m</p>
+          <p>Distance: {(distance / 1000).toFixed(2)} km</p>
         </div>
         <div className="duration">
           <p>Duration: {formatDuration(timeTaken)}</p>
         </div>
         <div className="average-speed">
-          <p>Avg Speed: {(distance / timeTaken || 0).toFixed(2)} m/s</p>
+          <p>
+            Avg Speed: {((distance * 3.6) / timeTaken || 0).toFixed(2)} km/h
+          </p>
         </div>
       </div>
 
       <div style={{ padding: "0.5rem 1rem" }}>
-        <p style={{ margin: 0 }}>{notes}</p>
+        <p style={{ margin: 0 }}>{activity.notes}</p>
       </div>
 
       <div className="actions-activity">
-        <div className="save-activity">{/* example icon or link */}</div>
-        <div className="delete-activity">{/* example icon or link */}</div>
+        <div
+          className="save-activity"
+          onClick={() => {
+            setModalRouteName(activity.activityName || "Untitled Route");
+            setModalNotes(activity.notes || "");
+            setShowModal(true);
+          }}
+          title="Save this route"
+        >
+          <img
+            src={SaveIcon}
+            alt="Save Route"
+            style={{ width: "30px", height: "30px" }}
+          />
+        </div>
       </div>
+
+      {showModal && (
+        <SaveRouteModal
+          routeName={modalRouteName}
+          notes={modalNotes}
+          onNameChange={setModalRouteName}
+          onNotesChange={setModalNotes}
+          onConfirm={handleSaveRoute}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 }
