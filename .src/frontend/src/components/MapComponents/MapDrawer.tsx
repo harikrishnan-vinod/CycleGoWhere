@@ -57,6 +57,11 @@ export default function MapDrawer({
     clearRoute();
     setRouteInstructions([]);
 
+    if (!formData.fromAddress.trim() || !formData.destAddress.trim()) {
+      alert("Please enter both a starting point and a destination.");
+      return;
+    }
+
     try {
       const url = new URL("http://127.0.0.1:1234/route");
       url.searchParams.append("fromAddress", formData.fromAddress);

@@ -18,9 +18,12 @@ function BaseMap() {
   // for map
   const mapRef = useRef<L.Map | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
-  const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
   const userMarkerRef = { current: null as L.Marker | null };
+
+  // for instructions
+  const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
+  const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
 
   // for activities
   const [distance, setDistance] = useState<number>(0);
@@ -89,35 +92,60 @@ function BaseMap() {
       }
     );
 
-    // 2. Start watching for updates
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+    // Poll for location every 3 seconds
+    const intervalId = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const map = mapRef.current;
+          if (!map) return;
 
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setLatLng([latitude, longitude]);
-        } else {
-          const marker = L.marker([latitude, longitude], { icon: userIcon })
-            .addTo(map)
-            .bindPopup("You are here")
-            .openPopup();
+          // Update or create marker
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setLatLng([latitude, longitude]);
+          } else {
+            const marker = L.marker([latitude, longitude], { icon: userIcon })
+              .addTo(map)
+              .bindPopup("You are here")
+              .openPopup();
+            userMarkerRef.current = marker;
+          }
 
-          userMarkerRef.current = marker;
+          // === Proximity check to next route instruction ===
+          if (
+            routeInstructions.length > 0 &&
+            currentInstructionIndex < routeInstructions.length
+          ) {
+            const currentPos = L.latLng(latitude, longitude);
+            const nextStep = routeInstructions[currentInstructionIndex];
+            const nextPos = L.latLng(nextStep.lat, nextStep.lng); // adjust keys if needed
+
+            const distance = currentPos.distanceTo(nextPos); // in meters
+
+            if (distance <= 20) {
+              console.log(
+                `Arrived at waypoint ${currentInstructionIndex}:`,
+                nextStep
+              );
+
+              // Move to next instruction
+              setCurrentInstructionIndex((prev) => prev + 1);
+            }
+          }
+        },
+        (error) => {
+          console.error("Polling geolocation error:", error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
         }
-      },
-      (error) => {
-        console.error("Watch geolocation error:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 1000,
-        timeout: 10000,
-      }
-    );
+      );
+    }, 3000); // every 3 seconds
 
     // Cleanup
     return () => {
-      navigator.geolocation.clearWatch(watchId);
+      clearInterval(intervalId);
     };
   }, []);
 
