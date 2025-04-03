@@ -13,14 +13,29 @@ const RouteLayer: React.FC<RouteLayerProps> = ({ routeGeometry, map }) => {
   const endMarkerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
+    // Always clean up old layers
+    if (polylineLayerRef.current) {
+      polylineLayerRef.current.remove();
+      polylineLayerRef.current = null;
+    }
+
+    if (startMarkerRef.current) {
+      startMarkerRef.current.remove();
+      startMarkerRef.current = null;
+    }
+
+    if (endMarkerRef.current) {
+      endMarkerRef.current.remove();
+      endMarkerRef.current = null;
+    }
+
+    // If no routeGeometry, do nothing else
     if (!map || !routeGeometry) return;
+
+    // Decode polyline and add layers
     const latlngs = polyline
       .decode(routeGeometry, 5)
       .map(([lat, lng]) => L.latLng(lat, lng));
-
-    polylineLayerRef.current?.remove();
-    startMarkerRef.current?.remove();
-    endMarkerRef.current?.remove();
 
     const newPolyline = L.polyline(latlngs, { color: "blue", weight: 5 }).addTo(
       map
