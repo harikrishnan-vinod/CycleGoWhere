@@ -1,11 +1,5 @@
-from flask import Flask, session, request, jsonify, redirect, url_for
+from flask import Flask
 from flask_cors import CORS
-from firebase_admin import credentials, firestore, auth as firebase_auth
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from google.oauth2 import service_account
-from authentication.authentication import pyrebase_auth, firebase
-from authentication.authentication import admin_sdk_auth
 
 import os
 from dotenv import load_dotenv
@@ -21,11 +15,6 @@ from routes.settings_route import setting_bp
  
 
 load_dotenv()
-
-auth_token = {
-    "token": None,
-    "expires_at": 0
-}
 
 app = Flask(__name__)
 app.secret_key = 'fhsidstuwe59weirwnsj099w04i5owro'
