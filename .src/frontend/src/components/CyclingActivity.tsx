@@ -110,7 +110,6 @@ function CyclingActivity({ activity }: ActivityProps) {
       return;
     }
 
-    // ✅ Fix #3: Encode the latlngs into polyline format before sending
     const encodedPolyline = polyline.encode(latlngArray, 5);
 
     const routeData = {
@@ -119,7 +118,7 @@ function CyclingActivity({ activity }: ActivityProps) {
       distance,
       startPostal: activity.startPostal,
       endPostal: activity.endPostal,
-      route_geometry: encodedPolyline, // <-- This is now properly encoded
+      route_geometry: encodedPolyline,
       route_instructions: activity.instructions,
     };
 
