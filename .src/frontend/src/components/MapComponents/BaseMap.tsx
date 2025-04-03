@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
-import polyline from "@mapbox/polyline";
 import Navigate from "../../components/Navigation";
 import MapDrawer from "./MapDrawer";
 import RouteInstructionsList from "./RouteInstructionsList";
@@ -13,12 +12,19 @@ import TimerControls from "./TimerControls";
 import SaveRouteModal from "./SaveRouteModal";
 import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
+import personIcon from "../../assets/personpositionicon.png";
 
 function BaseMap() {
+  // for map
   const mapRef = useRef<L.Map | null>(null);
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
+  const [userLocationMarker, setUserLocationMarker] = useState<L.Marker | null>(
+    null
+  );
+
+  // for activities
   const [distance, setDistance] = useState<number>(0);
   const [startPostal, setStartPostal] = useState("");
   const [endPostal, setEndPostal] = useState("");
@@ -33,17 +39,21 @@ function BaseMap() {
   const [activityDescription, setActivityDescription] = useState("");
   const [activityStartTime, setActivityStartTime] = useState<Date | null>(null);
 
+  // declare icons
+  const userIcon = L.icon({
+    iconUrl: personIcon, // or iconUrl if from public folder
+    iconSize: [32, 32], // size of the icon
+    iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
+    popupAnchor: [0, -32], // point from which the popup should open relative to the iconAnchor
+  });
+
   useEffect(() => {
     if (mapRef.current) return;
-    const sw = L.latLng(1.144, 103.535);
-    const ne = L.latLng(1.494, 104.502);
-    const bounds = L.latLngBounds(sw, ne);
 
     const map = L.map("mapdiv", {
-      center: L.latLng(1.2868108, 103.8545349),
+      center: L.latLng(1.2868108, 103.8545349), // fallback
       zoom: 16,
     });
-    map.setMaxBounds(bounds);
 
     L.tileLayer(
       "https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png",
@@ -57,6 +67,62 @@ function BaseMap() {
     ).addTo(map);
 
     mapRef.current = map;
+
+    const userMarkerRef = { current: null as L.Marker | null };
+
+    // 1. Get initial position
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        const marker = L.marker([latitude, longitude], { icon: userIcon })
+          .addTo(map)
+          .bindPopup("You are here")
+          .openPopup();
+
+        userMarkerRef.current = marker;
+        map.setView([latitude, longitude], 16);
+      },
+      (error) => {
+        console.error("Initial geolocation error:", error);
+        alert("Unable to retrieve your initial location.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+      }
+    );
+
+    // 2. Start watching for updates
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setLatLng([latitude, longitude]);
+        } else {
+          const marker = L.marker([latitude, longitude], { icon: userIcon })
+            .addTo(map)
+            .bindPopup("You are here")
+            .openPopup();
+
+          userMarkerRef.current = marker;
+        }
+      },
+      (error) => {
+        console.error("Watch geolocation error:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 10000,
+      }
+    );
+
+    // Cleanup
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
   function handleSetRouteMeta(
