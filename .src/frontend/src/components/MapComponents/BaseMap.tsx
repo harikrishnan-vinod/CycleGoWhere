@@ -20,9 +20,7 @@ function BaseMap() {
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
-  const [userLocationMarker, setUserLocationMarker] = useState<L.Marker | null>(
-    null
-  );
+  const userMarkerRef = { current: null as L.Marker | null };
 
   // for activities
   const [distance, setDistance] = useState<number>(0);
@@ -67,8 +65,6 @@ function BaseMap() {
     ).addTo(map);
 
     mapRef.current = map;
-
-    const userMarkerRef = { current: null as L.Marker | null };
 
     // 1. Get initial position
     navigator.geolocation.getCurrentPosition(
