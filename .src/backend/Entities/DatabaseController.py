@@ -7,6 +7,7 @@ from pathlib import Path
 from firebase_admin import credentials, firestore
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Union
+from flask import jsonify
 
 # Import entities
 from Entities.User import User
@@ -243,27 +244,45 @@ class DatabaseController:
             print(f"Error updating user: {e}")
             return False
     
-    def update_user_profile_picture(self, user_id: str, profile_picture: bytes) -> bool:
+    def update_user_profile_picture(self, user_UID: str, profile_picture_url: str) -> bool:
         """Updates a user's profile picture.
         
         Args:
-            user_id: User identifier
+            user_UID: User identifier
             profile_picture: Binary image data
             
         Returns:
             True if successful
         """
         try:
-            # In a real implementation, you'd upload this to Firebase Storage
-            # and store the URL in Firestore. For simplicity, we'll just mock this.
-            self.db.collection('users').document(user_id).update({
-                'has_profile_picture': True
+            self.db.collection("users").document(user_UID).update({
+                "profilePic": profile_picture_url
             })
-            return True
+            return {"message": "Profile picture updated", "url": profile_picture_url}, 200
         except Exception as e:
-            print(f"Error updating profile picture: {e}")
-            return False
-    
+            print("Firestore update failed:", e)
+            return {"message": "Failed to update Firestore"}, 500
+
+    def update_user_email(self, user_UID, new_email):
+        self.db.collection("users").document(user_UID).update({"email": new_email})
+        users_ref = self.db.collection("usernames").where("userUID", "==", user_UID).stream()
+        for doc_snapshot in users_ref:
+            self.db.collection("usernames").document(doc_snapshot.id).update({"email": new_email})
+
+    def update_username(self, user_UID, new_username):
+        user_doc = self.db.collection("users").document(user_UID).get()
+        if user_doc.exists:
+            old_username = user_doc.to_dict().get("username")
+            self.db.collection("usernames").document(old_username).delete()
+            self.db.collection("usernames").document(new_username).set({
+                "email": user_doc.to_dict().get("email"),
+                "userUID": user_UID
+            })
+            self.db.collection("users").document(user_UID).update({"username": new_username})
+            return jsonify({"message": "Username updated"}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+
     # Activity methods
     def add_activity(self, activity: Activity) -> bool:
         """Adds a new activity to the database.

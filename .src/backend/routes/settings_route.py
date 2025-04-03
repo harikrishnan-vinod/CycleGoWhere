@@ -2,13 +2,14 @@ from flask import Blueprint, request, jsonify
 import requests
 from .services import db , cloudinary, pyrebase_auth, firebase_auth
 import os
+from Controllers.SettingsPageController import SettingsPageController
 
 setting_bp = Blueprint("setting",__name__)
-
-
+settings_controller = SettingsPageController()
 
 @setting_bp.route("/upload-profile-pic", methods=["POST"])
 def upload_profile_pic():
+    return SettingsPageController.change_profile_pic()
     if 'file' not in request.files or 'userUID' not in request.form:
         return {"message": "Missing file or userUID"}, 400
 
@@ -74,6 +75,10 @@ def change_password():
     email = data.get("email")
     old_password = data.get("oldPassword")
     new_password = data.get("newPassword")
+    return settings_controller.change_user_password(os.environ.get('FIREBASE_API_KEY'),
+                                                       email,
+                                                       old_password,
+                                                       new_password)
 
     try:
         user = pyrebase_auth.sign_in_with_email_and_password(email, old_password)
@@ -104,6 +109,8 @@ def change_email():
     UID = data.get("userUID")
     new_email = data.get("newEmail")
 
+    return settings_controller.change_email(UID, new_email)
+
     try:
         firebase_auth.update_user(UID, email=new_email)
         db.collection("users").document(UID).update({"email": new_email})
@@ -121,6 +128,8 @@ def change_username():
     data = request.get_json()
     UID = data.get("userUID")
     new_username = data.get("newUsername")
+
+    return settings_controller.change_username(UID, new_username)
 
     if db.collection("usernames").document(new_username).get().exists:
         return jsonify({"message": "Username already exists"}), 400

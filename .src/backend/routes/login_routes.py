@@ -16,6 +16,7 @@ def login():
     data = request.get_json()
     login_input = data.get("login")
     password = data.get("password")
+    print("trying login")
     return login_controller.login(session, login_input, password)
     
 @login_bp.route("/logout", methods=["POST"])
