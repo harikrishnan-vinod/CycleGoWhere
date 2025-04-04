@@ -13,7 +13,6 @@ from flask import jsonify
 from Entities.User import User
 from Entities.Activity import Activity
 from Entities.Route import Route
-from Entities.Location import Location
 from Entities.SavedRoutes import SavedRoutes
 from Entities.Settings import Settings
 from Entities.Filters import Filters
@@ -292,60 +291,26 @@ class DatabaseController:
             return jsonify({"message": "User not found"}), 404
 
     # Activity methods
-    def add_activity(self, activity: Activity) -> bool:
-        """Adds a new activity to the database.
+    def save_activity(self, activity: Activity) -> bool:
         
-        Args:
-            activity: Activity object to add
-            
-        Returns:
-            True if successful
-        """
-        try:
-            # Create activity document
-            activity_data = {
-                'user_id': activity.user.user_id,
-                'date_time_started': activity.date_time_started,
-                'date_time_ended': activity.date_time_ended,
-                'time_elapsed': activity.get_time_elapsed(),
-            }
-            
-            # Add route data if available
-            if activity.route_taken:
-                route = activity.route_taken
-                activity_data['route'] = {
-                    'start_point': {
-                        'location_id': route.start_point.location_id,
-                        'latitude': route.start_point.latitude,
-                        'longitude': route.start_point.longitude,
-                        'address': route.start_point.address
-                    },
-                    'end_point': {
-                        'location_id': route.end_point.location_id,
-                        'latitude': route.end_point.latitude,
-                        'longitude': route.end_point.longitude,
-                        'address': route.end_point.address
-                    }
-                }
-            
-            # Generate new activity ID if not set
-            if not activity.activity_id:
-                activity.activity_id = str(uuid.uuid4())
-            
-            # Add to database
-            self.db.collection('activities').document(str(activity.activity_id)).set(activity_data)
-            
-            # Update user's activities list
-            user_ref = self.db.collection('users').document(activity.user.user_id)
-            user_ref.update({
-                'activity_ids': firestore.ArrayUnion([str(activity.activity_id)])
-            })
-            
-            return True
-        except Exception as e:
-            print(f"Error adding activity: {e}")
-            return False
-    
+        # Prepare data for activity document
+        doc_data = {
+            "activityName": activity.get_activity_name(),
+            "notes": activity.get_notes(),
+            "distance": activity.get_route().get_distance(),
+            "startPostal": activity.get_route().get_start_postal(),
+            "endPostal": activity.get_route().get_end_postal(),
+            "duration": activity.get_duration(),
+            "routePath": activity.get_route().get_route_path(),
+            "startTime": activity.get_start_time(),
+            "instructions": activity.get_route().get_instructions(),
+            "startLocation": activity.get_route().get_start_location(),
+            "endLocation": activity.get_route().get_end_location(),
+            "createdAt": activity.get_created_at()
+        }
+
+        self.db.collection("users").document(activity.get_user_uid()).collection("activities").add(doc_data)
+        
     def get_user_activities(self, user_id: str, period: Optional[str] = None, limit: Optional[int] = None) -> List[Activity]:
         """Retrieves activities for a user with optional filtering.
         

@@ -1,11 +1,21 @@
 from flask import request, jsonify
 from Entities.Activity import Activity
 from Entities.DatabaseController import DatabaseController
+import polyline
 
 class ProfilePageController:
     def __init__(self):
         self.db_controller = DatabaseController()
 
+    def fetch_activies(self, user_UID):
+        act_ref = db.collection("users").document(user_UID).collection("activities").stream()
+        activities = []
+        for doc in act_ref:
+            data = doc.to_dict()
+            data = to_serializable(data)
+            data["id"] = doc.id
+            activities.append(data)
+        return jsonify(activities), 200
     def get_username(self, user_UID):
         if not user_UID:
             return jsonify({"message": "User UID required"}), 400

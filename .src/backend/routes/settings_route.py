@@ -36,7 +36,6 @@ def change_password():
                                                        old_password,
                                                        new_password)
 
-
 @setting_bp.route("/change-email", methods=["POST"])
 def change_email():
     data = request.get_json()
