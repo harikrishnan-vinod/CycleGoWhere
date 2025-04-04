@@ -56,8 +56,12 @@ function Profile() {
         ))}
       </div>
 
+      <div className="footer">
+
+      </div>
       <Navigate />
     </div>
+
   );
 }
 
