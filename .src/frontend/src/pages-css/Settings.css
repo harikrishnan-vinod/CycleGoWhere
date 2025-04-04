@@ -17,7 +17,6 @@
 
 }
 
-/* Logout button moved to the right */
 .logout-button {
   position: relative;
   background-color: white;
@@ -38,8 +37,7 @@
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   padding: 35px;
-  /* More padding for more space */
-  width: 100%;
+  width: 30%;
   position: relative;
 }
 
