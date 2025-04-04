@@ -1,23 +1,43 @@
-from Entities.Location import Location
+
 
 class Route:
-    def __init__(self, start_point=None, end_point=None, route_id=None, distance=0, 
-                 estimated_time=0, route_path=None):
+    def __init__(self,
+                 route_id=None,
+                 route_name=None,
+                 notes=None,
+                 start_location=None,
+                 start_postal=None,
+                 end_location=None,
+                 end_postal=None,
+                 distance=0,
+                 route_path=[],
+                 instructions=None,
+                 last_used_at=None,):
+        self.__start_location = start_location
+        self.__start_postal = start_postal
+        self.__end_location = end_location
+        self.__end_postal = end_postal
+        self.__distance = distance  # in kilometers
+        self.__route_path = route_path or []  # list of Location objects representing the path
+        self.__instructions = instructions
         self.__route_id = route_id
-        self.__start_point = start_point
-        self.__end_point = end_point
-        self.__total_distance = distance  # in kilometers
-        self.__total_time = estimated_time  # in seconds
-        self.__route_path = route_path or {}  # list of Location objects representing the path
-    
+        self.__route_name = route_name
+        self.__notes = notes
+        self.__last_used_at = last_used_at
+
     def to_dict(self):
         return {
+            "start_location": self.__start_location if self.__start_location else None,
+            "start_postal": self.__start_postal,
+            "end_location": self.__end_location if self.__end_location else None,
+            "end_postal": self.__end_postal,
+            "distance": self.__distance,
+            "route_path": self.__route_path,
+            "instructions": self.__instructions,
             "route_id": self.__route_id,
-            "start_point": self.__start_point.to_dict() if self.__start_point else None,
-            "end_point": self.__end_point.to_dict() if self.__end_point else None,
-            "distance": self.__total_distance,
-            "total_time": self.__total_time,
-            "path": {location.to_dict() for location in self.__route_path} if self.__route_path else []
+            "route_name": self.__route_name,
+            "notes": self.__notes,
+            "last_used_at": self.__last_used_at
         }
     
     @staticmethod
@@ -45,30 +65,80 @@ class Route:
     
     # Get methods
     def get_start_location(self):
-        return self.start_location
-    
+        return self.__start_location
+
+    def get_start_postal(self):
+        return self.__start_postal
+
     def get_end_location(self):
-        return self.end_location
-    
+        return self.__end_location
+
+    def get_end_postal(self):
+        return self.__end_postal
+
     def get_distance(self):
-        return self.distance
+        return self.__distance
+
+    def get_route_path(self):
+        return self.__route_path
+
+    def get_instructions(self):
+        return self.__instructions
     
-    def get_estimated_time(self):
-        return self.estimated_time
+    def get_route_id(self):
+        return self.__route_id
     
-    # Set methods
-    def set_start_location(self, location):
-        self.start_location = location
-        return True
+    def get_route_name(self):
+        return self.__route_name
     
-    def set_end_location(self, location):
-        self.end_location = location
-        return True
+    def get_notes(self):
+        return self.__notes
     
+    def get_last_used_at(self):
+        return self.__last_used_at
+
+    def set_start_location(self, start_location):
+        self.__start_location = start_location
+        return self.__start_location
+
+    def set_start_postal(self, start_postal):
+        self.__start_postal = start_postal
+        return self.__start_postal
+
+    def set_end_location(self, end_location):
+        self.__end_location = end_location
+        return self.__end_location
+
+    def set_end_postal(self, end_postal):
+        self.__end_postal = end_postal
+        return self.__end_postal
+
     def set_distance(self, distance):
-        self.distance = distance
-        return True
+        self.__distance = distance
+        return self.__distance
+
+    def set_route_path(self, route_path):
+        self.__route_path = route_path
+        return self.__route_path
+
+    def set_instructions(self, instructions):
+        self.__instructions = instructions
+        return self.__instructions
     
-    def set_estimated_time(self, time):
-        self.estimated_time = time
-        return True
+    def set_route_id(self, route_id):
+        self.__route_id = route_id
+        return self.__route_id
+    
+    def set_route_name(self, route_name):
+        self.__route_name = route_name
+        return self.__route_name
+    
+    def set_notes(self, notes):
+        self.__notes = notes
+        return self.__notes
+    
+    def set_last_used_at(self, last_used_at):
+        self.__last_used_at = last_used_at
+        return self.__last_used_at
+
+    

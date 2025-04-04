@@ -3,7 +3,12 @@ import requests
 from math import radians, sin, cos, sqrt, atan2
 import csv
 from Entities.DatabaseController import DatabaseController
+from Entities.Activity import Activity
+from Entities.Route import Route
+from routes.services import db, firestore_module as firestore
 import os
+import datetime
+import polyline
 
 def haversine(lat1, lon1, lat2, lon2):
     """Calculate Haversine distance between two lat/lng points in kilometers."""
@@ -151,6 +156,7 @@ class MainPageController:
 
         return nearby
     
+    @staticmethod
     def findBikeParking(route_points,radius_km=0.5): #TODO: Use Filter entity?
         nearby = []
         seen = set()
@@ -247,6 +253,7 @@ class MainPageController:
 
         return nearby
     
+    @staticmethod
     def findBikeShops(route_points, radius_km=0.5):
         """
         Load bike shop data from a CSV and return shops near the route.
@@ -336,4 +343,58 @@ class MainPageController:
                     continue  # Skip invalid rows
         
         return nearby
-            
+    
+    def saveActivity(self, user_uid, activity_data):
+        decoded_points = polyline.decode(activity_data["route_geometry"], 5)
+        geo_points = [firestore.GeoPoint(lat, lng) for lat, lng in decoded_points]
+
+        start_time_str = activity_data.get("startTime")
+        start_time = None
+
+        if start_time_str:
+            try:
+                # Try full ISO 8601 with microseconds
+                start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f")
+            except ValueError:
+                try:
+                    # Fallback without microseconds
+                    start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
+                except Exception as e:
+                    print("Invalid startTime format fallback:", e)
+        
+        instructions_converted = []
+        for row in activity_data["route_instructions"]:
+            if isinstance(row, dict):
+                instructions_converted.append({
+                    "direction": row.get("direction"),
+                    "road": row.get("road"),
+                    "distance": row.get("distance"),
+                    "latLng": row.get("latLng")
+                })
+            elif isinstance(row, list):
+                instructions_converted.append({
+                    "direction": row[0],
+                    "road": row[1],
+                    "distance": row[5],
+                    "latLng": row[3]
+                })
+
+        route = Route(
+            start_location=firestore.GeoPoint(*decoded_points[0]),
+            end_location=firestore.GeoPoint(*decoded_points[-1]),
+            distance=activity_data["distance"],
+            route_path=geo_points,
+            instructions=instructions_converted,
+            start_postal=activity_data["startPostal"],
+            end_postal=activity_data["endPostal"]
+        )
+        activity = Activity(user_uid=user_uid,
+                            activity_name=activity_data["activityName"],
+                            notes=activity_data["notes"],
+                            duration=activity_data["timeTaken"],
+                            start_time=start_time,
+                            route=route,
+                            created_at=firestore.SERVER_TIMESTAMP)
+
+        self.db_controller.save_activity(activity)
+        return jsonify({"message": "Activity saved"}), 200
