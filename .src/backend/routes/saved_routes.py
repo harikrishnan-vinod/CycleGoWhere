@@ -41,7 +41,7 @@ def get_activities():
         print("Error getting activities:", e)
         return jsonify({"message": "Could not fetch activities"}), 500
     
-@savedroutes_bp.route("/update-last-used", methods=["POST"])
+@savedroutes_bp.route("/update-last-used", methods=["POST"]) #TODO: Use controller
 def update_last_used():
     user_uid = request.args.get("userUID")
     route_id = request.args.get("routeId")
