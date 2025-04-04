@@ -2,13 +2,17 @@
 
 class Route:
     def __init__(self,
+                 route_id=None,
+                 route_name=None,
+                 notes=None,
                  start_location=None,
                  start_postal=None,
                  end_location=None,
                  end_postal=None,
                  distance=0,
                  route_path=[],
-                 instructions=None,):
+                 instructions=None,
+                 last_used_at=None,):
         self.__start_location = start_location
         self.__start_postal = start_postal
         self.__end_location = end_location
@@ -16,15 +20,24 @@ class Route:
         self.__distance = distance  # in kilometers
         self.__route_path = route_path or []  # list of Location objects representing the path
         self.__instructions = instructions
+        self.__route_id = route_id
+        self.__route_name = route_name
+        self.__notes = notes
+        self.__last_used_at = last_used_at
 
     def to_dict(self):
         return {
+            "start_location": self.__start_location if self.__start_location else None,
+            "start_postal": self.__start_postal,
+            "end_location": self.__end_location if self.__end_location else None,
+            "end_postal": self.__end_postal,
+            "distance": self.__distance,
+            "route_path": self.__route_path,
+            "instructions": self.__instructions,
             "route_id": self.__route_id,
-            "start_location": self.__start_location.to_dict() if self.__start_location else None,
-            "end_location": self.__end_location.to_dict() if self.__end_location else None,
-            "distance": self.__total_distance,
-            "total_time": self.__total_time,
-            "path": {location.to_dict() for location in self.__route_path} if self.__route_path else []
+            "route_name": self.__route_name,
+            "notes": self.__notes,
+            "last_used_at": self.__last_used_at
         }
     
     @staticmethod
@@ -71,6 +84,18 @@ class Route:
 
     def get_instructions(self):
         return self.__instructions
+    
+    def get_route_id(self):
+        return self.__route_id
+    
+    def get_route_name(self):
+        return self.__route_name
+    
+    def get_notes(self):
+        return self.__notes
+    
+    def get_last_used_at(self):
+        return self.__last_used_at
 
     def set_start_location(self, start_location):
         self.__start_location = start_location
@@ -99,5 +124,21 @@ class Route:
     def set_instructions(self, instructions):
         self.__instructions = instructions
         return self.__instructions
+    
+    def set_route_id(self, route_id):
+        self.__route_id = route_id
+        return self.__route_id
+    
+    def set_route_name(self, route_name):
+        self.__route_name = route_name
+        return self.__route_name
+    
+    def set_notes(self, notes):
+        self.__notes = notes
+        return self.__notes
+    
+    def set_last_used_at(self, last_used_at):
+        self.__last_used_at = last_used_at
+        return self.__last_used_at
 
     

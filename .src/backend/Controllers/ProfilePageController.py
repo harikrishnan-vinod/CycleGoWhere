@@ -1,21 +1,89 @@
 from flask import request, jsonify
 from Entities.Activity import Activity
-from Entities.DatabaseController import DatabaseController
+from Entities.Route import Route
+from Entities.DatabaseController import DatabaseController, to_serializable
+from routes.services import db, firestore_module as firestore
 import polyline
+import traceback
 
 class ProfilePageController:
     def __init__(self):
         self.db_controller = DatabaseController()
 
     def fetch_activies(self, user_UID):
-        act_ref = db.collection("users").document(user_UID).collection("activities").stream()
-        activities = []
-        for doc in act_ref:
-            data = doc.to_dict()
+        activity_data = []
+        activities = self.db_controller.get_user_activities(user_UID)
+        for activity in activities:
+            activity_dict = activity.to_dict()
+            data = {
+                "id": activity_dict.get("id"),
+                "activityName": activity_dict.get("activity_name"),
+                "notes": activity_dict.get("notes"),
+                "duration": activity_dict.get("duration"),
+                "startTime": activity_dict.get("start_time"),
+                "startLocation": activity_dict.get("route").get("start_location"),
+                "startPostal": activity_dict.get("route").get("start_postal"),
+                "endLocation": activity_dict.get("route").get("end_location"),
+                "endPostal": activity_dict.get("route").get("end_postal"),
+                "distance": activity_dict.get("route").get("distance"),
+                "routePath": activity_dict.get("route").get("route_path"),
+                "instructions": activity_dict.get("route").get("instructions"),
+                "createdAt": activity_dict.get("created_at")
+            }
             data = to_serializable(data)
-            data["id"] = doc.id
-            activities.append(data)
-        return jsonify(activities), 200
+            activity_data.append(data)
+        return jsonify(activity_data), 200
+    
+    def save_route(self, user_UID, route_data):
+        if not isinstance(route_data["route_geometry"], str):
+            raise ValueError("route_geometry must be an encoded polyline string.")
+
+        try:
+            decoded_points = polyline.decode(route_data["route_geometry"], 5)
+            print("Received encoded polyline:", route_data["route_geometry"])
+
+            
+            if not decoded_points:
+                raise ValueError("Polyline decoding returned empty list.")
+
+            geo_points = [firestore.GeoPoint(lat, lng) for lat, lng in decoded_points]
+
+            instructions_converted = []
+            for row in route_data["route_instructions"]:
+                if isinstance(row, dict):  
+                    instructions_converted.append({
+                        "direction": row.get("direction"),
+                        "road": row.get("road"),
+                        "distance": row.get("distance"),
+                        "latLng": row.get("latLng"),
+                    })
+                elif isinstance(row, list):  
+                    instructions_converted.append({
+                        "direction": row[0],
+                        "road": row[1],
+                        "distance": row[5],
+                        "latLng": row[3],
+                })
+
+            route = Route(route_name=route_data["routeName"],
+                          notes=route_data["notes"],
+                          distance=route_data["distance"],
+                          start_postal=route_data["startPostal"],
+                          end_postal=route_data["endPostal"],
+                          route_path=geo_points,
+                          instructions=instructions_converted,
+                          start_location=firestore.GeoPoint(*decoded_points[0]),
+                          end_location=firestore.GeoPoint(*decoded_points[-1]),
+                          last_used_at=firestore.SERVER_TIMESTAMP)
+
+            self.db_controller.save_route(user_UID, route)
+            return jsonify({"message": "Route saved successfully"}), 200
+
+        except Exception as e:
+            print("Error saving route:", e)
+            traceback.print_exc()
+            return jsonify({"message": "Failed to save route"}), 500
+
     def get_username(self, user_UID):
         if not user_UID:
             return jsonify({"message": "User UID required"}), 400

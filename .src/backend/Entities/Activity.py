@@ -2,10 +2,11 @@ from datetime import datetime
 from Entities.Route import Route
 
 class Activity:
-    def __init__(self, user_uid, activity_name=None, notes=None,
+    def __init__(self, user_uid, activity_id=None, activity_name=None, notes=None,
                  duration=None, start_time=None, route: Route=None,
                  created_at=None):
         self.__user_uid = user_uid
+        self.__activity_id = activity_id
         self.__activity_name = activity_name
         self.__notes = notes
         self.__duration = duration
@@ -16,19 +17,14 @@ class Activity:
     
     def to_dict(self):
         return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "route": self.route.to_dict() if self.route else None,
-            "start_time": self.start_time.isoformat() if isinstance(self.start_time, datetime) else self.start_time,
-            "end_time": self.end_time.isoformat() if isinstance(self.end_time, datetime) else self.end_time,
-            "distance": self.distance,
-            "duration": self.duration,
-            "calories": self.calories,
-            "average_speed": self.average_speed,
-            "max_speed": self.max_speed,
-            "min_elevation": self.min_elevation,
-            "max_elevation": self.max_elevation,
-            "cadence": self.cadence
+            "user_uid": self.__user_uid,
+            "activity_id": self.__activity_id,
+            "activity_name": self.__activity_name,
+            "notes": self.__notes,
+            "duration": self.__duration,
+            "start_time": self.__start_time,
+            "route": self.__route.to_dict() if self.__route else None,
+            "created_at": self.__created_at
         }
     
     @staticmethod
@@ -52,13 +48,15 @@ class Activity:
     # Getters and Setters
     def get_user_uid(self):
         return self.__user_uid
+    
+    def get_activity_id(self):
+        return self.__activity_id
 
     def get_activity_name(self):
         return self.__activity_name
 
     def get_notes(self):
         return self.__notes
-        return self.__distance
 
     def get_duration(self):
         return self.__duration
@@ -81,6 +79,10 @@ class Activity:
 
     def set_activity_name(self, activity_name):
         self.__activity_id = activity_name
+        return self.__activity_id
+    
+    def set_activity_id(self, activity_id):
+        self.__activity_id = activity_id
         return self.__activity_id
 
     def set_notes(self, notes):

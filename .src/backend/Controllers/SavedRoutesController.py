@@ -1,8 +1,8 @@
 from flask import request, jsonify
 from Entities.Route import Route
 from Entities.SavedRoutes import SavedRoutes
-from Entities.DatabaseController import DatabaseController
-from flask import Blueprint, request, josonify
+from Entities.DatabaseController import DatabaseController, to_serializable
+from flask import Blueprint, request, jsonify
 from routes.services import db, firestore_module as firestore
 import polyline
 import datetime
@@ -12,70 +12,44 @@ class SavedRoutesController:
     def __init__(self):
         self.db_controller = DatabaseController()
     
-    def get_saved_routes(self, user_id):
-        try:
-            # Get saved routes
-            saved_routes = self.db_controller.get_saved_routes(user_id)
-            
-            return {
-                "saved_routes": [route.to_dict() for route in saved_routes]
+    def fetch_saved_routes(self, user_uid):
+        routes_data = []
+        routes = self.db_controller.get_saved_routes(user_uid)
+        for route in routes:
+            route_dict = route.to_dict()
+            raw_data = {
+                "routeName": route_dict.get("route_name"),
+                "notes": route_dict.get("notes"),
+                "distance": route_dict.get("distance"),
+                "startLocation": route_dict.get("start_location"),
+                "startPostal": route_dict.get("start_postal"),
+                "endLocation": route_dict.get("end_location"),
+                "endPostal": route_dict.get("end_postal"),
+                "routePath": route_dict.get("route_path"),
+                "instructions": route_dict.get("instructions"),
+                "lastUsedAt": route_dict.get("last_used_at"),
+                "routeId": route_dict.get("route_id")
             }
-        except Exception as e:
-            return {"error": str(e)}, 400
+            serializable_data = to_serializable(raw_data)
+
+            route_path = serializable_data.get("routePath", [])
+            print("Route path:", route_path[1])
+            if route_path and isinstance(route_path, list):
+                try:
+                    latlngs = [
+                        (pt["latitude"], pt["longitude"]) for pt in route_path
+                    ]
+                    encoded = polyline.encode(latlngs, 5)
+                    serializable_data["route_geometry"] = encoded
+                except Exception as e:
+                    print("⚠️ Failed to encode polyline:", e)
+                    serializable_data["route_geometry"] = None
+
+            serializable_data["id"] = route.get_route_id()
+            routes_data.append(serializable_data)
+
+        return jsonify(routes_data), 200
     
-    def save_route(self, user_id, route_data):
-        if not isinstance(route_data["route_geometry"], str):
-            raise ValueError("route_geometry must be an encoded polyline string.")
-
-        try:
-            decoded_points = polyline.decode(route_data["route_geometry"], 5)
-            print("Received encoded polyline:", route_data["route_geometry"])
-
-            
-            if not decoded_points:
-                raise ValueError("Polyline decoding returned empty list.")
-
-            geo_points = [firestore.GeoPoint(lat, lng) for lat, lng in decoded_points]
-
-            instructions_converted = []
-            for row in route_data["route_instructions"]:
-                if isinstance(row, dict):  
-                    instructions_converted.append({
-                        "direction": row.get("direction"),
-                        "road": row.get("road"),
-                        "distance": row.get("distance"),
-                        "latLng": row.get("latLng"),
-                    })
-                elif isinstance(row, list):  
-                    instructions_converted.append({
-                        "direction": row[0],
-                        "road": row[1],
-                        "distance": row[5],
-                        "latLng": row[3],
-                })
-
-
-
-            doc_data = {
-                "routeName": route_data["routeName"],
-                "notes": route_data["notes"],
-                "distance": route_data["distance"],
-                "startPostal": route_data["startPostal"],
-                "endPostal": route_data["endPostal"],
-                "routePath": geo_points,
-                "instructions": instructions_converted,
-                "startLocation": firestore.GeoPoint(*decoded_points[0]),
-                "endLocation": firestore.GeoPoint(*decoded_points[-1]),
-                "lastUsedAt": firestore.SERVER_TIMESTAMP
-            }
-
-            db.collection("users").document(user_uid).collection("savedRoutes").add(doc_data)
-            return jsonify({"message": "Route saved successfully"}), 200
-
-        except Exception as e:
-            print("Error saving route:", e)
-            traceback.print_exc()
-            return jsonify({"message": "Failed to save route"}), 500
     
     def unsave_route(self, user_id, route_id):
         try:
