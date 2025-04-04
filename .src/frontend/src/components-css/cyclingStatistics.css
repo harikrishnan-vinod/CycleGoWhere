@@ -13,13 +13,11 @@
     padding: 5px;
 }
 
-/* Styles for the date bar container */
 .date-bar {
     overflow-x: auto;
     white-space: nowrap;
 }
 
-/* Styles for each date item */
 .date-item {
     display: inline-block;
     padding: 5px 10px;
@@ -32,12 +30,12 @@
     /* Smooth transition for background color */
 }
 
-/* Highlighting the selected date item */
 .date-item.selected {
     background-color: #000000;
     color: white;
     ;
 }
+
 
 /* Optional: Add hover effect for better UX */
 .date-item:hover {
