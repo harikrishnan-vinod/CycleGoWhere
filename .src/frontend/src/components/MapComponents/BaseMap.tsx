@@ -23,6 +23,7 @@ function BaseMap() {
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const userLocation = useRef<L.LatLng | null>(null);
 
   // for instructions
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
@@ -92,6 +93,8 @@ function BaseMap() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        const latLng = L.latLng(latitude, longitude);
+        userLocation.current = latLng;
 
         const marker = L.marker([latitude, longitude], { icon: userIcon })
           .addTo(map)
@@ -117,6 +120,8 @@ function BaseMap() {
 
     const index = locationIndexRef.current;
     const { lat, lng } = mockLocations[index];
+    const latLng = L.latLng(lat, lng);
+    userLocation.current = latLng;
 
     console.log("📍 Moving to index:", index, "Location:", lat, lng);
 
@@ -170,6 +175,27 @@ function BaseMap() {
       }
     }
   };
+
+  function centerMapOnUserLocation() {
+    if (!mapRef.current || !userLocation.current) {
+      alert("User location not available.");
+      return;
+    }
+
+    const latLng = userLocation.current;
+    mapRef.current.setView(latLng, 16);
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLatLng(latLng);
+    } else {
+      const marker = L.marker(latLng, { icon: userIcon })
+        .addTo(mapRef.current)
+        .bindPopup("You are here")
+        .openPopup();
+
+      userMarkerRef.current = marker;
+    }
+  }
 
   function handleSetRouteMeta(
     dist: number,
@@ -322,6 +348,10 @@ function BaseMap() {
 
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
       <WaterPointsLayer map={mapRef.current} waterPoints={waterPoints} />
+
+      <div className="center-location-button">
+        <button onClick={centerMapOnUserLocation}>Center on Me</button>
+      </div>
 
       {activityStarted && (
         <div className="next-location-button">
