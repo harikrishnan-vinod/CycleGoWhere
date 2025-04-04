@@ -68,6 +68,7 @@ def save_route():
         print("Error saving route:", e)
         traceback.print_exc()
         return jsonify({"message": "Failed to save route"}), 500
+    
 #unsave route (in saved route page)
 @savedroutes_bp.route("/unsave-route", methods=["DELETE"])
 def unsave_route():
