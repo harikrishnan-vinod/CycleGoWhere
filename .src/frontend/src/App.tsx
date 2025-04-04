@@ -16,6 +16,7 @@ import ChangeEmail from "./components/ChangeEmail";
 import ChangePassword from "./components/ChangePassword";
 import ChangeProfilePicture from "./components/ChangeProfilePicture";
 
+import ProtectedRoute from "./components/ProtectedRoute"; // ✅ import the wrapper
 import "./App.css";
 
 function App() {
@@ -23,19 +24,83 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Navigate replace to="/login" />} />
-        <Route path="/MainPage" element={<MainPage />} />
-        <Route path="/Profile" element={<Profile />} />
-        <Route path="/SavedRoutes" element={<SavedRoutes />} />
-        <Route path="/Settings" element={<Settings />} />
-        <Route path="/Login" element={<Login />} />
+
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/changeUsername" element={<ChangeUsername />} />
-        <Route path="/ChangeEmail" element={<ChangeEmail />} />
-        <Route path="/ChangePassword" element={<ChangePassword />} />
+
+        {/* Protected routes */}
+        <Route
+          path="/MainPage"
+          element={
+            <ProtectedRoute>
+              <MainPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/SavedRoutes"
+          element={
+            <ProtectedRoute>
+              <SavedRoutes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/logout"
+          element={
+            <ProtectedRoute>
+              <Logout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/changeUsername"
+          element={
+            <ProtectedRoute>
+              <ChangeUsername />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ChangeEmail"
+          element={
+            <ProtectedRoute>
+              <ChangeEmail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ChangePassword"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/changeProfilePicture"
-          element={<ChangeProfilePicture />}
+          element={
+            <ProtectedRoute>
+              <ChangeProfilePicture />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>

@@ -1,11 +1,10 @@
 .icon-btn {
-    width: 30px;
-    height: 30px;
+  width: 30px;
+  height: 30px;
 }
 
 .icon-btn:hover {
-    transform: scale(1.2);
-
+  transform: scale(1.2);
 }
 
 .profile-container {
@@ -14,4 +13,27 @@
 
 .cycling-statistics {
     max-width: 70vw;
+}
+.statistics-list-container {
+  text-align: left;
+  padding-left: 27%;
+}
+
+.statistics-list {
+  flex-direction: column;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  color: black;
+}
+
+
+.activities-list {
+  min-width: 100%;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
 }

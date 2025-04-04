@@ -12,11 +12,18 @@ function SavedRoute({ route }: { route: any }) {
     const userUID = sessionStorage.getItem("userUID");
     if (!userUID) return;
 
+    const instructionsArrayFormat = route.instructions.map((inst: any) => [
+      inst.direction,
+      inst.distance,
+      inst.road,
+      inst.latLng,
+    ]);
+
     sessionStorage.setItem(
       "savedRouteToStart",
       JSON.stringify({
         route_geometry: route.route_geometry,
-        route_instructions: route.instructions,
+        route_instructions: instructionsArrayFormat,
         distance: route.distance,
         startPostal: route.startPostal,
         endPostal: route.endPostal,

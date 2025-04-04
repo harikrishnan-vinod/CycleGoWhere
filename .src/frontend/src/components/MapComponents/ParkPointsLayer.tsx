@@ -1,33 +1,33 @@
 import React, { useEffect } from "react";
 import L from "leaflet";
-import WaterPointIcon from "../../assets/water-tap.png";
+import ParkingPointIcon from "../../assets/bikeparking.png";
 
-interface WaterPoint {
+interface ParkPoint {
   lat: number;
   lng: number;
   name: string;
   distance_km: number;
 }
 
-interface WaterPointsLayerProps {
+interface ParkPointsLayerProps {
   map: L.Map | null;
-  waterPoints: WaterPoint[];
+  parkPoints: ParkPoint[];
   markersRef: React.MutableRefObject<L.Marker[]>;
-  showWater: boolean;
+  showPark: boolean;
 }
 
-const WaterIcon = L.icon({
-  iconUrl: WaterPointIcon,
+const ParkingIcon = L.icon({
+  iconUrl: ParkingPointIcon,
   iconSize: [32, 32],
   iconAnchor: [16, 32],
   popupAnchor: [0, -32],
 });
 
-const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
+const ParkPointsLayer: React.FC<ParkPointsLayerProps> = ({
   map,
-  waterPoints,
+  parkPoints,
   markersRef,
-  showWater,
+  showPark,
 }) => {
   useEffect(() => {
     if (!map) return;
@@ -38,15 +38,15 @@ const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
     });
     markersRef.current = [];
 
-    // Add new markers if visible
-    if (showWater) {
-      const newMarkers = waterPoints.map((wp) => {
-        const marker = L.marker([wp.lat, wp.lng], {
-          title: wp.name,
-          icon: WaterIcon,
+    // Only add markers if showPark is true
+    if (showPark) {
+      const newMarkers = parkPoints.map((pp) => {
+        const marker = L.marker([pp.lat, pp.lng], {
+          title: pp.name,
+          icon: ParkingIcon,
         }).addTo(map);
         marker.bindPopup(
-          `<b>${wp.name}</b><br/>Distance: ${wp.distance_km} km`
+          `<b>${pp.name}</b><br/>Distance: ${pp.distance_km} km`
         );
         return marker;
       });
@@ -60,9 +60,9 @@ const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
       });
       markersRef.current = [];
     };
-  }, [map, waterPoints, showWater]);
+  }, [map, parkPoints, showPark]);
 
   return null;
 };
 
-export default WaterPointsLayer;
+export default ParkPointsLayer;
