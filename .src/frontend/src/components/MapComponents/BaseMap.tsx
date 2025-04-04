@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
-import polyline from "@mapbox/polyline";
 import Navigate from "../../components/Navigation";
 import RouteInstructionsList from "./RouteInstructionsList";
 import RouteLayer from "./RouteLayer";
@@ -13,15 +12,28 @@ import SaveRouteModal from "./SaveRouteModal";
 import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
 import MapDrawer, { MapDrawerRef } from "./MapDrawer";
+import personIcon from "../../assets/personpositionicon.png";
+import { useMemo } from "react";
+import { RouteSummary } from "../../types";
+import RouteSummaryComponent from "./RouteSummaryComponent";
 
 function BaseMap() {
+  // for map
   const mapRef = useRef<L.Map | null>(null);
   const mapDrawerRef = useRef<MapDrawerRef>(null);
   const waterPointMarkersRef = useRef<L.Marker[]>([]);
 
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
-  const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+  const userLocation = useRef<L.LatLng | null>(null);
+
+  // for instructions
+  const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
+  const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
+  const [routeSummary, setRouteSummary] = useState<RouteSummary | null>(null);
+
+  // for activities
   const [distance, setDistance] = useState<number>(0);
   const [startPostal, setStartPostal] = useState("");
   const [endPostal, setEndPostal] = useState("");
@@ -36,18 +48,36 @@ function BaseMap() {
   const [activityStartTime, setActivityStartTime] = useState<Date | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // declare icons
+  const userIcon = L.icon({
+    iconUrl: personIcon, // or iconUrl if from public folder
+    iconSize: [32, 32], // size of the icon
+    iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
+    popupAnchor: [0, -32], // point from which the popup should open relative to the iconAnchor
+  });
+
+  // mock locations from 637035 to 648310
+  const mockLocations = useMemo(() => {
+    if (!routeInstructions || routeInstructions.length === 0) return [];
+
+    return routeInstructions.map((instruction) => {
+      const [latStr, lngStr] = instruction[3].split(",");
+      return {
+        lat: parseFloat(latStr),
+        lng: parseFloat(lngStr),
+      };
+    });
+  }, [routeInstructions]);
+
+  const locationIndexRef = useRef(0);
+
   useEffect(() => {
     if (mapRef.current) return;
 
-    const sw = L.latLng(1.144, 103.535);
-    const ne = L.latLng(1.494, 104.502);
-    const bounds = L.latLngBounds(sw, ne);
-
     const map = L.map("mapdiv", {
-      center: L.latLng(1.2868108, 103.8545349),
+      center: L.latLng(1.2868108, 103.8545349), // fallback
       zoom: 16,
     });
-    map.setMaxBounds(bounds);
 
     L.tileLayer(
       "https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png",
@@ -80,7 +110,118 @@ function BaseMap() {
         setElapsedSeconds((prev) => prev + 1);
       }, 1000);
     }
+
+    // 1. Get initial position
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const latLng = L.latLng(latitude, longitude);
+        userLocation.current = latLng;
+
+        const marker = L.marker([latitude, longitude], { icon: userIcon })
+          .addTo(map)
+          .bindPopup("You are here")
+          .openPopup();
+
+        userMarkerRef.current = marker;
+        map.setView([latitude, longitude], 16);
+      },
+      (error) => {
+        console.error("Initial geolocation error:", error);
+        alert("Unable to retrieve your initial location.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+      }
+    );
   }, []);
+
+  const updateLocation = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    const index = locationIndexRef.current;
+
+    if (routeInstructions.length === 1) {
+      setActivityModalOpen(true);
+      setActivityStarted(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    const { lat, lng } = mockLocations[index];
+    const latLng = L.latLng(lat, lng);
+    userLocation.current = latLng;
+
+    console.log("📍 Moving to index:", index, "Location:", lat, lng);
+
+    locationIndexRef.current = (index + 1) % mockLocations.length;
+
+    if (mapRef.current) {
+      const map = mapRef.current;
+
+      if (userMarkerRef.current) {
+        map.removeLayer(userMarkerRef.current);
+        userMarkerRef.current = null;
+      }
+
+      const marker = L.marker([lat, lng], { icon: userIcon })
+        .addTo(map)
+        .bindPopup("You are here")
+        .openPopup();
+
+      userMarkerRef.current = marker;
+      map.setView([lat, lng], 16);
+
+      // === Proximity check ===
+      if (
+        routeInstructions.length > 0 &&
+        currentInstructionIndex < routeInstructions.length
+      ) {
+        const currentPos = L.latLng(lat, lng);
+        const nextStep = routeInstructions[currentInstructionIndex];
+        const [latStr, lngStr] = nextStep[3].split(",");
+        const nextPos = L.latLng(parseFloat(latStr), parseFloat(lngStr));
+
+        const distance = currentPos.distanceTo(nextPos);
+
+        if (distance <= 20) {
+          setRouteInstructions((prevInstructions) => {
+            const updated = prevInstructions.slice(1);
+            locationIndexRef.current = 0;
+
+            return updated;
+          });
+
+          setCurrentInstructionIndex(0);
+        }
+      }
+    }
+  };
+
+  function centerMapOnUserLocation() {
+    if (!mapRef.current || !userLocation.current) {
+      alert("User location not available.");
+      return;
+    }
+
+    const latLng = userLocation.current;
+    mapRef.current.setView(latLng, 16);
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLatLng(latLng);
+    } else {
+      const marker = L.marker(latLng, { icon: userIcon })
+        .addTo(mapRef.current)
+        .bindPopup("You are here")
+        .openPopup();
+
+      userMarkerRef.current = marker;
+    }
+  }
 
   function handleSetRouteMeta(
     dist: number,
@@ -115,6 +256,7 @@ function BaseMap() {
   }
 
   function handleEndActivity() {
+    setActivityStarted(false);
     setRouteInstructions([]);
     setRouteGeometry(null);
     setDistance(0);
@@ -128,6 +270,24 @@ function BaseMap() {
     setActivityDescription("");
     setWaterPoints([]);
     mapDrawerRef.current?.resetInputs();
+    setCurrentInstructionIndex(0);
+    setRouteSummary(null);
+    locationIndexRef.current = 0;
+
+    // Clear map layers except user marker
+    if (mapRef.current) {
+      const map = mapRef.current;
+
+      map.eachLayer((layer) => {
+        // Preserve the base tile layer and user marker only
+        const isTileLayer = (layer as any)._url?.includes("onemap.gov.sg");
+        const isUserMarker = layer === userMarkerRef.current;
+
+        if (!isTileLayer && !isUserMarker) {
+          map.removeLayer(layer);
+        }
+      });
+    }
   }
 
   async function handleSaveRoute() {
@@ -199,7 +359,6 @@ function BaseMap() {
     setElapsedSeconds(0);
     handleEndActivity();
   }
-
   return (
     <div className="basemap-container">
       <div id="mapdiv" className="map-fullscreen" />
@@ -211,16 +370,35 @@ function BaseMap() {
         setRouteInstructions={setRouteInstructions}
         setWaterPoints={setWaterPoints}
         setRouteMeta={handleSetRouteMeta}
+        setRouteSummary={setRouteSummary}
         mapInstance={mapRef.current}
       />
-
-      <RouteInstructionsList routeInstructions={routeInstructions} />
+      <div className="route-summarybox">
+        <RouteInstructionsList
+          routeInstructions={routeInstructions}
+          activityStarted={activityStarted}
+        />
+        <RouteSummaryComponent
+          routeSummary={routeSummary}
+          activityStarted={activityStarted}
+        />
+      </div>
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
       <WaterPointsLayer
         map={mapRef.current}
         waterPoints={waterPoints}
         markersRef={waterPointMarkersRef}
       />
+
+      <div className="center-location-button">
+        <button onClick={centerMapOnUserLocation}>Center on Me</button>
+      </div>
+
+      {activityStarted && (
+        <div className="next-location-button">
+          <button onClick={updateLocation}>Next Location</button>
+        </div>
+      )}
 
       {routeInstructions.length > 0 && (
         <div className="bottom-right-buttons">

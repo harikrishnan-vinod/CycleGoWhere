@@ -1,8 +1,5 @@
 .route-instruction-container {
-  position: absolute;
-  top: 80px;
-  right: 20px;
-  width: 300px;
+  width: 100%;
   background-color: white;
   border-radius: 8px;
   padding: 16px;
@@ -62,4 +59,41 @@
 
 .route-button.end:hover {
   background-color: #cc0000;
+}
+
+.route-instruction-container {
+  position: relative;
+  max-height: 50vh; /* Limit scrollable area */
+  overflow-y: auto;
+  margin-right: 10px;
+}
+
+.route-instruction-header {
+  position: sticky;
+  top: 0;
+  background-color: #f0f0f0;
+  padding: 10px;
+  z-index: 1000;
+  border-bottom: 1px solid #ccc;
+}
+
+.route-instruction-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.route-instruction-item {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background: white;
+}
+
+.instruction-meta {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.route-instruction-header {
+  position: sticky;
 }

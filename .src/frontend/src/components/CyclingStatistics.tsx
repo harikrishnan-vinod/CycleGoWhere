@@ -30,13 +30,15 @@ const CyclingStatistics: React.FC = () => {
 
         // Automatically select today's date
         const todayString = today.toISOString().split("T")[0];
-        setSelectedDate(todayString);  // Set selected date to today's date
+        setSelectedDate(todayString);
         setWeekRangeForDate(today);
 
-        const todayElement = document.querySelector(`[data-date='${todayString}']`);
-        if (todayElement) {
-            todayElement.scrollIntoView({ behavior: "smooth", inline: "center" });
-        }
+        setTimeout(() => {
+            const todayElement = document.querySelector(`[data-date='${todayString}']`);
+            if (todayElement) {
+                todayElement.scrollIntoView({ behavior: "smooth", inline: "center" });
+            }
+        }, 100);
     }, []);
 
     useEffect(() => {
