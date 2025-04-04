@@ -9,7 +9,7 @@ import datetime
 
 savedroutes_bp = Blueprint("savedroutes",__name__)
 
-
+# save route
 @savedroutes_bp.route("/save-route", methods=["POST"])
 def save_route():
     data = request.get_json()
@@ -68,7 +68,24 @@ def save_route():
         print("Error saving route:", e)
         traceback.print_exc()
         return jsonify({"message": "Failed to save route"}), 500
-    
+#unsave route (in saved route page)
+@savedroutes_bp.route("/unsave-route", methods=["DELETE"])
+def unsave_route():
+    data = request.get_json()
+    user_uid = data.get("userUID")
+    route_id = data.get("routeId")
+
+    if not user_uid or not route_id:
+        return jsonify({"message": "Missing userUID or routeId"}), 400
+
+    try:
+        db.collection("users").document(user_uid).collection("savedRoutes").document(route_id).delete()
+        return jsonify({"message": "Route unsaved successfully"}), 200
+    except Exception as e:
+        print("Error unsaving route:", e)
+        return jsonify({"message": "Failed to unsave route"}), 500
+
+#get saved routes
 @savedroutes_bp.route("/get-saved-routes", methods=["GET"])
 def get_saved_routes():
     user_uid = request.args.get("userUID")
@@ -102,6 +119,7 @@ def get_saved_routes():
         return jsonify({"message": "Could not fetch saved routes"}), 500
 
 
+#save activity
 @savedroutes_bp.route("/save-activity", methods=["POST"])
 def save_activity():
     data = request.get_json()
@@ -166,7 +184,7 @@ def save_activity():
         return jsonify({"message": "Failed to save activity"}), 500
 
     
-
+#get activity
 @savedroutes_bp.route("/get-activities", methods=["GET"])  
 def get_activities():
     user_uid = request.args.get("userUID")
@@ -215,3 +233,31 @@ def to_serializable(doc_dict):
                 elif isinstance(value[i], dict):
                     to_serializable(value[i])
     return doc_dict
+
+#delete activity
+@savedroutes_bp.route("/delete-activity", methods=["DELETE"])
+def delete_activity():
+    try:
+        data = request.get_json()
+        user_uid = data.get("userUID")
+        activity_id = data.get("activityId")
+
+        if not user_uid or not activity_id:
+            return jsonify({"error": "Missing userUID or activityId"}), 400
+
+        # Reference to the specific activity document
+        activity_ref = db.collection("users").document(user_uid).collection("activities").document(activity_id)
+
+        # Check if activity exists
+        if not activity_ref.get().exists:
+            return jsonify({"error": "Activity not found"}), 404
+
+        # Delete the activity
+        activity_ref.delete()
+
+        return jsonify({"message": "Activity deleted successfully"}), 200
+
+    except Exception as e:
+        print("Error deleting activity:", e)
+        traceback.print_exc()
+        return jsonify({"error": "Failed to delete activity"}), 500

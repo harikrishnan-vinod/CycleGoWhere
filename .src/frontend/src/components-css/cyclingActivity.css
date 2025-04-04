@@ -27,24 +27,45 @@
     border-radius: 8px;
 }
 
-.actions-activity {
+.activity-bottom {
     display: flex;
-    padding-left: 80%;
+    flex-direction: row;
+    padding-top: 2%;
 }
 
-.save-activity {
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 4px;
+.activity-distance {
+    font-size: 20px;
+    color: #222;
+    text-align: left;
+    margin-top: 3px;
+    padding-left: 2%;
 }
 
-.save-activity:hover {
-    background-color: #ececec;
+.action-button {
+    display: flex;
+    flex-direction: row;
+    padding-left: 50%;
+}
+
+
+
+.delete-activity {
+    width: 30px;
+    height: 30px;
 }
 
 .save-activity img {
     width: 30px;
     height: 30px;
+
+}
+
+.save-activity img:hover {
+    transform: scale(1.5);
+}
+
+.delete-activity:hover {
+    transform: scale(1.5);
 }
 
 .map-activity {

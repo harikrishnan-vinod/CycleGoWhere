@@ -49,3 +49,11 @@ class SavedRoutesController:
             }
         except Exception as e:
             return {"error": str(e)}, 400
+        
+
+    def unsave_activity(self, user_id, route_id):
+        try:
+            self.db_controller.unsave_route(user_id, route_id)
+            return {"message": "Route unsaved successfully"}
+        except Exception as e:
+            return {"error": str(e)}, 400
