@@ -39,12 +39,7 @@ const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
     const newMarkers = waterPoints.map((wp) => {
       const marker = L.marker([wp.lat, wp.lng], {
         title: wp.name,
-        icon: L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-          iconSize: [25, 25],
-          iconAnchor: [12, 24],
-          popupAnchor: [0, -20],
-        }),
+        icon: WaterIcon,
       }).addTo(map);
       marker.bindPopup(`<b>${wp.name}</b><br/>Distance: ${wp.distance_km} km`);
       return marker;
