@@ -13,19 +13,21 @@ interface WaterPointsLayerProps {
   map: L.Map | null;
   waterPoints: WaterPoint[];
   markersRef: React.MutableRefObject<L.Marker[]>;
+  showWater: boolean;
 }
 
 const WaterIcon = L.icon({
-  iconUrl: WaterPointIcon, // or iconUrl if from public folder
-  iconSize: [32, 32], // size of the icon
-  iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
-  popupAnchor: [0, -32], // point from which the popup should open relative to the iconAnchor
+  iconUrl: WaterPointIcon,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 
 const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
   map,
   waterPoints,
   markersRef,
+  showWater,
 }) => {
   useEffect(() => {
     if (!map) return;
@@ -36,17 +38,29 @@ const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
     });
     markersRef.current = [];
 
-    const newMarkers = waterPoints.map((wp) => {
-      const marker = L.marker([wp.lat, wp.lng], {
-        title: wp.name,
-        icon: WaterIcon,
-      }).addTo(map);
-      marker.bindPopup(`<b>${wp.name}</b><br/>Distance: ${wp.distance_km} km`);
-      return marker;
-    });
+    // Add new markers if visible
+    if (showWater) {
+      const newMarkers = waterPoints.map((wp) => {
+        const marker = L.marker([wp.lat, wp.lng], {
+          title: wp.name,
+          icon: WaterIcon,
+        }).addTo(map);
+        marker.bindPopup(
+          `<b>${wp.name}</b><br/>Distance: ${wp.distance_km} km`
+        );
+        return marker;
+      });
 
-    markersRef.current = newMarkers;
-  }, [map, waterPoints]);
+      markersRef.current = newMarkers;
+    }
+
+    return () => {
+      markersRef.current.forEach((marker) => {
+        map.removeLayer(marker);
+      });
+      markersRef.current = [];
+    };
+  }, [map, waterPoints, showWater]);
 
   return null;
 };

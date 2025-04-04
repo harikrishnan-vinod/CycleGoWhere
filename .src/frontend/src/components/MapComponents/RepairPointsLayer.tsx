@@ -13,40 +13,53 @@ interface RepairPointsLayerProps {
   map: L.Map | null;
   RepairPoints: RepairPoint[];
   markersRef: React.MutableRefObject<L.Marker[]>;
+  showRepair: boolean;
 }
 
 const RepairIcon = L.icon({
-  iconUrl: RepairPointIcon, // or iconUrl if from public folder
-  iconSize: [32, 32], // size of the icon
-  iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
-  popupAnchor: [0, -32], // point from which the popup should open relative to the iconAnchor
+  iconUrl: RepairPointIcon,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 
 const RepairPointsLayer: React.FC<RepairPointsLayerProps> = ({
   map,
   RepairPoints,
   markersRef,
+  showRepair,
 }) => {
   useEffect(() => {
     if (!map) return;
 
-    // Clear previous markers
+    // Always clear previous markers first
     markersRef.current.forEach((marker) => {
       map.removeLayer(marker);
     });
     markersRef.current = [];
 
-    const newMarkers = RepairPoints.map((rp) => {
-      const marker = L.marker([rp.lat, rp.lng], {
-        title: rp.name,
-        icon: RepairIcon,
-      }).addTo(map);
-      marker.bindPopup(`<b>${rp.name}</b><br/>Distance: ${rp.distance_km} km`);
-      return marker;
-    });
+    if (showRepair) {
+      const newMarkers = RepairPoints.map((rp) => {
+        const marker = L.marker([rp.lat, rp.lng], {
+          title: rp.name,
+          icon: RepairIcon,
+        }).addTo(map);
+        marker.bindPopup(
+          `<b>${rp.name}</b><br/>Distance: ${rp.distance_km} km`
+        );
+        return marker;
+      });
 
-    markersRef.current = newMarkers;
-  }, [map, RepairPoints]);
+      markersRef.current = newMarkers;
+    }
+
+    return () => {
+      markersRef.current.forEach((marker) => {
+        map.removeLayer(marker);
+      });
+      markersRef.current = [];
+    };
+  }, [map, RepairPoints, showRepair]);
 
   return null;
 };
