@@ -1,6 +1,8 @@
 // MapDrawer.tsx
 import { useState } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
+import { SearchData } from "../../types";
+import { RouteSummary } from "../../types";
 
 interface MapDrawerProps {
   setRouteGeometry: (geometry: string) => void;
@@ -8,11 +10,7 @@ interface MapDrawerProps {
   setRouteInstructions: (instructions: any[]) => void;
   setWaterPoints: (points: any[]) => void;
   setRouteMeta: (dist: number, startPost: string, endPost: string) => void;
-}
-
-interface SearchData {
-  fromAddress: string;
-  destAddress: string;
+  setRouteSummary: (summary: RouteSummary) => void;
 }
 
 export default function MapDrawer({
@@ -21,6 +19,7 @@ export default function MapDrawer({
   setRouteInstructions,
   setWaterPoints,
   setRouteMeta,
+  setRouteSummary,
 }: MapDrawerProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState<SearchData>({
@@ -73,6 +72,7 @@ export default function MapDrawer({
 
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
+      setRouteSummary(data.route_summary);
 
       setIsOpen(false);
 

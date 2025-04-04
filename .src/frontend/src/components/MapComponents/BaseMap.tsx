@@ -14,6 +14,8 @@ import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
 import personIcon from "../../assets/personpositionicon.png";
 import { useMemo } from "react";
+import { RouteSummary } from "../../types";
+import RouteSummaryComponent from "./RouteSummaryComponent";
 
 function BaseMap() {
   // for map
@@ -25,6 +27,7 @@ function BaseMap() {
   // for instructions
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
+  const [routeSummary, setRouteSummary] = useState<RouteSummary | null>(null);
 
   // for activities
   const [distance, setDistance] = useState<number>(0);
@@ -154,9 +157,15 @@ function BaseMap() {
             `✅ Arrived at waypoint ${currentInstructionIndex}:`,
             nextStep
           );
-          setCurrentInstructionIndex((prev) => prev + 1);
-        } else {
-          console.log(`📏 ${distance.toFixed(2)}m to next waypoint`);
+
+          setRouteInstructions((prevInstructions) => {
+            const updated = prevInstructions.slice(1);
+            locationIndexRef.current = 0;
+
+            return updated;
+          });
+
+          setCurrentInstructionIndex(0);
         }
       }
     }
@@ -195,7 +204,28 @@ function BaseMap() {
   }
 
   function handleEndActivity() {
+    setActivityStarted(false);
     setRouteInstructions([]);
+    setRouteGeometry(null);
+    setWaterPoints([]);
+    setCurrentInstructionIndex(0);
+    setRouteSummary(null);
+    locationIndexRef.current = 0;
+
+    // Clear map layers except user marker
+    if (mapRef.current) {
+      const map = mapRef.current;
+
+      map.eachLayer((layer) => {
+        // Preserve the base tile layer and user marker only
+        const isTileLayer = (layer as any)._url?.includes("onemap.gov.sg");
+        const isUserMarker = layer === userMarkerRef.current;
+
+        if (!isTileLayer && !isUserMarker) {
+          map.removeLayer(layer);
+        }
+      });
+    }
   }
 
   async function handleSaveRoute() {
@@ -267,7 +297,6 @@ function BaseMap() {
     setActivityModalOpen(false);
     setElapsedSeconds(0);
   }
-
   return (
     <div className="basemap-container">
       <div id="mapdiv" className="map-fullscreen" />
@@ -278,15 +307,27 @@ function BaseMap() {
         setRouteInstructions={setRouteInstructions}
         setWaterPoints={setWaterPoints}
         setRouteMeta={handleSetRouteMeta}
+        setRouteSummary={setRouteSummary}
       />
+      <div className="route-summarybox">
+        <RouteInstructionsList
+          routeInstructions={routeInstructions}
+          activityStarted={activityStarted}
+        />
+        <RouteSummaryComponent
+          routeSummary={routeSummary}
+          activityStarted={activityStarted}
+        />
+      </div>
 
-      <RouteInstructionsList routeInstructions={routeInstructions} />
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
       <WaterPointsLayer map={mapRef.current} waterPoints={waterPoints} />
 
-      <div className="next-location-button">
-        <button onClick={updateLocation}>Next Location</button>
-      </div>
+      {activityStarted && (
+        <div className="next-location-button">
+          <button onClick={updateLocation}>Next Location</button>
+        </div>
+      )}
 
       {routeInstructions.length > 0 && (
         <div className="bottom-right-buttons">

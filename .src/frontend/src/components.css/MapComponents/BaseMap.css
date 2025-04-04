@@ -176,3 +176,12 @@
   font-weight: bold;
   cursor: pointer;
 }
+
+.route-summarybox {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  z-index: 1000;
+  width: 300px;
+  margin-right: 1%;
+}

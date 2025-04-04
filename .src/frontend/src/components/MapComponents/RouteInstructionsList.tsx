@@ -4,19 +4,19 @@ import "../../components.css/MapComponents/RouteInstructionList.css";
 
 interface RouteInstructionListProps {
   routeInstructions: any[];
+  activityStarted: boolean;
 }
 
 // Use React.forwardRef so the parent (BaseMap) can attach a ref
 const RouteInstructionsList = forwardRef<
   HTMLDivElement,
   RouteInstructionListProps
->(({ routeInstructions }, ref) => {
+>(({ routeInstructions, activityStarted }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!routeInstructions || routeInstructions.length === 0) {
     return null;
   }
-
   return (
     <div className="route-instruction-container" ref={ref}>
       <div
@@ -32,17 +32,22 @@ const RouteInstructionsList = forwardRef<
       </div>
 
       {isOpen && (
-        <ol className="route-instruction-list">
-          {routeInstructions.map((instruction, index) => (
-            <li key={index} className="route-instruction-item">
-              <strong>{instruction[9]}</strong>
-              <div className="instruction-meta">
-                {instruction[1] && <div>Road: {instruction[1]}</div>}
-                Distance: {instruction[5]}
-              </div>
-            </li>
-          ))}
-        </ol>
+        <>
+          <ol className="route-instruction-list">
+            {(activityStarted
+              ? routeInstructions.slice(0, 1)
+              : routeInstructions
+            ).map((instruction, index) => (
+              <li key={index} className="route-instruction-item">
+                <strong>{instruction[9]}</strong>
+                <div className="instruction-meta">
+                  {instruction[1] && <div>Road: {instruction[1]}</div>}
+                  Distance: {instruction[5]}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </div>
   );
