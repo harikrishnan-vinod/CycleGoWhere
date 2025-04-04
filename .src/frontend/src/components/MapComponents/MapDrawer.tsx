@@ -1,5 +1,7 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
+import { SearchData } from "../../types";
+import { RouteSummary } from "../../types";
 
 interface MapDrawerProps {
   setRouteGeometry: (geometry: string) => void;
@@ -8,11 +10,7 @@ interface MapDrawerProps {
   setWaterPoints: (points: any[]) => void;
   setRouteMeta: (dist: number, startPost: string, endPost: string) => void;
   mapInstance: L.Map | null;
-}
-
-interface SearchData {
-  fromAddress: string;
-  destAddress: string;
+  setRouteSummary: (summary: RouteSummary) => void;
 }
 
 export type MapDrawerRef = {
@@ -26,6 +24,7 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
     setRouteInstructions,
     setWaterPoints,
     setRouteMeta,
+    setRouteSummary,
   } = props;
 
   const [isOpen, setIsOpen] = useState(true);
@@ -71,6 +70,11 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
     clearRoute();
     setRouteInstructions([]);
 
+    if (!formData.fromAddress.trim() || !formData.destAddress.trim()) {
+      alert("Please enter both a starting point and a destination.");
+      return;
+    }
+
     try {
       const url = new URL("http://127.0.0.1:1234/route");
       url.searchParams.append("fromAddress", formData.fromAddress);
@@ -82,6 +86,7 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
 
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
+      setRouteSummary(data.route_summary);
       setIsOpen(false);
 
       const waterData = await fetchWaterPoint(data.route_instructions);

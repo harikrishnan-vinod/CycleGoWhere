@@ -1,0 +1,14 @@
+/* RouteSummaryComponent.css */
+
+.route-summary-box {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
+  width: 100%;
+}
+
+.route-summary-box h4 {
+  margin-top: 0;
+}
