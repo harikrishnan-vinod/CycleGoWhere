@@ -155,7 +155,7 @@ function SavedRoute({ route }: { route: any }) {
         <div className="saved-activity-distance">
           <p>Distance: {(route.distance / 1000).toFixed(2)} km</p>
         </div>
-        <div>
+        <div className='bottom-action-button'>
           <button
             className="start-activity-from-route-btn"
             onClick={handleStart}
