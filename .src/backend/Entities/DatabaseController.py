@@ -99,7 +99,15 @@ class DatabaseController:
             return True
     
     def get_profile_picture(self, uid: str):
-        """Retrieves a user's profile picture URL."""
+        """
+        Retrieves a user's profile picture URL.
+
+        Args:
+            uid: Unique user identifier
+
+        Returns:
+            Profile picture URL (str) if found, empty string otherwise
+        """
         try:
             user_doc = self.db.collection('users').document(uid).get()
             if user_doc.exists:

@@ -11,6 +11,34 @@ class SettingsPageController:
     def __init__(self):
         self.db_controller = DatabaseController()
 
+    def get_username(self, user_UID):
+        if not user_UID:
+            return jsonify({"message": "User UID required"}), 400
+
+        try:
+            username = self.db_controller.get_username_by_uid(user_UID)
+            if username:
+                return jsonify({"username": username}), 200
+            else:
+                return jsonify({"message": "Username not found"}), 404
+        except Exception as e:
+            print("Error fetching username:", e)
+            return jsonify({"message": "Server error"}), 500
+        
+    def get_profile_pic(self, user_UID):
+        if not user_UID:
+            return jsonify({"message": "User UID required"}), 400
+
+        try:
+            profile_pic = self.db_controller.get_profile_picture(user_UID)
+            if not profile_pic == '':
+                return jsonify({"profilePic": profile_pic}), 200
+            else:
+                return jsonify({"message": "Profile picture not found"}), 404
+        except Exception as e:
+            print("Error fetching profile picture:", e)
+            return jsonify({"message": "Server error"}), 500
+
     def change_profile_pic(self):
         if 'file' not in request.files or 'userUID' not in request.form:
             return {"message": "Missing file or userUID"}, 400
@@ -76,38 +104,7 @@ class SettingsPageController:
             return jsonify({"message": "Update failed"}), 500
 
     
-    def manage_user_account_settings(self, user_id, settings_data):
-        try:
-            # Update user settings
-            if "username" in settings_data:
-                # Check if username exists and is different from current
-                if self.db_controller.username_exists(settings_data["username"]) and \
-                   self.db_controller.get_user_username(user_id) != settings_data["username"]:
-                    return {"error": "Username already exists"}, 400
-                
-                # Update username
-                self.db_controller.update_user_username(user_id, settings_data["username"])
-            
-            if "email" in settings_data:
-                # Update email in Firebase Auth
-                auth.update_user(user_id, email=settings_data["email"])
-                
-                # Update email in database
-                self.db_controller.update_user_email(user_id, settings_data["email"])
-            
-            if "password" in settings_data:
-                # Update password in Firebase Auth
-                auth.update_user(user_id, password=settings_data["password"])
-            
-            if "profile_picture" in settings_data:
-                # Update profile picture
-                self.db_controller.update_user_profile_picture(user_id, settings_data["profile_picture"])
-            
-            return {"message": "User settings updated successfully"}
-        except Exception as e:
-            return {"error": str(e)}, 400
-    
-    def toggle_notification(self, user_id, notification_enabled):
+    def toggle_notification(self, user_id, notification_enabled): #TODO: 
         try:
             # Update notification settings
             self.db_controller.update_notification_settings(user_id, notification_enabled)
