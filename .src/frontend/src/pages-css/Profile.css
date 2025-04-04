@@ -7,12 +7,14 @@
   transform: scale(1.2);
 }
 
-.pb-container {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  padding-top: 5%;
-  padding-bottom: 10%;
+.profile-container {
+  max-width: 100vw;
+}
+
+.cycling-statistics {
+  width: 80%;
+  margin-left: 10%;
+  margin-right: 10%;
 }
 
 .statistics-list-container {
@@ -31,30 +33,6 @@ body {
   color: black;
 }
 
-.profile-container {
-  flex-direction: column;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-/* Ensure DisplayProfile is properly sized */
-.display-profile-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.profile-picture {
-  width: 120px;
-  /* Adjust size */
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  /* Ensure the image doesn't stretch */
-  border: 3px solid #ffcc00;
-}
 
 .activities-list {
   min-width: 100%;

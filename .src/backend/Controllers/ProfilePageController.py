@@ -131,22 +131,6 @@ class ProfilePageController:
         except Exception as e:
             return {"error": str(e)}, 400
     
-    def get_personal_best(self, user_id):
-        try:
-            # Get all activities
-            activities = self.db_controller.get_user_activities(user_id)
-            
-            # Find personal bests
-            best_distance = max(activities, key=lambda x: x.distance, default=None)
-            best_speed = max(activities, key=lambda x: x.average_speed, default=None)
-            
-            return {
-                "best_distance": best_distance.to_dict() if best_distance else None,
-                "best_speed": best_speed.to_dict() if best_speed else None
-            }
-        except Exception as e:
-            return {"error": str(e)}, 400
-    
     def get_recent_activities(self, user_id, limit=3):
         try:
             # Get recent activities

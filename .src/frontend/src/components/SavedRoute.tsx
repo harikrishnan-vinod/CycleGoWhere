@@ -2,6 +2,7 @@ import "../components-css/savedRoute.css";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
+import saveicon from "../assets/save.png";
 
 function SavedRoute({ route }: { route: any }) {
   const navigate = useNavigate();
@@ -94,6 +95,43 @@ function SavedRoute({ route }: { route: any }) {
       lastUsedStr = "Invalid date";
     }
   }
+  const handleUnsave = async () => {
+    // Ask the user for confirmation
+    const isConfirmed = window.confirm("Are you sure you want to unsave this activity?");
+
+    if (isConfirmed) {
+      const userUID = sessionStorage.getItem("userUID");
+
+      if (!userUID) {
+        alert("User not logged in");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://127.0.0.1:1234/unsave-route", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userUID, routeId: route.id }), // Assuming `route.id` is the unique identifier
+        });
+
+        if (res.ok) {
+          alert("Route unsaved successfully!");
+          // After unsaving the route, refresh the page
+          window.location.reload(); // This refreshes the page to show the updated state
+        } else {
+          alert("Failed to unsave route.");
+        }
+      } catch (err) {
+        console.error("Error unsaving route:", err);
+        alert("Error unsaving route.");
+      }
+    } else {
+      // If the user cancels, do nothing
+      console.log("Unsave action cancelled.");
+    }
+  };
+
+
 
   return (
     <div className="saved-activity-container">
@@ -110,7 +148,7 @@ function SavedRoute({ route }: { route: any }) {
       <div
         className="saved-activity-map"
         ref={mapRef}
-        style={{ height: "200px", width: "100%" }}
+
       />
 
       <div className="saved-activity-details">
@@ -124,9 +162,14 @@ function SavedRoute({ route }: { route: any }) {
           >
             Start Activity
           </button>
+
+          <div onClick={handleUnsave}>
+            <img className="unsave-activity-btn" src={saveicon} alt="Unsave" />
+          </div>
+
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

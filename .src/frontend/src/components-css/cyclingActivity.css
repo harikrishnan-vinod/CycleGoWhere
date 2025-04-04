@@ -5,89 +5,86 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     background: #ffffff;
-
+    margin: auto;
+    margin-bottom: 20px;
 }
 
-.top-activity {
-    display: flex;
-    padding: 1%;
+.activity-title {
+    padding-bottom: 2%;
 }
 
-.profile-details {
-    padding: 1%;
-}
-
-.date-time {
-    color: #666;
+.activity-title,
+.activity-date,
+.activity-notes {
+    text-align: left;
+    padding-left: 3%;
 }
 
 .map-activity {
     height: 250px;
-    background-color: #f5f5f5;
+    background-color: #000000;
     z-index: 0;
+    border-radius: 8px;
 }
 
-.activity-statistics {
+.activity-bottom {
     display: flex;
-    justify-content: space-around;
-    padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
+    flex-direction: row;
+    padding-top: 2%;
 }
 
-
-.activity-statistics p {
-    margin: 0;
-    font-size: 0.9em;
-    color: #333;
-    font-weight: bold;
-
+.activity-distance {
+    font-size: 20px;
+    color: #222;
+    text-align: left;
+    margin-top: 3px;
+    padding-left: 2%;
 }
 
-
-.actions-activity {
+.action-button {
     display: flex;
-    padding-left: 80%;
+    flex-direction: row;
+    padding-left: 50%;
 }
 
-.save-activity,
+
+
 .delete-activity {
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.save-activity:hover {
-    background-color: #f0f8ff;
-}
-
-.delete-activity:hover {
-    background-color: #fff0f0;
-}
-
-.save-activity img,
-.delete-activity img {
     width: 30px;
     height: 30px;
 }
+
+.save-activity img {
+    width: 30px;
+    height: 30px;
+
+}
+
+.save-activity img:hover {
+    transform: scale(1.5);
+}
+
+.delete-activity:hover {
+    transform: scale(1.5);
+}
+
 .map-activity {
-  pointer-events: none;
+    pointer-events: none;
 }
 
 .activity-header {
     text-align: center;
     margin-bottom: 12px;
-  }
-  
-  .activity-title {
+}
+
+.activity-title {
     font-size: 1.4em;
     font-weight: 700;
     color: #222;
     margin-bottom: 4px;
-  }
-  
-  .activity-date {
+}
+
+.activity-date {
     font-size: 0.85em;
     color: #888;
-  }
-  
+}

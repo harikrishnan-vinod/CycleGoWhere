@@ -14,14 +14,31 @@ savedroutes_bp = Blueprint("savedroutes",__name__)
 profile_controller = ProfilePageController()
 save_route_controller = SavedRoutesController()
 
-
+# save route
 @savedroutes_bp.route("/save-route", methods=["POST"])
 def save_route():
     data = request.get_json()
     user_uid = data.get("userUID")
     route_data = data.get("routeData")
     return profile_controller.save_route(user_uid, route_data)
-    
+#unsave route (in saved route page)
+@savedroutes_bp.route("/unsave-route", methods=["DELETE"])
+def unsave_route():
+    data = request.get_json()
+    user_uid = data.get("userUID")
+    route_id = data.get("routeId")
+
+    if not user_uid or not route_id:
+        return jsonify({"message": "Missing userUID or routeId"}), 400
+
+    try:
+        db.collection("users").document(user_uid).collection("savedRoutes").document(route_id).delete()
+        return jsonify({"message": "Route unsaved successfully"}), 200
+    except Exception as e:
+        print("Error unsaving route:", e)
+        return jsonify({"message": "Failed to unsave route"}), 500
+
+#get saved routes
 @savedroutes_bp.route("/get-saved-routes", methods=["GET"])
 def get_saved_routes():
     user_uid = request.args.get("userUID")
@@ -52,3 +69,31 @@ def update_last_used():
     except Exception as e:
         print("Error updating last used:", e)
         return jsonify({"message": "Failed to update last used"}), 500
+
+#delete activity
+@savedroutes_bp.route("/delete-activity", methods=["DELETE"])
+def delete_activity():
+    try:
+        data = request.get_json()
+        user_uid = data.get("userUID")
+        activity_id = data.get("activityId")
+
+        if not user_uid or not activity_id:
+            return jsonify({"error": "Missing userUID or activityId"}), 400
+
+        # Reference to the specific activity document
+        activity_ref = db.collection("users").document(user_uid).collection("activities").document(activity_id)
+
+        # Check if activity exists
+        if not activity_ref.get().exists:
+            return jsonify({"error": "Activity not found"}), 404
+
+        # Delete the activity
+        activity_ref.delete()
+
+        return jsonify({"message": "Activity deleted successfully"}), 200
+
+    except Exception as e:
+        print("Error deleting activity:", e)
+        traceback.print_exc()
+        return jsonify({"error": "Failed to delete activity"}), 500

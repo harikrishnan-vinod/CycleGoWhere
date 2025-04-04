@@ -4,6 +4,8 @@ import L from "leaflet";
 import SaveIcon from "../assets/savedroutesicon.png";
 import SaveRouteModal from "./MapComponents/SaveRouteModal";
 import polyline from "@mapbox/polyline";
+import DisplayProfile from "./displayProfile";
+import deleteicon from "../assets/delete.png";
 
 interface ActivityProps {
   activity: any;
@@ -123,39 +125,77 @@ function CyclingActivity({ activity }: ActivityProps) {
       console.error("Error saving route:", err);
       alert("Error saving route.");
     }
-  };
 
+
+  };
+  const handleDeleteActivity = async () => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this activity?");
+
+    if (isConfirmed) {
+      const userUID = sessionStorage.getItem("userUID");
+
+      if (!userUID || !activity.id) {
+        alert("Missing user ID or activity ID.");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://127.0.0.1:1234/delete-activity", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userUID,
+            activityId: activity.id
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("Activity deleted successfully!");
+          window.location.href = "/Profile";
+        } else {
+          alert(data.error || "Failed to delete activity.");
+        }
+      } catch (err) {
+        console.error("Error deleting activity:", err);
+        alert("Error deleting activity.");
+      }
+    } else {
+      console.log("Delete action cancelled.");
+    }
+  };
   return (
     <div className="activity-container">
       <div className="activity-header">
         <div className="activity-title">{activityName}</div>
+        <div className="activity-notes">
+          <p>{activity.notes}</p>
+        </div>
         <div className="activity-date">{startTimeStr}</div>
       </div>
 
       <div className="map-activity" ref={mapRef} />
 
-
-      <div style={{ padding: "0.5rem 1rem" }}>
-        <p style={{ margin: 0 }}>{activity.notes}</p>
-      </div>
-
-      <div className="actions-activity">
-        <div
-          className="save-activity"
-          onClick={() => {
-            setModalRouteName(activity.activityName || "Untitled Route");
-            setModalNotes(activity.notes || "");
-            setShowModal(true);
-          }}
-          title="Save this route"
-        >
-          <img
-            src={SaveIcon}
-            alt="Save Route"
-            style={{ width: "30px", height: "30px" }}
-          />
+      <div className="activity-bottom">
+        <p className="activity-distance">Distance: {(distance / 1000).toFixed(2)} km</p>
+        <div className="action-button">
+          <div className="save-activity">
+            <img
+              onClick={() => {
+                setModalRouteName(activity.activityName || "Untitled Route");
+                setModalNotes(activity.notes || "");
+                setShowModal(true);
+              }}
+              src={SaveIcon}
+              alt="Save Route"
+            />
+          </div>
+          <img className="delete-activity" src={deleteicon} alt="Delete Activity" onClick={handleDeleteActivity} title="Delete This Activity" />
         </div>
+
       </div>
+
 
       {showModal && (
         <SaveRouteModal
