@@ -119,6 +119,17 @@ function BaseMap() {
     e.preventDefault();
 
     const index = locationIndexRef.current;
+
+    if (routeInstructions.length === 1) {
+      setActivityModalOpen(true);
+      setActivityStarted(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
     const { lat, lng } = mockLocations[index];
     const latLng = L.latLng(lat, lng);
     userLocation.current = latLng;
@@ -130,13 +141,11 @@ function BaseMap() {
     if (mapRef.current) {
       const map = mapRef.current;
 
-      // === Remove previous marker ===
       if (userMarkerRef.current) {
         map.removeLayer(userMarkerRef.current);
-        userMarkerRef.current = null; // ✅ Clear reference
+        userMarkerRef.current = null;
       }
 
-      // === Add new marker ===
       const marker = L.marker([lat, lng], { icon: userIcon })
         .addTo(map)
         .bindPopup("You are here")
@@ -158,11 +167,6 @@ function BaseMap() {
         const distance = currentPos.distanceTo(nextPos);
 
         if (distance <= 20) {
-          console.log(
-            `✅ Arrived at waypoint ${currentInstructionIndex}:`,
-            nextStep
-          );
-
           setRouteInstructions((prevInstructions) => {
             const updated = prevInstructions.slice(1);
             locationIndexRef.current = 0;

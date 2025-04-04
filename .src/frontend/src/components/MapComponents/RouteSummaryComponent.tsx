@@ -12,7 +12,6 @@ function RouteSummaryComponent({
 }: RouteSummaryComponentProps) {
   if (activityStarted) return null;
   if (routeSummary === null) return null;
-  console.log("routesummary", routeSummary);
 
   return (
     <div className="route-summary-box">
