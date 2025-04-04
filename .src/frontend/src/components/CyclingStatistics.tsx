@@ -140,7 +140,7 @@ const CyclingStatistics: React.FC = () => {
                 <h4>{weekRange}</h4>
             </div>
 
-            <div className="date-bar" ref={dateBarRef} style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
+            <div className="date-bar" ref={dateBarRef} >
                 {dates.map((date, index) => (
                     <div
                         key={index}

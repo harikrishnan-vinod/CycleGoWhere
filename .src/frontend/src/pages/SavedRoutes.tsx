@@ -42,7 +42,7 @@ function SavedRoutes() {
     <div>
       <DisplayProfile />
       <div className="saved-route-title">
-        <h2>Here are your saved routes</h2>
+        <h3>Here are your saved routes</h3>
       </div>
 
       <div className="saved-routes-list">
@@ -50,6 +50,8 @@ function SavedRoutes() {
           <SavedRoute key={route.id} route={route} />
         ))}
       </div>
+
+      <div className="footer"></div>
 
       <Navigate />
     </div>

@@ -19,3 +19,7 @@ root {
   --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   --border-radius: 12px;
 }
+
+.footer {
+  padding: 50px;
+}

@@ -4,6 +4,7 @@ import L from "leaflet";
 import SaveIcon from "../assets/savedroutesicon.png";
 import SaveRouteModal from "./MapComponents/SaveRouteModal";
 import polyline from "@mapbox/polyline";
+import DisplayProfile from "./displayProfile";
 
 interface ActivityProps {
   activity: any;
@@ -129,15 +130,13 @@ function CyclingActivity({ activity }: ActivityProps) {
     <div className="activity-container">
       <div className="activity-header">
         <div className="activity-title">{activityName}</div>
+        <div className="activity-notes">
+          <p>{activity.notes}</p>
+        </div>
         <div className="activity-date">{startTimeStr}</div>
       </div>
 
       <div className="map-activity" ref={mapRef} />
-
-
-      <div style={{ padding: "0.5rem 1rem" }}>
-        <p style={{ margin: 0 }}>{activity.notes}</p>
-      </div>
 
       <div className="actions-activity">
         <div
@@ -147,12 +146,11 @@ function CyclingActivity({ activity }: ActivityProps) {
             setModalNotes(activity.notes || "");
             setShowModal(true);
           }}
-          title="Save this route"
+          title="Save This Route"
         >
           <img
             src={SaveIcon}
             alt="Save Route"
-            style={{ width: "30px", height: "30px" }}
           />
         </div>
       </div>
