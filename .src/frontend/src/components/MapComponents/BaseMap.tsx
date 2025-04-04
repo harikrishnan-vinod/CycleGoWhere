@@ -72,13 +72,18 @@ function BaseMap() {
   const mockLocations = useMemo(() => {
     if (!routeInstructions || routeInstructions.length === 0) return [];
 
-    return routeInstructions.map((instruction) => {
-      const [latStr, lngStr] = instruction[3].split(",");
-      return {
-        lat: parseFloat(latStr),
-        lng: parseFloat(lngStr),
-      };
-    });
+    return routeInstructions
+      .filter(
+        (instruction) =>
+          Array.isArray(instruction) && typeof instruction[3] === "string"
+      )
+      .map((instruction) => {
+        const [latStr, lngStr] = instruction[3].split(",");
+        return {
+          lat: parseFloat(latStr),
+          lng: parseFloat(lngStr),
+        };
+      });
   }, [routeInstructions]);
 
   const locationIndexRef = useRef(0);
