@@ -13,6 +13,7 @@ import SaveRouteModal from "./SaveRouteModal";
 import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
 import personIcon from "../../assets/personpositionicon.png";
+import { useMemo } from "react";
 
 function BaseMap() {
   // for map
@@ -49,14 +50,17 @@ function BaseMap() {
   });
 
   // mock locations from 637035 to 648310
-  const mockLocations = [
-    { lat: 1.354011, lng: 103.688962 },
-    { lat: 1.34711, lng: 103.689724 },
-    { lat: 1.346981, lng: 103.689855 },
-    { lat: 1.337923, lng: 103.695839 },
-    { lat: 1.337623, lng: 103.696449 },
-    { lat: 1.337617, lng: 103.697322 },
-  ];
+  const mockLocations = useMemo(() => {
+    if (!routeInstructions || routeInstructions.length === 0) return [];
+
+    return routeInstructions.map((instruction) => {
+      const [latStr, lngStr] = instruction[3].split(",");
+      return {
+        lat: parseFloat(latStr),
+        lng: parseFloat(lngStr),
+      };
+    });
+  }, [routeInstructions]);
 
   const locationIndexRef = useRef(0);
 
@@ -277,7 +281,6 @@ function BaseMap() {
       />
 
       <RouteInstructionsList routeInstructions={routeInstructions} />
-
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
       <WaterPointsLayer map={mapRef.current} waterPoints={waterPoints} />
 
