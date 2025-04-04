@@ -1,52 +1,51 @@
 import React, { useEffect } from "react";
 import L from "leaflet";
-import WaterPointIcon from "../../assets/water-tap.png";
+import RepairPointIcon from "../../assets/repairshop.png";
 
-interface WaterPoint {
+interface RepairPoint {
   lat: number;
   lng: number;
   name: string;
   distance_km: number;
 }
 
-interface WaterPointsLayerProps {
+interface RepairPointsLayerProps {
   map: L.Map | null;
-  waterPoints: WaterPoint[];
+  RepairPoints: RepairPoint[];
   markersRef: React.MutableRefObject<L.Marker[]>;
-  showWater: boolean;
+  showRepair: boolean;
 }
 
-const WaterIcon = L.icon({
-  iconUrl: WaterPointIcon,
+const RepairIcon = L.icon({
+  iconUrl: RepairPointIcon,
   iconSize: [32, 32],
   iconAnchor: [16, 32],
   popupAnchor: [0, -32],
 });
 
-const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
+const RepairPointsLayer: React.FC<RepairPointsLayerProps> = ({
   map,
-  waterPoints,
+  RepairPoints,
   markersRef,
-  showWater,
+  showRepair,
 }) => {
   useEffect(() => {
     if (!map) return;
 
-    // Clear previous markers
+    // Always clear previous markers first
     markersRef.current.forEach((marker) => {
       map.removeLayer(marker);
     });
     markersRef.current = [];
 
-    // Add new markers if visible
-    if (showWater) {
-      const newMarkers = waterPoints.map((wp) => {
-        const marker = L.marker([wp.lat, wp.lng], {
-          title: wp.name,
-          icon: WaterIcon,
+    if (showRepair) {
+      const newMarkers = RepairPoints.map((rp) => {
+        const marker = L.marker([rp.lat, rp.lng], {
+          title: rp.name,
+          icon: RepairIcon,
         }).addTo(map);
         marker.bindPopup(
-          `<b>${wp.name}</b><br/>Distance: ${wp.distance_km} km`
+          `<b>${rp.name}</b><br/>Distance: ${rp.distance_km} km`
         );
         return marker;
       });
@@ -60,9 +59,9 @@ const WaterPointsLayer: React.FC<WaterPointsLayerProps> = ({
       });
       markersRef.current = [];
     };
-  }, [map, waterPoints, showWater]);
+  }, [map, RepairPoints, showRepair]);
 
   return null;
 };
 
-export default WaterPointsLayer;
+export default RepairPointsLayer;

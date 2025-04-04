@@ -16,17 +16,29 @@ import personIcon from "../../assets/personpositionicon.png";
 import { useMemo } from "react";
 import { RouteSummary } from "../../types";
 import RouteSummaryComponent from "./RouteSummaryComponent";
+import ParkPointsLayer from "./ParkPointsLayer";
+import RepairPointsLayer from "./RepairPointsLayer";
+import FilterComponent from "./FilterComponent";
 
 function BaseMap() {
   // for map
   const mapRef = useRef<L.Map | null>(null);
   const mapDrawerRef = useRef<MapDrawerRef>(null);
   const waterPointMarkersRef = useRef<L.Marker[]>([]);
+  const repairPointsMarkerRef = useRef<L.Marker[]>([]);
+  const parkPointsMarkerRef = useRef<L.Marker[]>([]);
 
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
+  const [repairPoints, setRepairPoints] = useState<any[]>([]);
+  const [parkPoints, setParkPoints] = useState<any[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const userLocation = useRef<L.LatLng | null>(null);
+
+  // for filters
+  const [showWater, setShowWater] = useState<boolean>(true);
+  const [showRepair, setShowRepair] = useState<boolean>(true);
+  const [showPark, setShowPark] = useState<boolean>(true);
 
   // for instructions
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
@@ -60,13 +72,18 @@ function BaseMap() {
   const mockLocations = useMemo(() => {
     if (!routeInstructions || routeInstructions.length === 0) return [];
 
-    return routeInstructions.map((instruction) => {
-      const [latStr, lngStr] = instruction[3].split(",");
-      return {
-        lat: parseFloat(latStr),
-        lng: parseFloat(lngStr),
-      };
-    });
+    return routeInstructions
+      .filter(
+        (instruction) =>
+          Array.isArray(instruction) && typeof instruction[3] === "string"
+      )
+      .map((instruction) => {
+        const [latStr, lngStr] = instruction[3].split(",");
+        return {
+          lat: parseFloat(latStr),
+          lng: parseFloat(lngStr),
+        };
+      });
   }, [routeInstructions]);
 
   const locationIndexRef = useRef(0);
@@ -372,6 +389,8 @@ function BaseMap() {
         setRouteMeta={handleSetRouteMeta}
         setRouteSummary={setRouteSummary}
         mapInstance={mapRef.current}
+        setParkPoints={setParkPoints}
+        setRepairPoints={setRepairPoints}
       />
       <div className="route-summarybox">
         <RouteInstructionsList
@@ -383,11 +402,39 @@ function BaseMap() {
           activityStarted={activityStarted}
         />
       </div>
+
+      <div className="filter-box">
+        <FilterComponent
+          setShowWater={setShowWater}
+          setShowRepair={setShowRepair}
+          setShowPark={setShowPark}
+          showWater={showWater}
+          showRepair={showRepair}
+          showPark={showPark}
+        />
+      </div>
+
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
+
       <WaterPointsLayer
         map={mapRef.current}
         waterPoints={waterPoints}
         markersRef={waterPointMarkersRef}
+        showWater={showWater}
+      />
+
+      <ParkPointsLayer
+        map={mapRef.current}
+        parkPoints={parkPoints}
+        markersRef={parkPointsMarkerRef}
+        showPark={showPark}
+      />
+
+      <RepairPointsLayer
+        map={mapRef.current}
+        RepairPoints={repairPoints}
+        markersRef={repairPointsMarkerRef}
+        showRepair={showRepair}
       />
 
       <div className="center-location-button">
