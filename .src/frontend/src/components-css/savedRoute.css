@@ -50,3 +50,8 @@
 .start-activity-from-route-btn:hover {
     background-color: #00b803;
 }
+
+.unsave-activity-btn {
+    width: 40px;
+    height: 40px;
+}
