@@ -16,15 +16,21 @@ import personIcon from "../../assets/personpositionicon.png";
 import { useMemo } from "react";
 import { RouteSummary } from "../../types";
 import RouteSummaryComponent from "./RouteSummaryComponent";
+import ParkPointsLayer from "./ParkPointsLayer";
+import RepairPointsLayer from "./RepairPointsLayer";
 
 function BaseMap() {
   // for map
   const mapRef = useRef<L.Map | null>(null);
   const mapDrawerRef = useRef<MapDrawerRef>(null);
   const waterPointMarkersRef = useRef<L.Marker[]>([]);
+  const repairPointsMarkerRef = useRef<L.Marker[]>([]);
+  const parkPointsMarkerRef = useRef<L.Marker[]>([]);
 
   const [routeGeometry, setRouteGeometry] = useState<string | null>(null);
   const [waterPoints, setWaterPoints] = useState<any[]>([]);
+  const [repairPoints, setRepairPoints] = useState<any[]>([]);
+  const [parkPoints, setParkPoints] = useState<any[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const userLocation = useRef<L.LatLng | null>(null);
 
@@ -372,6 +378,8 @@ function BaseMap() {
         setRouteMeta={handleSetRouteMeta}
         setRouteSummary={setRouteSummary}
         mapInstance={mapRef.current}
+        setParkPoints={setParkPoints}
+        setRepairPoints={setRepairPoints}
       />
       <div className="route-summarybox">
         <RouteInstructionsList
@@ -388,6 +396,16 @@ function BaseMap() {
         map={mapRef.current}
         waterPoints={waterPoints}
         markersRef={waterPointMarkersRef}
+      />
+      <ParkPointsLayer
+        map={mapRef.current}
+        parkPoints={parkPoints}
+        markersRef={parkPointsMarkerRef}
+      />
+      <RepairPointsLayer
+        map={mapRef.current}
+        RepairPoints={repairPoints}
+        markersRef={repairPointsMarkerRef}
       />
 
       <div className="center-location-button">

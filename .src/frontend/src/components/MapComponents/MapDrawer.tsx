@@ -11,6 +11,8 @@ interface MapDrawerProps {
   setRouteMeta: (dist: number, startPost: string, endPost: string) => void;
   mapInstance: L.Map | null;
   setRouteSummary: (summary: RouteSummary) => void;
+  setRepairPoints: (points: any[]) => void;
+  setParkPoints: (points: any[]) => void;
 }
 
 export type MapDrawerRef = {
@@ -25,6 +27,8 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
     setWaterPoints,
     setRouteMeta,
     setRouteSummary,
+    setRepairPoints,
+    setParkPoints,
   } = props;
 
   const [isOpen, setIsOpen] = useState(true);
@@ -89,8 +93,19 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
       setRouteSummary(data.route_summary);
       setIsOpen(false);
 
+      // get water, shop and park data
       const waterData = await fetchWaterPoint(data.route_instructions);
-      if (waterData) setWaterPoints(waterData);
+      if (waterData) {
+        setWaterPoints(waterData);
+      }
+      const bicycleRepairData = await fetchBicycleShop(data.route_instructions);
+      if (bicycleRepairData) {
+        setRepairPoints(bicycleRepairData);
+      }
+      const bicycleParkData = await fetchBicyclePark(data.route_instructions);
+      if (bicycleParkData) {
+        setParkPoints(bicycleParkData);
+      }
 
       if (data.route_summary) {
         setRouteMeta(
@@ -105,6 +120,32 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
   const fetchWaterPoint = async (instructions: any[]) => {
     try {
       const response = await fetch("http://127.0.0.1:1234/fetchWaterPoint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routeInstructions: instructions }),
+      });
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      return await response.json();
+    } catch {}
+  };
+
+  const fetchBicycleShop = async (instructions: any[]) => {
+    try {
+      const response = await fetch("http://127.0.0.1:1234/fetchBicycleShop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routeInstructions: instructions }),
+      });
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      return await response.json();
+    } catch {}
+  };
+
+  const fetchBicyclePark = async (instructions: any[]) => {
+    try {
+      const response = await fetch("http://127.0.0.1:1234/fetchBicyclePark", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ routeInstructions: instructions }),

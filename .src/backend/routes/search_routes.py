@@ -112,7 +112,7 @@ def getBicyclePark():
                 points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
             except ValueError:
                 continue 
-    print("Finding Water points")
+    print("Finding bicycle park points")
     result = MainPageController.findBikeParking(points)
     return result
 
@@ -131,6 +131,6 @@ def getBicycleShop():
                 points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
             except ValueError:
                 continue 
-    print("Finding Water points")
+    print("Finding bicycle points")
     result = MainPageController.findBikeShops(points)
     return result 

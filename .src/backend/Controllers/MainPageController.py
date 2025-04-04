@@ -217,7 +217,7 @@ class MainPageController:
             else:
                 print("Bicycle Parking data already exists in the CSV. Skipping API request.")
 
-        with open("csv_filename", newline='', encoding='utf-8') as csvfile:
+        with open(csv_filename, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
