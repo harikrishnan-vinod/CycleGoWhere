@@ -5,6 +5,34 @@ from Entities.DatabaseController import DatabaseController
 class ProfilePageController:
     def __init__(self):
         self.db_controller = DatabaseController()
+
+    def get_username(self, user_UID):
+        if not user_UID:
+            return jsonify({"message": "User UID required"}), 400
+
+        try:
+            username = self.db_controller.get_username_by_uid(user_UID)
+            if username:
+                return jsonify({"username": username}), 200
+            else:
+                return jsonify({"message": "Username not found"}), 404
+        except Exception as e:
+            print("Error fetching username:", e)
+            return jsonify({"message": "Server error"}), 500
+        
+    def get_profile_pic(self, user_UID):
+        if not user_UID:
+            return jsonify({"message": "User UID required"}), 400
+
+        try:
+            profile_pic = self.db_controller.get_profile_picture(user_UID)
+            if not profile_pic == '':
+                return jsonify({"profilePic": profile_pic}), 200
+            else:
+                return jsonify({"message": "Profile picture not found"}), 404
+        except Exception as e:
+            print("Error fetching profile picture:", e)
+            return jsonify({"message": "Server error"}), 500
     
     def get_cycling_statistics(self, user_id, period="week"):
         try:

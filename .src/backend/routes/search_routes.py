@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 import requests
+import polyline
+import traceback
 import time
 import os
 from Controllers.MainPageController import MainPageController
@@ -112,7 +114,7 @@ def getBicyclePark():
                 points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
             except ValueError:
                 continue 
-    print("Finding Water points")
+    print("Finding Bicycle parkings")
     result = MainPageController.findBikeParking(points)
     return result
 
@@ -131,6 +133,69 @@ def getBicycleShop():
                 points.append((lat, lng))  # ✅ now a list of (lat, lng) tuples
             except ValueError:
                 continue 
-    print("Finding Water points")
+    print("Finding Bicycle Shops")
     result = MainPageController.findBikeShops(points)
-    return result 
+    return result
+
+@search_bp.route("/save-activity", methods=["POST"])
+def save_activity():
+    data = request.get_json()
+    user_uid = data.get("userUID")
+    activity_data = data.get("activityData")
+    start_time_str = activity_data.get("startTime")
+    start_time = None
+
+    if start_time_str:
+        try:
+            # Try full ISO 8601 with microseconds
+            start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f")
+        except ValueError:
+            try:
+                # Fallback without microseconds
+                start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
+            except Exception as e:
+                print("Invalid startTime format fallback:", e)
+
+    try:
+        decoded_points = polyline.decode(activity_data["route_geometry"], 5)
+        geo_points = [firestore.GeoPoint(lat, lng) for lat, lng in decoded_points]
+
+        instructions_converted = []
+        for row in activity_data["route_instructions"]:
+            if isinstance(row, dict):
+                instructions_converted.append({
+                    "direction": row.get("direction"),
+                    "road": row.get("road"),
+                    "distance": row.get("distance"),
+                    "latLng": row.get("latLng")
+                })
+            elif isinstance(row, list):
+                instructions_converted.append({
+                    "direction": row[0],
+                    "road": row[1],
+                    "distance": row[5],
+                    "latLng": row[3]
+                })
+
+        doc_data = {
+            "activityName": activity_data["activityName"],
+            "notes": activity_data["notes"],
+            "distance": activity_data["distance"],
+            "startPostal": activity_data["startPostal"],
+            "endPostal": activity_data["endPostal"],
+            "duration": activity_data["timeTaken"],
+            "routePath": geo_points,
+            "startTime": start_time,
+            "instructions": instructions_converted,
+            "startLocation": firestore.GeoPoint(*decoded_points[0]),
+            "endLocation": firestore.GeoPoint(*decoded_points[-1]),
+            "createdAt": firestore.SERVER_TIMESTAMP
+        }
+
+        db.collection("users").document(user_uid).collection("activities").add(doc_data)
+        return jsonify({"message": "Activity saved"}), 200
+    
+    except Exception as e:
+        print("Error saving activity:", e)
+        traceback.print_exc()
+        return jsonify({"message": "Failed to save activity"}), 500

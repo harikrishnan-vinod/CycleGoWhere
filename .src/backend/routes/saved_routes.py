@@ -167,21 +167,21 @@ def save_activity():
 
     
 
-@savedroutes_bp.route("/get-activities", methods=["GET"])  
-def get_activities():
-    user_uid = request.args.get("userUID")
-    try:
-        act_ref = db.collection("users").document(user_uid).collection("activities").stream()
-        activities = []
-        for doc in act_ref:
-            data = doc.to_dict()
-            data = to_serializable(data)
-            data["id"] = doc.id
-            activities.append(data)
-        return jsonify(activities), 200
-    except Exception as e:
-        print("Error getting activities:", e)
-        return jsonify({"message": "Could not fetch activities"}), 500
+# @savedroutes_bp.route("/get-activities", methods=["GET"]) 
+# def get_activities():
+#     user_uid = request.args.get("userUID")
+#     try:
+#         act_ref = db.collection("users").document(user_uid).collection("activities").stream()
+#         activities = []
+#         for doc in act_ref:
+#             data = doc.to_dict()
+#             data = to_serializable(data)
+#             data["id"] = doc.id
+#             activities.append(data)
+#         return jsonify(activities), 200
+#     except Exception as e:
+#         print("Error getting activities:", e)
+#         return jsonify({"message": "Could not fetch activities"}), 500
     
 @savedroutes_bp.route("/update-last-used", methods=["POST"])
 def update_last_used():

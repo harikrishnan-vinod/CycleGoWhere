@@ -11,6 +11,7 @@ from routes.login_routes import login_bp
 from routes.saved_routes import savedroutes_bp
 from routes.search_routes import search_bp
 from routes.settings_route import setting_bp
+from routes.profile_routes import profile_bp
  
 
 load_dotenv()
@@ -36,6 +37,7 @@ app.register_blueprint(login_bp)
 app.register_blueprint(savedroutes_bp)
 app.register_blueprint(search_bp)
 app.register_blueprint(setting_bp)
+app.register_blueprint(profile_bp)
 
 if __name__ == "__main__":
     app.run(port=1234, debug=True)
