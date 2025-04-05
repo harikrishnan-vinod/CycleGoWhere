@@ -4,6 +4,7 @@ import "../pages-css/Profile.css";
 import DisplayProfile from "../components/displayProfile";
 import CyclingStatistics from "../components/CyclingStatistics";
 import CyclingActivity from "../components/CyclingActivity";
+import { Link } from "react-router-dom";
 
 function Profile() {
   const [activities, setActivities] = useState<any[]>([]);
@@ -51,9 +52,17 @@ function Profile() {
         <CyclingStatistics />
       </div>
       <div className="activities-list">
-        {activities.map((activity) => (
-          <CyclingActivity key={activity.id} activity={activity} />
-        ))}
+        {activities.length > 0 ? (
+          activities.map((activity) => (
+            <CyclingActivity key={activity.id} activity={activity} />
+          ))
+        ) : (
+          <p>
+            No activity. Start your first ride{" "}
+            <Link to="/mainpage" className="underline-link">HERE</Link>!
+          </p>)}
+
+
       </div>
 
       <div className="footer">

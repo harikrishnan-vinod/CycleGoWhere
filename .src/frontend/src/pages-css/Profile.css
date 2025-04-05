@@ -40,3 +40,12 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.activities-list p {
+  font-size: 16px;
+  color: rgb(0, 0, 148);
+}
+
+.underline-link {
+  text-decoration: underline;
+}

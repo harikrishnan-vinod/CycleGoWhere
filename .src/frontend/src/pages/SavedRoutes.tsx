@@ -39,18 +39,23 @@ function SavedRoutes() {
   }, []);
 
   return (
-    <div>
+    <div className="saved-route-page">
       <DisplayProfile />
-      <div className="saved-route-title">
-        <h3>Here are your saved routes</h3>
-      </div>
 
       <div className="saved-routes-list">
-        {savedRoutes.map((route) => (
-          <SavedRoute key={route.id} route={route} />
-        ))}
+        {savedRoutes.length > 0 ? (
+          <>
+            <div className="saved-route-title">
+              <h3>Here are your saved routes</h3>
+            </div>
+            {savedRoutes.map((route) => (
+              <SavedRoute key={route.id} route={route} />
+            ))}
+          </>
+        ) : (
+          <p>No saved routes to display...</p>
+        )}
       </div>
-
       <div className="footer"></div>
 
       <Navigate />

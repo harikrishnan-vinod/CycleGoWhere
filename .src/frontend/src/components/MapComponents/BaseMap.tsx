@@ -60,7 +60,6 @@ function BaseMap() {
   const [activityStartTime, setActivityStartTime] = useState<Date | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // declare icons
   const userIcon = L.icon({
     iconUrl: personIcon, // or iconUrl if from public folder
     iconSize: [32, 32], // size of the icon
