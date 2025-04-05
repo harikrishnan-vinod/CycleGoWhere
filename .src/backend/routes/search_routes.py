@@ -1,12 +1,8 @@
 from flask import Blueprint, request, jsonify
-from .services import db, firestore_module as firestore
+from Controllers.MainPageController import MainPageController
 import requests
-import polyline
-import traceback
 import time
 import os
-import datetime
-from Controllers.MainPageController import MainPageController
 
 search_bp = Blueprint("search",__name__)
 main_controller = MainPageController()

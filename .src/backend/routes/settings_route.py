@@ -1,8 +1,6 @@
-from flask import Blueprint, request, jsonify
-import requests
-from .services import db , cloudinary, pyrebase_auth, firebase_auth
-import os
+from flask import Blueprint, request
 from Controllers.SettingsPageController import SettingsPageController
+import os
 
 setting_bp = Blueprint("setting",__name__)
 settings_controller = SettingsPageController()

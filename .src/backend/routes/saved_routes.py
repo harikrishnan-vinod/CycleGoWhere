@@ -1,12 +1,8 @@
-import datetime
-import traceback
-from flask import Blueprint, app,request,jsonify
-import polyline
+from flask import Blueprint,request,jsonify
 from .services import db, firestore_module as firestore
-import polyline
-import datetime
 from Controllers.ProfilePageController import ProfilePageController
 from Controllers.SavedRoutesController import SavedRoutesController
+import traceback
 
 
 savedroutes_bp = Blueprint("savedroutes",__name__)
@@ -34,8 +30,7 @@ def unsave_route():
 
     try:
         return saved_route_controller.unsave_route(user_uid, route_id)
-        db.collection("users").document(user_uid).collection("savedRoutes").document(route_id).delete()
-        return jsonify({"message": "Route unsaved successfully"}), 200
+    
     except Exception as e:
         print("Error unsaving route:", e)
         return jsonify({"message": "Failed to unsave route"}), 500
@@ -82,18 +77,6 @@ def delete_activity():
             return jsonify({"error": "Missing userUID or activityId"}), 400
 
         return profile_controller.delete_activity(user_uid, activity_id)
-
-        # Reference to the specific activity document
-        activity_ref = db.collection("users").document(user_uid).collection("activities").document(activity_id)
-
-        # Check if activity exists
-        if not activity_ref.get().exists:
-            return jsonify({"error": "Activity not found"}), 404
-
-        # Delete the activity
-        activity_ref.delete()
-
-        return jsonify({"message": "Activity deleted successfully"}), 200
 
     except Exception as e:
         print("Error deleting activity:", e)
