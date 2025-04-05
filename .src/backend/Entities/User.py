@@ -1,9 +1,5 @@
-from typing import List, Optional
 from Entities import Settings
-from Entities import Filters
 from Entities import Activity
-from Entities import SavedRoutes
-from Entities import Route
 
 class User:
     def __init__(self, uid=None, email=None, username=None, first_name=None, last_name=None,

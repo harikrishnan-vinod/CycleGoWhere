@@ -1,12 +1,7 @@
-from flask import request, jsonify
-from Entities.Route import Route
-from Entities.SavedRoutes import SavedRoutes
+from flask import jsonify
 from Entities.DatabaseController import DatabaseController, to_serializable
-from flask import Blueprint, request, jsonify
 from routes.services import db, firestore_module as firestore
 import polyline
-import datetime
-import traceback
 
 class SavedRoutesController:
     def __init__(self):

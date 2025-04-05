@@ -1,11 +1,4 @@
-import firebase_admin
-import firebase_admin.firestore
-import pyrebase
-import uuid
-import os
-from pathlib import Path
-from firebase_admin import credentials, firestore
-from datetime import datetime, timedelta
+from firebase_admin import firestore
 from typing import List, Optional, Dict, Any, Union
 from flask import jsonify
 
@@ -13,9 +6,7 @@ from flask import jsonify
 from Entities.User import User
 from Entities.Activity import Activity
 from Entities.Route import Route
-from Entities.SavedRoutes import SavedRoutes
 from Entities.Settings import Settings
-from Entities.Filters import Filters
 
 # Helper methods
 def to_serializable(doc_dict):
