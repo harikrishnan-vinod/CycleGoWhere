@@ -14,21 +14,21 @@ class ProfilePageController:
         activity_data = []
         activities = self.db_controller.get_user_activities(user_UID)
         for activity in activities:
-            activity_dict = activity.to_dict()
+            # activity_dict = activity.to_dict()
             data = {
-                "id": activity_dict.get("id"),
-                "activityName": activity_dict.get("activity_name"),
-                "notes": activity_dict.get("notes"),
-                "duration": activity_dict.get("duration"),
-                "startTime": activity_dict.get("start_time"),
-                "startLocation": activity_dict.get("route").get("start_location"),
-                "startPostal": activity_dict.get("route").get("start_postal"),
-                "endLocation": activity_dict.get("route").get("end_location"),
-                "endPostal": activity_dict.get("route").get("end_postal"),
-                "distance": activity_dict.get("route").get("distance"),
-                "routePath": activity_dict.get("route").get("route_path"),
-                "instructions": activity_dict.get("route").get("instructions"),
-                "createdAt": activity_dict.get("created_at")
+                "id": activity.get_activity_id(),
+                "activityName": activity.get_activity_name(),
+                "notes": activity.get_notes(),
+                "duration": activity.get_duration(),
+                "startTime": activity.get_start_time(),
+                "startLocation": activity.get_route().get_start_location(),
+                "startPostal": activity.get_route().get_start_postal(),
+                "endLocation": activity.get_route().get_end_location(),
+                "endPostal": activity.get_route().get_end_postal(),
+                "distance": activity.get_route().get_distance(),
+                "routePath": activity.get_route().get_route_path(),
+                "instructions": activity.get_route().get_instructions(),
+                "createdAt": activity.get_created_at()
             }
             data = to_serializable(data)
             activity_data.append(data)

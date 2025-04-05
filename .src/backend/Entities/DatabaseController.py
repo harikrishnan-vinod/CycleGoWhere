@@ -391,20 +391,27 @@ class DatabaseController:
         Returns:
             True if successful
         """
-        try:
+        # try:
             # Check if activity belongs to user
-            activity_ref = self.db.collection("users").document(user_uid).collection('activities').document(activity_id)
-            activity_doc = activity_ref.get()
+        #     activity_ref = self.db.collection("users").document(user_uid).collection('activities').document(activity_id)
+        #     activity_doc = activity_ref.get()
             
-            if not activity_doc.exists:
-                return False
+        #     if not activity_doc.exists:
+        #         return False
             
-            if activity_doc.to_dict().get('user_uid') != user_uid:
-                return False
+        #     if activity_doc.to_dict().get('user_uid') != user_uid:
+        #         return False
             
-            # Delete activity
-            activity_ref.delete()
+        #     # Delete activity
+        #     activity_ref.delete()
             
+        #     return True
+        # except Exception as e:
+        #     print(f"Error deleting activity: {e}")
+        #     return False
+        try:
+            # Delete activity entry
+            self.db.collection("users").document(user_uid).collection("activities").document(activity_id).delete()
             return True
         except Exception as e:
             print(f"Error deleting activity: {e}")
