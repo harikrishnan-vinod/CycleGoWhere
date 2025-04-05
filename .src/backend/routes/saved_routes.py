@@ -5,6 +5,8 @@ import polyline
 from .services import db, firestore_module as firestore
 import polyline
 import datetime
+from Controllers.ProfilePageController import ProfilePageController
+from Controllers.SavedRoutesController import SavedRoutesController
 
 
 savedroutes_bp = Blueprint("savedroutes",__name__)
@@ -19,6 +21,7 @@ def save_route():
     user_uid = data.get("userUID")
     route_data = data.get("routeData")
     return profile_controller.save_route(user_uid, route_data)
+
 #unsave route (in saved route page)
 @savedroutes_bp.route("/unsave-route", methods=["DELETE"])
 def unsave_route():
@@ -41,29 +44,7 @@ def unsave_route():
 def get_saved_routes():
     user_uid = request.args.get("userUID")
     try:
-        routes_ref = db.collection("users").document(user_uid).collection("savedRoutes").stream()
-
-        routes = []
-        for r in routes_ref:
-            raw_data = r.to_dict()
-            serializable_data = to_serializable(raw_data)
-
-            route_path = serializable_data.get("routePath", [])
-            if route_path and isinstance(route_path, list):
-                try:
-                    latlngs = [
-                        (pt["latitude"], pt["longitude"]) for pt in route_path
-                    ]
-                    encoded = polyline.encode(latlngs, 5)
-                    serializable_data["route_geometry"] = encoded
-                except Exception as e:
-                    print("⚠️ Failed to encode polyline:", e)
-                    serializable_data["route_geometry"] = None
-
-            serializable_data["id"] = r.id
-            routes.append(serializable_data)
-
-        return jsonify(routes), 200
+        return save_route_controller.fetch_saved_routes(user_uid)
 
     except Exception as e:
         print("Error fetching routes:", e)
@@ -73,14 +54,7 @@ def get_saved_routes():
 def get_activities():
     user_uid = request.args.get("userUID")
     try:
-        act_ref = db.collection("users").document(user_uid).collection("activities").stream()
-        activities = []
-        for doc in act_ref:
-            data = doc.to_dict()
-            data = to_serializable(data)
-            data["id"] = doc.id
-            activities.append(data)
-        return jsonify(activities), 200
+        return profile_controller.fetch_activies(user_uid)
     except Exception as e:
         print("Error getting activities:", e)
         return jsonify({"message": "Could not fetch activities"}), 500
