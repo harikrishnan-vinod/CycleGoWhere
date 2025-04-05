@@ -53,7 +53,7 @@ function SavedRoutes() {
             ))}
           </>
         ) : (
-          <p>No saved routes to display...</p>
+          <p className="no-saved-routes">No saved routes to display...</p>
         )}
       </div>
       <div className="footer"></div>

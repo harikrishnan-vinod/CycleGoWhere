@@ -57,7 +57,7 @@ function Profile() {
             <CyclingActivity key={activity.id} activity={activity} />
           ))
         ) : (
-          <p>
+          <p className="no-activity">
             No activity. Start your first ride{" "}
             <Link to="/mainpage" className="underline-link">HERE</Link>!
           </p>)}
