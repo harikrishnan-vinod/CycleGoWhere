@@ -31,7 +31,7 @@ class Activity:
     def from_dict(data):
         activity = Activity(
             id=data.get("id"),
-            user_id=data.get("user_id"),
+            user_uid=data.get("user_uid"),
             start_time=data.get("start_time"),
             end_time=data.get("end_time"),
             distance=data.get("distance", 0),

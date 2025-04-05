@@ -104,10 +104,10 @@ class SettingsPageController:
             print("Error fetching profile picture:", e)
             return jsonify({"message": "Server error"}), 500
     
-    def toggle_notification(self, user_id, notification_enabled): #TODO: 
+    def toggle_notification(self, user_uid, notification_enabled): #TODO: 
         try:
             # Update notification settings
-            self.db_controller.update_notification_settings(user_id, notification_enabled)
+            self.db_controller.update_notification_settings(user_uid, notification_enabled)
             
             return {"message": "Notification settings updated successfully"}
         except Exception as e:

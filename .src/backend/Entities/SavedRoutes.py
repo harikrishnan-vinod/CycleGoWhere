@@ -29,14 +29,14 @@ class SavedRoutes:
     
     def to_dict(self):
         return {
-            "user_id": self.user_id,
+            "user_uid": self.user_uid,
             "routes": [route.to_dict() for route in self.routes]
         }
     
     @staticmethod
     def from_dict(data, routes):
         saved_routes = SavedRoutes(
-            user_id=data.get("user_id"),
+            user_uid=data.get("user_uid"),
             routes=routes
         )
         return saved_routes

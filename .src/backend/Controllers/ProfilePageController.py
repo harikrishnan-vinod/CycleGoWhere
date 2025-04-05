@@ -121,10 +121,10 @@ class ProfilePageController:
             print("Error fetching profile picture:", e)
             return jsonify({"message": "Server error"}), 500
     
-    def get_recent_activities(self, user_id, limit=3):
+    def get_recent_activities(self, user_uid, limit=3):
         try:
             # Get recent activities
-            activities = self.db_controller.get_user_activities(user_id, limit=limit)
+            activities = self.db_controller.get_user_activities(user_uid, limit=limit)
             
             return {
                 "activities": [activity.to_dict() for activity in activities]
@@ -132,10 +132,10 @@ class ProfilePageController:
         except Exception as e:
             return {"error": str(e)}, 400
     
-    def get_all_ride_history(self, user_id):
+    def get_all_ride_history(self, user_uid):
         try:
             # Get all activities
-            activities = self.db_controller.get_user_activities(user_id)
+            activities = self.db_controller.get_user_activities(user_uid)
             
             return {
                 "activities": [activity.to_dict() for activity in activities]
@@ -143,10 +143,10 @@ class ProfilePageController:
         except Exception as e:
             return {"error": str(e)}, 400
     
-    def delete_ride_history(self, user_id, activity_id):
+    def delete_ride_history(self, user_uid, activity_id):
         try:
             # Delete activity
-            self.db_controller.delete_activity(user_id, activity_id)
+            self.db_controller.delete_activity(user_uid, activity_id)
             
             return {"message": "Activity deleted successfully"}
         except Exception as e:

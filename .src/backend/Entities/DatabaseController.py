@@ -232,8 +232,11 @@ class DatabaseController:
             }
             print(f"user_data: {user_data}")
             self.db.collection('users').document(user.get_uid()).set(user_data)
-            self.db.collection('users').document(user.get_uid()).collection('savedRoutes').document("placeholder").set({"placeholder": True})
-            self.db.collection('users').document(user.get_uid()).collection('activities').document("placeholder").set({"placeholder": True})
+            self.db_controller.db.collection("users").document(user.get_uid).collection("savedRoutes").document("dummyRoute").set({"initial": True})
+            self.db_controller.db.collection("users").document(user.get_uid).collection("savedRoutes").document("dummyRoute").delete()
+
+            self.db_controller.db.collection("users").document(user.get_uid).collection("activities").document("dummyActivity").set({"initial": True})
+            self.db_controller.db.collection("users").document(user.get_uid).collection("activities").document("dummyActivity").delete()
             
             return True
         except Exception as e:
@@ -257,7 +260,7 @@ class DatabaseController:
                 'notification_enabled': user.settings._app_notifications if user.settings else True
             }
             
-            self.db.collection('users').document(user.user_id).update(user_data)
+            self.db.collection('users').document(user.user_uid).update(user_data)
             return True
         except Exception as e:
             print(f"Error updating user: {e}")
@@ -344,7 +347,7 @@ class DatabaseController:
         """Deletes an activity from the database.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             activity_id: Activity identifier
             
         Returns:
@@ -358,7 +361,7 @@ class DatabaseController:
             if not activity_doc.exists:
                 return False
             
-            if activity_doc.to_dict().get('user_id') != user_id:
+            if activity_doc.to_dict().get('user_uid') != user_uid:
                 return False
             
             # Delete activity
@@ -419,6 +422,7 @@ class DatabaseController:
                 "endLocation": route.get_end_location(),
                 "lastUsedAt": route.get_last_used_at()
             }
+        self.db.collection("users").document(user_uid).collection("savedRoutes").add(doc_data)
         
     def update_last_used(self, user_uid: str, route_id: str) -> bool:
         route_ref = self.db.collection("users").document(user_uid).collection("savedRoutes").document(route_id)
@@ -431,7 +435,7 @@ class DatabaseController:
         """Removes a saved route for a user.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             route_id: Route identifier
             
         Returns:
@@ -446,11 +450,11 @@ class DatabaseController:
             return False
     
     # Filter methods
-    def update_filters(self, user_id: str, filters: Filters) -> bool:
+    def update_filters(self, user_uid: str, filters: Filters) -> bool:
         """Updates a user's map filters.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             filters: Filters object with updated preferences
             
         Returns:
@@ -464,7 +468,7 @@ class DatabaseController:
             }
             
             # Update user's filters
-            self.db.collection('users').document(user_id).update({
+            self.db.collection('users').document(user_uid).update({
                 'filters': filters_data
             })
             
@@ -474,11 +478,11 @@ class DatabaseController:
             return False
     
     # Settings methods
-    def update_notification_settings(self, user_id: str, notification_enabled: bool) -> bool:
+    def update_notification_settings(self, user_uid: str, notification_enabled: bool) -> bool:
         """Updates a user's notification preferences.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             notification_enabled: True to enable notifications
             
         Returns:
@@ -486,7 +490,7 @@ class DatabaseController:
         """
         try:
             # Update user's notification settings
-            self.db.collection('users').document(user_id).update({
+            self.db.collection('users').document(user_uid).update({
                 'notification_enabled': notification_enabled
             })
             

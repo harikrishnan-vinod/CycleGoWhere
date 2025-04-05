@@ -49,15 +49,15 @@ class SavedRoutesController:
 
         return jsonify(routes_data), 200
     
-    def unsave_route(self, user_id, route_id):
+    def unsave_route(self, user_uid, route_id):
         try:
             # Unsave route
-            self.db_controller.unsave_route(user_id, route_id)
+            self.db_controller.unsave_route(user_uid, route_id)
             return jsonify({"message": "Route unsaved successfully"}), 200
         except Exception as e:
             return jsonify({"message": "Failed to unsave route"}), 500
     
-    def start_activity_from_saved(self, user_id, route_id):
+    def start_activity_from_saved(self, user_uid, route_id):
         try:
             # Get route
             route = self.db_controller.get_route(route_id)
@@ -70,17 +70,17 @@ class SavedRoutesController:
         except Exception as e:
             return {"error": str(e)}, 400
         
-    def unsave_activity(self, user_id, route_id):
+    def unsave_activity(self, user_uid, route_id):
         try:
-            self.db_controller.unsave_route(user_id, route_id)
+            self.db_controller.unsave_route(user_uid, route_id)
             return {"message": "Route unsaved successfully"}
         except Exception as e:
             return {"error": str(e)}, 400
 
-    def update_last_used(self, user_id, route_id):
+    def update_last_used(self, user_uid, route_id):
         try:
             # Update last used timestamp
-            if self.db_controller.update_last_used(user_id, route_id):
+            if self.db_controller.update_last_used(user_uid, route_id):
                 return jsonify({"message": "Last used updated"}), 200
         except Exception as e:
             return jsonify({"message": "Failed to update last used"}), 500
