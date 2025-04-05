@@ -115,8 +115,9 @@ class LoginPageController:
                 session["user"] = email
                 session["user_UID"] = user_UID
 
-                # Handle first-time users
+                # ✅ Determine username regardless of new/existing user
                 if not self.db_controller.user_exists(user_UID):
+                    # Create a new username
                     username = email.split('@')[0]
                     base_username = username
                     counter = 0
@@ -133,16 +134,23 @@ class LoginPageController:
                         settings=Settings(user_UID=user_UID),
                     )
                     self.db_controller.add_user(user)
+                else:
+                    # ✅ Get username for existing user
+                    user_doc = self.db_controller.db.collection("users").document(user_UID).get()
+                    user_data = user_doc.to_dict()
+                    username = user_data.get("username", email.split('@')[0])
 
-                # ✅ Always redirect on success
-                return redirect('http://localhost:5173/mainpage')
+                # ✅ Always redirect with all required data
+                return redirect(
+                    f"http://localhost:5173/google-callback?email={email}&userUID={user_UID}&username={username}"
+                )
 
-            # ❌ Token was missing
             return jsonify({"message": "Google login failed"}), 400
 
         except Exception as e:
             print("Google callback failed:", str(e))
             return redirect('http://localhost:5173/login')
+
 
 
     def logout(self, session):

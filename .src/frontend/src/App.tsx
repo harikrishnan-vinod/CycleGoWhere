@@ -15,6 +15,7 @@ import ChangeUsername from "./components/ChangeUsername";
 import ChangeEmail from "./components/ChangeEmail";
 import ChangePassword from "./components/ChangePassword";
 import ChangeProfilePicture from "./components/ChangeProfilePicture";
+import GoogleCallback from "./pages/GoogleCallback";
 
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ import the wrapper
 import "./App.css";
@@ -28,6 +29,7 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/google-callback" element={<GoogleCallback />} />
 
         {/* Protected routes */}
         <Route
