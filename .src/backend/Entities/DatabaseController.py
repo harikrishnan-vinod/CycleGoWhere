@@ -161,14 +161,6 @@ class DatabaseController:
 
         # Get user saved routes
         # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
-        
-        # Generated?    
-        # # Get user filters
-        # filters = Filters()
-        # filters_data = data.get('filters', {})
-        # filters._show_water_point = filters_data.get('show_water_point', False)
-        # filters._show_repair_shop = filters_data.get('show_repair_shop', False)
-        # user.filters = filters
             
         return User(uid=user_UID,
                     email=email,
@@ -348,7 +340,7 @@ class DatabaseController:
 
         return activities
     
-    def delete_activity(self, user_id: str, activity_id: str) -> bool:
+    def delete_activity(self, user_uid: str, activity_id: str) -> bool:
         """Deletes an activity from the database.
         
         Args:
@@ -360,7 +352,7 @@ class DatabaseController:
         """
         try:
             # Check if activity belongs to user
-            activity_ref = self.db.collection('activities').document(activity_id)
+            activity_ref = self.db.collection("users").document(user_uid).collection('activities').document(activity_id)
             activity_doc = activity_ref.get()
             
             if not activity_doc.exists:
@@ -371,12 +363,6 @@ class DatabaseController:
             
             # Delete activity
             activity_ref.delete()
-            
-            # Update user's activities list
-            user_ref = self.db.collection('users').document(user_id)
-            user_ref.update({
-                'activity_ids': firestore.ArrayRemove([activity_id])
-            })
             
             return True
         except Exception as e:
@@ -433,10 +419,15 @@ class DatabaseController:
                 "endLocation": route.get_end_location(),
                 "lastUsedAt": route.get_last_used_at()
             }
-
-        self.db.collection("users").document(user_uid).collection("savedRoutes").add(doc_data)
-    
-    def unsave_route(self, user_id: str, route_id: str) -> bool:
+        
+    def update_last_used(self, user_uid: str, route_id: str) -> bool:
+        route_ref = self.db.collection("users").document(user_uid).collection("savedRoutes").document(route_id)
+        if route_ref.get().exists:
+            route_ref.update({"lastUsedAt": firestore.SERVER_TIMESTAMP})
+            return True
+        return False
+ 
+    def unsave_route(self, user_uid: str, route_id: str) -> bool:
         """Removes a saved route for a user.
         
         Args:
@@ -448,8 +439,7 @@ class DatabaseController:
         """
         try:
             # Delete saved route entry
-            self.db.collection('users').document(user_id).collection('saved_routes').document(route_id).delete()
-            
+            self.db.collection("users").document(user_uid).collection("savedRoutes").document(route_id).delete()
             return True
         except Exception as e:
             print(f"Error unsaving route: {e}")

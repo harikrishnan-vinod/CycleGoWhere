@@ -12,7 +12,7 @@ from Controllers.SavedRoutesController import SavedRoutesController
 savedroutes_bp = Blueprint("savedroutes",__name__)
 
 profile_controller = ProfilePageController()
-save_route_controller = SavedRoutesController()
+saved_route_controller = SavedRoutesController()
 
 # save route
 @savedroutes_bp.route("/save-route", methods=["POST"])
@@ -33,6 +33,7 @@ def unsave_route():
         return jsonify({"message": "Missing userUID or routeId"}), 400
 
     try:
+        return saved_route_controller.unsave_route(user_uid, route_id)
         db.collection("users").document(user_uid).collection("savedRoutes").document(route_id).delete()
         return jsonify({"message": "Route unsaved successfully"}), 200
     except Exception as e:
@@ -44,7 +45,7 @@ def unsave_route():
 def get_saved_routes():
     user_uid = request.args.get("userUID")
     try:
-        return save_route_controller.fetch_saved_routes(user_uid)
+        return saved_route_controller.fetch_saved_routes(user_uid)
 
     except Exception as e:
         print("Error fetching routes:", e)
@@ -64,9 +65,7 @@ def update_last_used():
     user_uid = request.args.get("userUID")
     route_id = request.args.get("routeId")
     try:
-        route_ref = db.collection("users").document(user_uid).collection("savedRoutes").document(route_id)
-        route_ref.update({"lastUsedAt": firestore.SERVER_TIMESTAMP})
-        return jsonify({"message": "Last used updated"}), 200
+        return saved_route_controller.update_last_used(user_uid, route_id)
     except Exception as e:
         print("Error updating last used:", e)
         return jsonify({"message": "Failed to update last used"}), 500
@@ -81,6 +80,8 @@ def delete_activity():
 
         if not user_uid or not activity_id:
             return jsonify({"error": "Missing userUID or activityId"}), 400
+
+        return profile_controller.delete_activity(user_uid, activity_id)
 
         # Reference to the specific activity document
         activity_ref = db.collection("users").document(user_uid).collection("activities").document(activity_id)

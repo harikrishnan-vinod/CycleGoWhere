@@ -34,6 +34,15 @@ class ProfilePageController:
             activity_data.append(data)
         return jsonify(activity_data), 200
     
+    def delete_activity(self, user_UID, activity_id):
+        try:
+
+            if self.db_controller.delete_activity(user_UID, activity_id):
+                return jsonify({"message": "Activity deleted successfully"}), 200
+        except Exception as e:
+            print("Error deleting activity:", e)
+            return jsonify({"message": "Failed to delete activity"}), 500
+    
     def save_route(self, user_UID, route_data):
         if not isinstance(route_data["route_geometry"], str):
             raise ValueError("route_geometry must be an encoded polyline string.")
@@ -111,25 +120,6 @@ class ProfilePageController:
         except Exception as e:
             print("Error fetching profile picture:", e)
             return jsonify({"message": "Server error"}), 500
-    
-    def get_cycling_statistics(self, user_id, period="week"):
-        try:
-            # Get activities for the period
-            activities = self.db_controller.get_user_activities(user_id, period)
-            
-            # Calculate statistics
-            total_distance = sum(activity.distance for activity in activities)
-            total_time = sum(activity.duration for activity in activities)
-            total_rides = len(activities)
-            
-            return {
-                "total_distance": total_distance,
-                "total_time": total_time,
-                "total_rides": total_rides,
-                "activities": [activity.to_dict() for activity in activities]
-            }
-        except Exception as e:
-            return {"error": str(e)}, 400
     
     def get_recent_activities(self, user_id, limit=3):
         try:

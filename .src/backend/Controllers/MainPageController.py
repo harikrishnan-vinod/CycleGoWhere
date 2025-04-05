@@ -375,7 +375,7 @@ class MainPageController:
                 instructions_converted.append({
                     "direction": row[0],
                     "road": row[1],
-                    "distance": row[5],
+                    "distance": row[2],
                     "latLng": row[3]
                 })
 
