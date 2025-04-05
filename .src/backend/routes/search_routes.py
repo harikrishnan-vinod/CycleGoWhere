@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
+from Controllers.MainPageController import MainPageController
 import requests
 import time
 import os
-from Controllers.MainPageController import MainPageController
 
 search_bp = Blueprint("search",__name__)
+main_controller = MainPageController()
 
 auth_token = {
     "token": None,
@@ -133,4 +134,12 @@ def getBicycleShop():
                 continue 
     print("Finding bicycle points")
     result = MainPageController.findBikeShops(points)
-    return result 
+    return result
+
+@search_bp.route("/save-activity", methods=["POST"])
+def save_activity():
+    data = request.get_json()
+    user_uid = data.get("userUID")
+    activity_data = data.get("activityData")
+    print(activity_data)
+    return main_controller.saveActivity(user_uid, activity_data)

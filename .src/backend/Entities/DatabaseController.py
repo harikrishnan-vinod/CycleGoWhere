@@ -13,10 +13,33 @@ from flask import jsonify
 from Entities.User import User
 from Entities.Activity import Activity
 from Entities.Route import Route
-from Entities.Location import Location
 from Entities.SavedRoutes import SavedRoutes
 from Entities.Settings import Settings
 from Entities.Filters import Filters
+
+# Helper methods
+def to_serializable(doc_dict):
+    """
+    Converts Firestore document data to a serializable format.
+    """
+    for key, value in doc_dict.items():
+        if isinstance(value, firestore.GeoPoint):
+            doc_dict[key] = {
+                "latitude": value.latitude,
+                "longitude": value.longitude
+            }
+        elif isinstance(value, dict):
+            to_serializable(value)
+        elif isinstance(value, list):
+            for i in range(len(value)):
+                if isinstance(value[i], firestore.GeoPoint):
+                    value[i] = {
+                        "latitude": value[i].latitude,
+                        "longitude": value[i].longitude
+                    }
+                elif isinstance(value[i], dict):
+                    to_serializable(value[i])
+    return doc_dict
 
 class DatabaseController:
     """Firebase Firestore database controller for the cycling application.
@@ -70,7 +93,7 @@ class DatabaseController:
         """
         user_doc = self.db.collection('users').document(uid).get()
         if user_doc.exists:
-            return user_doc.to_dict().get('username')
+            return user_doc.to_dict().get('username','')
         return None
 
     def get_uid_by_username(self, username: str) -> Optional[str]:
@@ -87,6 +110,14 @@ class DatabaseController:
             return user_doc.to_dict().get('userUID')
         return None
     
+    def get_names_by_uid(self, uid: str):
+        user_doc = self.db.collection('users').document(uid).get()
+        if user_doc.exists:
+            doc = user_doc.to_dict().get('username')
+            if doc:
+                return doc.get('firstName'), doc.get('lastName')
+        return None
+
     def get_notifications_enabled(self, uid: str):
         """Retrieves a user's notification preferences."""
         try:
@@ -117,7 +148,7 @@ class DatabaseController:
             print(f"Error getting profile picture: {e}")
             return ''  # Default to empty string on error
     
-    def get_user_by_uid(self, user_UID: str) -> Optional[User]: # TODO: Fix this
+    def get_user_by_uid(self, user_UID: str) -> Optional[User]:
         """Retrieves a user by their ID.
         
         Args:
@@ -132,31 +163,28 @@ class DatabaseController:
         # Get email from usernames document
         email = self.get_email_by_username(username) if username else None
 
+        # Get user's first and last name
+        first_name, last_name = self.get_names_by_uid(user_UID) if username else (None, None)
+
         # Get user settings
         settings = Settings(user_UID,
                             self.get_notifications_enabled(user_UID),
                             self.get_profile_picture(user_UID))
         
         # Get user activities
-        # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+        activities = self.get_user_activities(user_UID)
 
         # Get user saved routes
-        # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
-        
-        # Generated?    
-        # # Get user filters
-        # filters = Filters()
-        # filters_data = data.get('filters', {})
-        # filters._show_water_point = filters_data.get('show_water_point', False)
-        # filters._show_repair_shop = filters_data.get('show_repair_shop', False)
-        # user.filters = filters
+        saved_routes = self.get_saved_routes(user_UID)
             
         return User(uid=user_UID,
                     email=email,
                     username=username,
+                    first_name=first_name,
+                    last_name=last_name,
                     settings=settings,
-                    # activities, #TODO: To be implemented
-                    # saved_routes
+                    activities=activities,
+                    saved_routes=saved_routes
                     )
     
     def user_exists(self, uid: str) -> bool:
@@ -195,6 +223,19 @@ class DatabaseController:
         users = self.db.collection('users').where('email', '==', email).get()
         return len(users) > 0
     
+    def create_default_user_document(self, user_UID: str, email: str) -> bool:
+        username = email.split('@')[0]  # Default username from email
+        self.db.collection("users").document(user_UID).set({
+            "email": email,
+            "username": username
+        })
+        
+        # Create username mapping
+        self.db.collection("usernames").document(username).set({
+            "email": email,
+            "userUID": user_UID
+        })
+
     def add_user(self, user: User) -> bool:
         """Adds a new user to the database.
         
@@ -209,7 +250,6 @@ class DatabaseController:
                 'email': user.get_email(),
                 'userUID': user.get_uid()
             })
-
             user_data = {
                 'email': user.get_email(),
                 'username': user.get_username(),
@@ -221,8 +261,11 @@ class DatabaseController:
             }
             print(f"user_data: {user_data}")
             self.db.collection('users').document(user.get_uid()).set(user_data)
-            self.db.collection('users').document(user.get_uid()).collection('savedRoutes').document("placeholder").set({"placeholder": True})
-            self.db.collection('users').document(user.get_uid()).collection('activities').document("placeholder").set({"placeholder": True})
+            self.db.collection("users").document(user.get_uid()).collection("savedRoutes").document("dummyRoute").set({"initial": True})
+            self.db.collection("users").document(user.get_uid()).collection("savedRoutes").document("dummyRoute").delete()
+
+            self.db.collection("users").document(user.get_uid()).collection("activities").document("dummyActivity").set({"initial": True})
+            self.db.collection("users").document(user.get_uid()).collection("activities").document("dummyActivity").delete()
             
             return True
         except Exception as e:
@@ -240,36 +283,45 @@ class DatabaseController:
         """
         try:
             # Update basic user document
-            user_data = {
-                'email': user.email,
-                'password': user.password,
-                'notification_enabled': user.settings._app_notifications if user.settings else True
+            username_data = {
+                'email': user.get_email(),
+                'userUID': user.get_uid(),
             }
-            
-            self.db.collection('users').document(user.user_id).update(user_data)
+
+            user_data = {
+                'email': user.get_email(),
+                'username': user.get_username(),
+                'firstName': user.get_first_name(),
+                'lastName': user.get_last_name(),
+                'profilePic': user.get_settings().get_profile_picture() if user.get_settings() else '',
+                'notification_enabled': user.get_settings().get_notification_enabled() if user.get_settings() else True
+            }
+
+            # Update username collection
+            old_username = self.get_username_by_uid(user.get_uid())
+            if old_username and old_username != user.get_username():
+                self.db.collection('usernames').document(old_username).delete()
+                self.db.collection('usernames').document(user.get_username()).set(username_data)
+
+            # Update user document
+            self.db.collection('users').document(user.get_uid()).update(user_data)
+
+            # Update activities if provided
+            if user.get_activities():
+                for activity in user.get_activities():
+                    self.save_activity(activity)
+
+            # Update saved routes if provided
+            if user.get_saved_routes():
+                for route in user.get_saved_routes():
+                    self.save_route(user.get_uid(), route)
+
             return True
         except Exception as e:
             print(f"Error updating user: {e}")
             return False
     
-    def update_user_profile_picture(self, user_UID: str, profile_picture_url: str) -> bool:
-        """Updates a user's profile picture.
-        
-        Args:
-            user_UID: User identifier
-            profile_picture: Binary image data
-            
-        Returns:
-            True if successful
-        """
-        try:
-            self.db.collection("users").document(user_UID).update({
-                "profilePic": profile_picture_url
-            })
-            return {"message": "Profile picture updated", "url": profile_picture_url}, 200
-        except Exception as e:
-            print("Firestore update failed:", e)
-            return {"message": "Failed to update Firestore"}, 500
+
 
     def update_user_email(self, user_UID, new_email):
         self.db.collection("users").document(user_UID).update({"email": new_email})
@@ -292,148 +344,48 @@ class DatabaseController:
             return jsonify({"message": "User not found"}), 404
 
     # Activity methods
-    def add_activity(self, activity: Activity) -> bool:
-        """Adds a new activity to the database.
+    def save_activity(self, activity: Activity) -> bool:
+        # Prepare data for activity document
+        doc_data = {
+            "activityName": activity.get_activity_name(),
+            "notes": activity.get_notes(),
+            "distance": activity.get_route().get_distance(),
+            "startPostal": activity.get_route().get_start_postal(),
+            "endPostal": activity.get_route().get_end_postal(),
+            "duration": activity.get_duration(),
+            "routePath": activity.get_route().get_route_path(),
+            "startTime": activity.get_start_time(),
+            "instructions": activity.get_route().get_instructions(),
+            "startLocation": activity.get_route().get_start_location(),
+            "endLocation": activity.get_route().get_end_location(),
+            "createdAt": activity.get_created_at()
+        }
+
+        self.db.collection("users").document(activity.get_user_uid()).collection("activities").add(doc_data)
         
-        Args:
-            activity: Activity object to add
-            
-        Returns:
-            True if successful
-        """
-        try:
-            # Create activity document
-            activity_data = {
-                'user_id': activity.user.user_id,
-                'date_time_started': activity.date_time_started,
-                'date_time_ended': activity.date_time_ended,
-                'time_elapsed': activity.get_time_elapsed(),
-            }
-            
-            # Add route data if available
-            if activity.route_taken:
-                route = activity.route_taken
-                activity_data['route'] = {
-                    'start_point': {
-                        'location_id': route.start_point.location_id,
-                        'latitude': route.start_point.latitude,
-                        'longitude': route.start_point.longitude,
-                        'address': route.start_point.address
-                    },
-                    'end_point': {
-                        'location_id': route.end_point.location_id,
-                        'latitude': route.end_point.latitude,
-                        'longitude': route.end_point.longitude,
-                        'address': route.end_point.address
-                    }
-                }
-            
-            # Generate new activity ID if not set
-            if not activity.activity_id:
-                activity.activity_id = str(uuid.uuid4())
-            
-            # Add to database
-            self.db.collection('activities').document(str(activity.activity_id)).set(activity_data)
-            
-            # Update user's activities list
-            user_ref = self.db.collection('users').document(activity.user.user_id)
-            user_ref.update({
-                'activity_ids': firestore.ArrayUnion([str(activity.activity_id)])
-            })
-            
-            return True
-        except Exception as e:
-            print(f"Error adding activity: {e}")
-            return False
+    def get_user_activities(self, user_UID: str) -> List[Activity]:
+        act_ref = self.db.collection("users").document(user_UID).collection("activities").stream()
+        activities = []
+        for doc in act_ref:
+            data = doc.to_dict()
+            route = self.get_route(user_UID, doc.id)
+            activity = Activity(user_uid=user_UID,
+                                activity_id=doc.id,
+                                activity_name=data.get("activityName"),
+                                notes=data.get("notes"),
+                                duration=data.get("duration"),
+                                start_time=data.get("startTime"),
+                                route=route,
+                                created_at=data.get("createdAt"))
+            activities.append(activity)
+
+        return activities
     
-    def get_user_activities(self, user_id: str, period: Optional[str] = None, limit: Optional[int] = None) -> List[Activity]:
-        """Retrieves activities for a user with optional filtering.
-        
-        Args:
-            user_id: User identifier
-            period: Time period filter ('week', 'month', 'year' or None)
-            limit: Maximum number of activities to return
-            
-        Returns:
-            List of Activity objects
-        """
-        try:
-            # Create query
-            query = self.db.collection('activities').where('user_id', '==', user_id)
-            
-            # Apply time period filter
-            if period:
-                cutoff_date = datetime.now()
-                if period == 'week':
-                    cutoff_date -= timedelta(days=7)
-                elif period == 'month':
-                    cutoff_date -= timedelta(days=30)
-                elif period == 'year':
-                    cutoff_date -= timedelta(days=365)
-                
-                query = query.where('date_time_started', '>=', cutoff_date)
-            
-            # Order by date (newest first)
-            query = query.order_by('date_time_started', direction=firestore.Query.DESCENDING)
-            
-            # Apply limit if specified
-            if limit:
-                query = query.limit(limit)
-            
-            # Execute query
-            activities_data = query.get()
-            
-            # Get user
-            user = self.get_user_by_id(user_id)
-            if not user:
-                return []
-            
-            # Create Activity objects
-            activities = []
-            for doc in activities_data:
-                data = doc.to_dict()
-                
-                # Create Activity
-                activity = Activity(activity_id=doc.id, user=user)
-                activity.date_time_started = data.get('date_time_started')
-                activity.date_time_ended = data.get('date_time_ended')
-                activity.time_elapsed = data.get('time_elapsed')
-                
-                # Add route if available
-                route_data = data.get('route')
-                if route_data:
-                    start_data = route_data.get('start_point', {})
-                    end_data = route_data.get('end_point', {})
-                    
-                    start_point = Location(
-                        location_id=start_data.get('location_id', 0),
-                        lat=start_data.get('latitude', 0),
-                        lng=start_data.get('longitude', 0),
-                        address=start_data.get('address', '')
-                    )
-                    
-                    end_point = Location(
-                        location_id=end_data.get('location_id', 0),
-                        lat=end_data.get('latitude', 0),
-                        lng=end_data.get('longitude', 0),
-                        address=end_data.get('address', '')
-                    )
-                    
-                    route = Route(start_point=start_point, end_point=end_point)
-                    activity.set_route_taken(route)
-                
-                activities.append(activity)
-            
-            return activities
-        except Exception as e:
-            print(f"Error getting user activities: {e}")
-            return []
-    
-    def delete_activity(self, user_id: str, activity_id: str) -> bool:
+    def delete_activity(self, user_uid: str, activity_id: str) -> bool:
         """Deletes an activity from the database.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             activity_id: Activity identifier
             
         Returns:
@@ -441,23 +393,17 @@ class DatabaseController:
         """
         try:
             # Check if activity belongs to user
-            activity_ref = self.db.collection('activities').document(activity_id)
+            activity_ref = self.db.collection("users").document(user_uid).collection('activities').document(activity_id)
             activity_doc = activity_ref.get()
             
             if not activity_doc.exists:
                 return False
             
-            if activity_doc.to_dict().get('user_id') != user_id:
+            if activity_doc.to_dict().get('user_uid') != user_uid:
                 return False
             
             # Delete activity
             activity_ref.delete()
-            
-            # Update user's activities list
-            user_ref = self.db.collection('users').document(user_id)
-            user_ref.update({
-                'activity_ids': firestore.ArrayRemove([activity_id])
-            })
             
             return True
         except Exception as e:
@@ -465,280 +411,69 @@ class DatabaseController:
             return False
     
     # Route methods
-    def get_route(self, route_id: str) -> Optional[Route]:
-        """Retrieves a route by its ID.
-        
-        Args:
-            route_id: Unique route identifier
-            
-        Returns:
-            Route object if found, None otherwise
-        """
-        try:
-            route_doc = self.db.collection('routes').document(route_id).get()
-            
-            if not route_doc.exists:
-                return None
-            
-            data = route_doc.to_dict()
-            
-            # Create start location
-            start_data = data.get('start_point', {})
-            start_point = Location(
-                location_id=start_data.get('location_id', 0),
-                lat=start_data.get('latitude', 0),
-                lng=start_data.get('longitude', 0),
-                address=start_data.get('address', '')
-            )
-            
-            # Create end location
-            end_data = data.get('end_point', {})
-            end_point = Location(
-                location_id=end_data.get('location_id', 0),
-                lat=end_data.get('latitude', 0),
-                lng=end_data.get('longitude', 0),
-                address=end_data.get('address', '')
-            )
-            
-            # Create route
-            route = Route(start_point=start_point, end_point=end_point)
-            
+    def get_route(self, user_UID: str, activity_ID) -> Optional[Route]:
+        doc = self.db.collection("users").document(user_UID).collection("activities").document(activity_ID).get()
+        if doc.exists:
+            data = doc.to_dict()
+            route = Route(start_location=data.get("startLocation"),
+                          start_postal=data.get("startPostal"),
+                          end_location=data.get("endLocation"),
+                          end_postal=data.get("endPostal"),
+                          distance=data.get("distance"),
+                          route_path=data.get("routePath"),
+                          instructions=data.get("instructions"))
             return route
-        except Exception as e:
-            print(f"Error getting route: {e}")
-            return None
-    
-    def add_route(self, route: Route) -> str:
-        """Adds a new route to the database.
-        
-        Args:
-            route: Route object to add
-            
-        Returns:
-            Route ID if successful, empty string otherwise
-        """
-        try:
-            # Create route document
-            route_data = {
-                'start_point': {
-                    'location_id': route.start_point.location_id,
-                    'latitude': route.start_point.latitude,
-                    'longitude': route.start_point.longitude,
-                    'address': route.start_point.address
-                },
-                'end_point': {
-                    'location_id': route.end_point.location_id,
-                    'latitude': route.end_point.latitude,
-                    'longitude': route.end_point.longitude,
-                    'address': route.end_point.address
-                }
-            }
-            
-            # Add to database
-            route_ref = self.db.collection('routes').document()
-            route_ref.set(route_data)
-            
-            return route_ref.id
-        except Exception as e:
-            print(f"Error adding route: {e}")
-            return ""
-    
-    def add_recent_search(self, user_id: str, route: Route) -> bool:
-        """Records a recent route search for a user.
-        
-        Args:
-            user_id: User identifier
-            route: Route that was searched
-            
-        Returns:
-            True if successful
-        """
-        try:
-            # Add route first
-            route_id = self.add_route(route)
-            if not route_id:
-                return False
-            
-            # Add to recent searches
-            recent_search_data = {
-                'route_id': route_id,
-                'timestamp': firestore.SERVER_TIMESTAMP
-            }
-            
-            self.db.collection('users').document(user_id).collection('recent_searches').document(route_id).set(recent_search_data)
-            
-            # Get all recent searches to limit to 5
-            recent_searches_ref = self.db.collection('users').document(user_id).collection('recent_searches')
-            recent_searches = recent_searches_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).get()
-            
-            # Keep only the 5 most recent
-            if len(recent_searches) > 5:
-                for i, doc in enumerate(recent_searches):
-                    if i >= 5:
-                        doc.reference.delete()
-            
-            return True
-        except Exception as e:
-            print(f"Error adding recent search: {e}")
-            return False
-    
-    def get_recent_searches(self, user_id: str, limit: int = 5) -> List[Route]:
-        """Retrieves a user's recent route searches.
-        
-        Args:
-            user_id: User identifier
-            limit: Maximum number of searches to return
-            
-        Returns:
-            List of Route objects
-        """
-        try:
-            # Get recent searches
-            recent_searches_ref = self.db.collection('users').document(user_id).collection('recent_searches')
-            recent_searches = recent_searches_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(limit).get()
-            
-            routes = []
-            for doc in recent_searches:
-                route_id = doc.to_dict().get('route_id')
-                route = self.get_route(route_id)
-                if route:
-                    routes.append(route)
-            
-            return routes
-        except Exception as e:
-            print(f"Error getting recent searches: {e}")
-            return []
-    
-    # Facility methods
-    def get_facilities(self, facility_type: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Retrieves facilities from the database with optional filtering.
-        
-        Args:
-            facility_type: Filter by facility type (None for all)
-            
-        Returns:
-            List of facility dictionaries
-        """
-        try:
-            # Create query
-            query = self.db.collection('facilities')
-            
-            # Apply type filter
-            if facility_type:
-                query = query.where('type', '==', facility_type)
-            
-            # Execute query
-            facilities_data = query.get()
-            
-            # Create facility dictionaries
-            facilities = []
-            for doc in facilities_data:
-                data = doc.to_dict()
-                data['id'] = doc.id
-                facilities.append(data)
-            
-            return facilities
-        except Exception as e:
-            print(f"Error getting facilities: {e}")
-            return []
+        return None
     
     # SavedRoutes methods
-    def get_saved_routes(self, user_id: str) -> List[SavedRoutes]:
-        """Retrieves a user's saved routes.
-        
-        Args:
-            user_id: User identifier
-            
-        Returns:
-            List of SavedRoutes objects
-        """
-        try:
-            # Get saved routes collection
-            saved_routes_ref = self.db.collection('users').document(user_id).collection('saved_routes')
-            saved_routes_data = saved_routes_ref.get()
-            
-            # Create SavedRoutes objects
-            saved_routes = []
-            for doc in saved_routes_data:
-                data = doc.to_dict()
-                
-                # Get route details
-                route_id = data.get('route_id')
-                route = self.get_route(route_id)
-                
-                if route:
-                    # Calculate distance (mock implementation)
-                    start = route.start_point
-                    end = route.end_point
-                    distance = self._calculate_distance(
-                        start.latitude, start.longitude, 
-                        end.latitude, end.longitude
-                    )
-                    
-                    # Create SavedRoutes object
-                    saved_route = SavedRoutes(
-                        route_name=data.get('name', f"Route {doc.id}"),
-                        distance=distance
-                    )
-                    
-                    # Set additional attributes
-                    saved_route.average_time_taken = data.get('average_time_taken', 0)
-                    saved_route.number_of_rides = data.get('number_of_rides', 0)
-                    
-                    saved_routes.append(saved_route)
-            
-            return saved_routes
-        except Exception as e:
-            print(f"Error getting saved routes: {e}")
-            return []
+    def get_saved_routes(self, user_uid: str) -> List[Route]:
+        route_ref = self.db.collection("users").document(user_uid).collection("savedRoutes").stream()
+        routes = []
+        for doc in route_ref:
+            data = doc.to_dict()
+            route = Route(route_name=data.get("routeName"),
+                          notes=data.get("notes"),
+                          distance=data.get("distance"),
+                          start_postal=data.get("startPostal"),
+                          end_postal=data.get("endPostal"),
+                          route_path=data.get("routePath"),
+                          instructions=data.get("instructions"),
+                          start_location=data.get("startLocation"),
+                          end_location=data.get("endLocation"),
+                          last_used_at=data.get("lastUsedAt"),
+                          route_id=doc.id)
+            routes.append(route)
+
+        return routes
     
-    def save_route(self, user_id: str, route: Route, name: str = "") -> bool:
-        """Saves a route for a user.
-        
-        Args:
-            user_id: User identifier
-            route: Route to save
-            name: Optional name for saved route
-            
-        Returns:
-            True if successful
-        """
-        try:
-            # Add route first
-            route_id = self.add_route(route)
-            if not route_id:
-                return False
-            
-            # Calculate distance
-            start = route.start_point
-            end = route.end_point
-            distance = self._calculate_distance(
-                start.latitude, start.longitude, 
-                end.latitude, end.longitude
-            )
-            
-            # Create saved route entry
-            saved_route_data = {
-                'route_id': route_id,
-                'name': name if name else f"Route {route_id[:8]}",
-                'distance': distance,
-                'average_time_taken': 0,
-                'number_of_rides': 0,
-                'timestamp': firestore.SERVER_TIMESTAMP
+    def save_route(self, user_uid: str, route: Route) -> bool:
+        # Prepare data for route document
+        doc_data = {
+                "routeName": route.get_route_name(),
+                "notes": route.get_notes(),
+                "distance": route.get_distance(),
+                "startPostal": route.get_start_postal(),
+                "endPostal": route.get_end_postal(),
+                "routePath": route.get_route_path(),
+                "instructions": route.get_instructions(),
+                "startLocation": route.get_start_location(),
+                "endLocation": route.get_end_location(),
+                "lastUsedAt": route.get_last_used_at()
             }
-            
-            self.db.collection('users').document(user_id).collection('saved_routes').document(route_id).set(saved_route_data)
-            
+        self.db.collection("users").document(user_uid).collection("savedRoutes").add(doc_data)
+        
+    def update_last_used(self, user_uid: str, route_id: str) -> bool:
+        route_ref = self.db.collection("users").document(user_uid).collection("savedRoutes").document(route_id)
+        if route_ref.get().exists:
+            route_ref.update({"lastUsedAt": firestore.SERVER_TIMESTAMP})
             return True
-        except Exception as e:
-            print(f"Error saving route: {e}")
-            return False
-    
-    def unsave_route(self, user_id: str, route_id: str) -> bool:
+        return False
+ 
+    def unsave_route(self, user_uid: str, route_id: str) -> bool:
         """Removes a saved route for a user.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             route_id: Route identifier
             
         Returns:
@@ -746,47 +481,36 @@ class DatabaseController:
         """
         try:
             # Delete saved route entry
-            self.db.collection('users').document(user_id).collection('saved_routes').document(route_id).delete()
-            
+            self.db.collection("users").document(user_uid).collection("savedRoutes").document(route_id).delete()
             return True
         except Exception as e:
             print(f"Error unsaving route: {e}")
             return False
     
-    # Filter methods
-    def update_filters(self, user_id: str, filters: Filters) -> bool:
-        """Updates a user's map filters.
+    # Settings methods
+    def update_user_profile_picture(self, user_UID: str, profile_picture_url: str) -> bool:
+        """Updates a user's profile picture.
         
         Args:
-            user_id: User identifier
-            filters: Filters object with updated preferences
+            user_UID: User identifier
+            profile_picture: Binary image data
             
         Returns:
             True if successful
         """
         try:
-            # Create filters document
-            filters_data = {
-                'show_water_point': filters.get_water_point(),
-                'show_repair_shop': filters._show_repair_shop  # Using private attribute directly as get method isn't defined
-            }
-            
-            # Update user's filters
-            self.db.collection('users').document(user_id).update({
-                'filters': filters_data
+            self.db.collection("users").document(user_UID).update({
+                "profilePic": profile_picture_url
             })
-            
-            return True
+            return {"message": "Profile picture updated", "url": profile_picture_url}, 200
         except Exception as e:
-            print(f"Error updating filters: {e}")
-            return False
-    
-    # Settings methods
-    def update_notification_settings(self, user_id: str, notification_enabled: bool) -> bool:
+            print("Firestore update failed:", e)
+            return {"message": "Failed to update Firestore"}, 500
+    def update_notification_settings(self, user_uid: str, notification_enabled: bool) -> bool:
         """Updates a user's notification preferences.
         
         Args:
-            user_id: User identifier
+            user_uid: User identifier
             notification_enabled: True to enable notifications
             
         Returns:
@@ -794,7 +518,7 @@ class DatabaseController:
         """
         try:
             # Update user's notification settings
-            self.db.collection('users').document(user_id).update({
+            self.db.collection('users').document(user_uid).update({
                 'notification_enabled': notification_enabled
             })
             
@@ -802,30 +526,3 @@ class DatabaseController:
         except Exception as e:
             print(f"Error updating notification settings: {e}")
             return False
-    
-    # Helper methods
-    def _calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-        """Calculates distance between two coordinates using Haversine formula.
-        
-        Args:
-            lat1: Latitude of first point
-            lon1: Longitude of first point
-            lat2: Latitude of second point
-            lon2: Longitude of second point
-            
-        Returns:
-            Distance in kilometers
-        """
-        from math import radians, sin, cos, sqrt, atan2
-        
-        # Convert decimal degrees to radians
-        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-        
-        # Haversine formula
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-        c = 2 * atan2(sqrt(a), sqrt(1-a))
-        r = 6371  # Radius of Earth in kilometers
-        
-        return r * c

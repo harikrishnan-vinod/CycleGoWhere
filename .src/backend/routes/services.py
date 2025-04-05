@@ -1,13 +1,11 @@
+from firebase_admin import firestore
+from firebase_admin import credentials, firestore, auth as firebase_auth
+from dotenv import load_dotenv
 import os
 import cloudinary
 import cloudinary.uploader
 import pyrebase
 import firebase_admin
-from firebase_admin import firestore
-from firebase_admin import credentials, firestore, auth as firebase_auth
-# from authentication.authentication import pyrebase_auth, firebase
-# from authentication.authentication import admin_sdk_auth
-from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
 

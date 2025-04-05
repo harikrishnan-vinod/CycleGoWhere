@@ -14,8 +14,8 @@ class User:
         self.__first_name = first_name
         self.__last_name = last_name
         self.__settings = settings
-        # self.__activites = activities
-        # self.__saved_routes = saved_routes
+        self.__activites = activities
+        self.__saved_routes = saved_routes
     
     def to_dict(self):
         return {
@@ -25,8 +25,8 @@ class User:
             "first_name": self.__first_name,
             "last_name": self.__last_name,
             "settings": {} if self.__settings is None else self.__settings.to_dict(),
-            # "activities": [] if self.activities is None else [a.to_dict() for a in self.activities],
-            # "saved_routes": [] if self.saved_routes is None else [r.to_dict() for r in self.saved]
+            "activities": [] if self.activities is None else [a.to_dict() for a in self.activities],
+            "saved_routes": [] if self.saved_routes is None else [r.to_dict() for r in self.saved]
         }
     
     @staticmethod
@@ -38,8 +38,8 @@ class User:
             first_name=data.get("first_name") if "first_name" in data else None,
             last_name=data.get("last_name") if "last_name" in data else None,
             settings=Settings.from_dict(data.get("settings")) if "settings" in data else None,
-            # activities=[Activity.from_dict(a) for a in data.get("activities", [])],
-            # saved_routes=[SavedRoutes.from_dict(r) for r in data.get("saved_routes", [])]
+            activities=[Activity.from_dict(a) for a in data.get("activities", [])],
+            saved_routes=[SavedRoutes.from_dict(r) for r in data.get("saved_routes", [])]
         )
     
     # Getters and Setters

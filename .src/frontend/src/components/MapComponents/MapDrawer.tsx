@@ -1,7 +1,6 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import "../../components.css/MapComponents/MapDrawer.css";
-import { SearchData } from "../../types";
-import { RouteSummary } from "../../types";
+import { SearchData, RouteSummary } from "../../types";
 
 interface MapDrawerProps {
   setRouteGeometry: (geometry: string) => void;
@@ -13,10 +12,18 @@ interface MapDrawerProps {
   setRouteSummary: (summary: RouteSummary) => void;
   setRepairPoints: (points: any[]) => void;
   setParkPoints: (points: any[]) => void;
+  startOpen?: boolean;
 }
 
 export type MapDrawerRef = {
   resetInputs: () => void;
+  loadSavedRoute: (
+    geometry: string,
+    instructions: any[],
+    summary: RouteSummary,
+    startPostal: string,
+    endPostal: string
+  ) => void;
 };
 
 const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
@@ -29,9 +36,10 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
     setRouteSummary,
     setRepairPoints,
     setParkPoints,
+    startOpen,
   } = props;
 
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(startOpen ?? true);
   const [formData, setFormData] = useState<SearchData>({
     fromAddress: "",
     destAddress: "",
@@ -44,6 +52,30 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
       setFormData({ fromAddress: "", destAddress: "" });
       setFromSuggestions([]);
       setDestSuggestions([]);
+    },
+
+    loadSavedRoute: async (
+      geometry,
+      instructions,
+      summary,
+      startPostal,
+      endPostal
+    ) => {
+      setIsOpen(false);
+      setRouteGeometry(geometry);
+      setRouteInstructions(instructions);
+      setRouteSummary(summary);
+
+      const water = await fetchWaterPoint(instructions);
+      if (water) setWaterPoints(water);
+
+      const shops = await fetchBicycleShop(instructions);
+      if (shops) setRepairPoints(shops);
+
+      const parks = await fetchBicyclePark(instructions);
+      if (parks) setParkPoints(parks);
+
+      setRouteMeta(summary.total_distance || 0, startPostal, endPostal);
     },
   }));
 
@@ -93,19 +125,14 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
       setRouteSummary(data.route_summary);
       setIsOpen(false);
 
-      // get water, shop and park data
       const waterData = await fetchWaterPoint(data.route_instructions);
-      if (waterData) {
-        setWaterPoints(waterData);
-      }
+      if (waterData) setWaterPoints(waterData);
+
       const bicycleRepairData = await fetchBicycleShop(data.route_instructions);
-      if (bicycleRepairData) {
-        setRepairPoints(bicycleRepairData);
-      }
+      if (bicycleRepairData) setRepairPoints(bicycleRepairData);
+
       const bicycleParkData = await fetchBicyclePark(data.route_instructions);
-      if (bicycleParkData) {
-        setParkPoints(bicycleParkData);
-      }
+      if (bicycleParkData) setParkPoints(bicycleParkData);
 
       if (data.route_summary) {
         setRouteMeta(
@@ -214,7 +241,7 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
         </div>
         <div className="drag-bar" onClick={() => setIsOpen(!isOpen)} />
       </div>
-      {!isOpen && (
+      {!isOpen && startOpen && (
         <div className="pull-tab-closed" onClick={() => setIsOpen(true)} />
       )}
     </>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
@@ -13,7 +13,6 @@ import SaveActivityModal from "./SaveActivityModal";
 import "../../components.css/MapComponents/BaseMap.css";
 import MapDrawer, { MapDrawerRef } from "./MapDrawer";
 import personIcon from "../../assets/personpositionicon.png";
-import { useMemo } from "react";
 import { RouteSummary } from "../../types";
 import RouteSummaryComponent from "./RouteSummaryComponent";
 import ParkPointsLayer from "./ParkPointsLayer";
@@ -21,7 +20,6 @@ import RepairPointsLayer from "./RepairPointsLayer";
 import FilterComponent from "./FilterComponent";
 
 function BaseMap() {
-  // for map
   const mapRef = useRef<L.Map | null>(null);
   const mapDrawerRef = useRef<MapDrawerRef>(null);
   const waterPointMarkersRef = useRef<L.Marker[]>([]);
@@ -35,17 +33,14 @@ function BaseMap() {
   const userMarkerRef = useRef<L.Marker | null>(null);
   const userLocation = useRef<L.LatLng | null>(null);
 
-  // for filters
   const [showWater, setShowWater] = useState<boolean>(true);
   const [showRepair, setShowRepair] = useState<boolean>(true);
   const [showPark, setShowPark] = useState<boolean>(true);
 
-  // for instructions
   const [routeInstructions, setRouteInstructions] = useState<any[]>([]);
   const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
   const [routeSummary, setRouteSummary] = useState<RouteSummary | null>(null);
 
-  // for activities
   const [distance, setDistance] = useState<number>(0);
   const [startPostal, setStartPostal] = useState("");
   const [endPostal, setEndPostal] = useState("");
@@ -59,15 +54,15 @@ function BaseMap() {
   const [activityDescription, setActivityDescription] = useState("");
   const [activityStartTime, setActivityStartTime] = useState<Date | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [openedFromSavedRoute, setOpenedFromSavedRoute] = useState(false);
 
   const userIcon = L.icon({
-    iconUrl: personIcon, // or iconUrl if from public folder
-    iconSize: [32, 32], // size of the icon
-    iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
-    popupAnchor: [0, -32], // point from which the popup should open relative to the iconAnchor
+    iconUrl: personIcon,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
   });
 
-  // mock locations from 637035 to 648310
   const mockLocations = useMemo(() => {
     if (!routeInstructions || routeInstructions.length === 0) return [];
 
@@ -91,7 +86,7 @@ function BaseMap() {
     if (mapRef.current) return;
 
     const map = L.map("mapdiv", {
-      center: L.latLng(1.2868108, 103.8545349), // fallback
+      center: L.latLng(1.2868108, 103.8545349),
       zoom: 16,
     });
 
@@ -113,11 +108,51 @@ function BaseMap() {
       const parsed = JSON.parse(saved);
       sessionStorage.removeItem("savedRouteToStart");
 
-      setRouteGeometry(parsed.route_geometry);
-      setRouteInstructions(parsed.route_instructions || []);
-      setDistance(parsed.distance || 0);
-      setStartPostal(parsed.startPostal || "");
-      setEndPostal(parsed.endPostal || "");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        sessionStorage.removeItem("savedRouteToStart");
+
+        setOpenedFromSavedRoute(true);
+
+        const summary: RouteSummary = {
+          total_distance: parsed.distance || 0,
+          total_time: Math.round((parsed.distance || 0) / 1.4),
+          start_point: parsed.startPostal || "",
+          end_point: parsed.endPostal || "",
+        };
+
+        mapDrawerRef.current?.loadSavedRoute(
+          parsed.route_geometry,
+          parsed.route_instructions,
+          summary,
+          parsed.startPostal,
+          parsed.endPostal
+        );
+
+        setActivityStarted(true);
+        setActivityStartTime(new Date());
+        setElapsedSeconds(0);
+
+        timerRef.current = setInterval(() => {
+          setElapsedSeconds((prev) => prev + 1);
+        }, 1000);
+      }
+
+      const summary: RouteSummary = {
+        total_distance: parsed.distance || 0,
+        total_time: Math.round((parsed.distance || 0) / 1.4),
+        start_point: parsed.startPostal || "",
+        end_point: parsed.endPostal || "",
+      };
+
+      mapDrawerRef.current?.loadSavedRoute(
+        parsed.route_geometry,
+        parsed.route_instructions,
+        summary,
+        parsed.startPostal,
+        parsed.endPostal
+      );
+
       setActivityStarted(true);
       setActivityStartTime(new Date());
       setElapsedSeconds(0);
@@ -127,7 +162,6 @@ function BaseMap() {
       }, 1000);
     }
 
-    // 1. Get initial position
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -172,8 +206,6 @@ function BaseMap() {
     const latLng = L.latLng(lat, lng);
     userLocation.current = latLng;
 
-    console.log("📍 Moving to index:", index, "Location:", lat, lng);
-
     locationIndexRef.current = (index + 1) % mockLocations.length;
 
     if (mapRef.current) {
@@ -192,7 +224,6 @@ function BaseMap() {
       userMarkerRef.current = marker;
       map.setView([lat, lng], 16);
 
-      // === Proximity check ===
       if (
         routeInstructions.length > 0 &&
         currentInstructionIndex < routeInstructions.length
@@ -208,7 +239,6 @@ function BaseMap() {
           setRouteInstructions((prevInstructions) => {
             const updated = prevInstructions.slice(1);
             locationIndexRef.current = 0;
-
             return updated;
           });
 
@@ -290,15 +320,11 @@ function BaseMap() {
     setRouteSummary(null);
     locationIndexRef.current = 0;
 
-    // Clear map layers except user marker
     if (mapRef.current) {
       const map = mapRef.current;
-
       map.eachLayer((layer) => {
-        // Preserve the base tile layer and user marker only
         const isTileLayer = (layer as any)._url?.includes("onemap.gov.sg");
         const isUserMarker = layer === userMarkerRef.current;
-
         if (!isTileLayer && !isUserMarker) {
           map.removeLayer(layer);
         }
@@ -375,21 +401,26 @@ function BaseMap() {
     setElapsedSeconds(0);
     handleEndActivity();
   }
+
   return (
     <div className="basemap-container">
       <div id="mapdiv" className="map-fullscreen" />
-
       <MapDrawer
         ref={mapDrawerRef}
         setRouteGeometry={setRouteGeometry}
         clearRoute={() => setRouteGeometry(null)}
         setRouteInstructions={setRouteInstructions}
         setWaterPoints={setWaterPoints}
-        setRouteMeta={handleSetRouteMeta}
+        setRouteMeta={(dist, start, end) => {
+          setDistance(dist);
+          setStartPostal(start);
+          setEndPostal(end);
+        }}
         setRouteSummary={setRouteSummary}
         mapInstance={mapRef.current}
         setParkPoints={setParkPoints}
         setRepairPoints={setRepairPoints}
+        startOpen={!openedFromSavedRoute}
       />
       <div className="route-summarybox">
         <RouteInstructionsList
@@ -401,7 +432,6 @@ function BaseMap() {
           activityStarted={activityStarted}
         />
       </div>
-
       <div className="filter-box">
         <FilterComponent
           setShowWater={setShowWater}
@@ -414,61 +444,53 @@ function BaseMap() {
       </div>
 
       <RouteLayer map={mapRef.current} routeGeometry={routeGeometry} />
-
       <WaterPointsLayer
         map={mapRef.current}
         waterPoints={waterPoints}
         markersRef={waterPointMarkersRef}
         showWater={showWater}
       />
-
       <ParkPointsLayer
         map={mapRef.current}
         parkPoints={parkPoints}
         markersRef={parkPointsMarkerRef}
         showPark={showPark}
       />
-
       <RepairPointsLayer
         map={mapRef.current}
         RepairPoints={repairPoints}
         markersRef={repairPointsMarkerRef}
         showRepair={showRepair}
       />
-
       <div className="center-location-button">
         <button onClick={centerMapOnUserLocation}>Center on Me</button>
       </div>
-
       {activityStarted && (
         <div className="next-location-button">
           <button onClick={updateLocation}>Next Location</button>
         </div>
       )}
-
       {routeInstructions.length > 0 && (
-        <div className="bottom-right-buttons">
-          <button
-            onClick={() => setRouteModalOpen(true)}
-            className="save-button"
-          >
-            Save Route
-          </button>
-          <button onClick={handleEndActivity} className="end-button">
-            Cancel
-          </button>
-        </div>
+        <>
+          <div className="bottom-right-buttons">
+            <button
+              onClick={() => setRouteModalOpen(true)}
+              className="save-button"
+            >
+              Save Route
+            </button>
+            <button onClick={handleEndActivity} className="end-button">
+              Cancel
+            </button>
+          </div>
+          <TimerControls
+            activityStarted={activityStarted}
+            elapsedSeconds={elapsedSeconds}
+            onStart={handleStartActivity}
+            onStop={handleStopActivity}
+          />
+        </>
       )}
-
-      {routeInstructions.length > 0 && (
-        <TimerControls
-          activityStarted={activityStarted}
-          elapsedSeconds={elapsedSeconds}
-          onStart={handleStartActivity}
-          onStop={handleStopActivity}
-        />
-      )}
-
       {routeModalOpen && (
         <SaveRouteModal
           routeName={routeName}
@@ -479,7 +501,6 @@ function BaseMap() {
           onCancel={() => setRouteModalOpen(false)}
         />
       )}
-
       {activityModalOpen && (
         <SaveActivityModal
           activityName={activityName}
@@ -490,7 +511,6 @@ function BaseMap() {
           onChangeActivityDescription={setActivityDescription}
         />
       )}
-
       <Navigate />
     </div>
   );

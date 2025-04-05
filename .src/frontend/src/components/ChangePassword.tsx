@@ -39,6 +39,15 @@ function ChangePassword() {
       return;
     }
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+
+    if (!passwordRegex.test(password.newpassword)) {
+      setError(
+        "Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and symbol."
+      );
+      return;
+    }
+
     if (password.newpassword !== password.confirmnewpassword) {
       setError("New passwords do not match");
       return;

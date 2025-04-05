@@ -1,9 +1,6 @@
+from Controllers.LoginPageController import LoginPageController
 from flask import Blueprint,request, session
 import os
-
-from Controllers.LoginPageController import LoginPageController
-
-
 
 login_bp = Blueprint("login",__name__)
 

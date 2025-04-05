@@ -32,24 +32,12 @@ class LoginPageController:
             # Get id token for session
             id_token = user['idToken']
 
-            # Get username from userUID document TODO: Use database_controller method instead
-            user_doc = self.db_controller.db.collection("users").document(user_UID).get()
-            if user_doc.exists:
-                user_data = user_doc.to_dict()
-                username = user_data.get("username", "")
+            # Get username from userUID document
+            if self.db_controller.user_exists(user_UID):
+                username = self.db_controller.get_username_by_uid(user_UID)
             else:
                 # Create user document if it doesn't exist
-                username = email.split('@')[0]  # Default username from email
-                self.db_controller.db.collection("users").document(user_UID).set({
-                    "email": email,
-                    "username": username
-                })
-                
-                # Create username mapping TODO: Use database_controller method instead
-                self.db_controller.db.collection("usernames").document(username).set({
-                    "email": email,
-                    "userUID": user_UID
-                })           
+                self.db_controller.create_default_user_document(user_UID, email) 
 
             session["user"] = email
             session["user_UID"] = user_UID
@@ -117,7 +105,7 @@ class LoginPageController:
                     base_username = username
                     counter = 0
                     while self.db_controller.username_exists(username):
-                        counter += 1 # Why?
+                        counter += 1
                         username = f"{base_username}{counter}"
 
                     user = User(uid=user_UID,
@@ -151,39 +139,24 @@ class LoginPageController:
     def register(self, email, username, password, first_name="", last_name=""):
         try:
             # Check if username exists in Firestore
-            username_doc = self.db_controller.db.collection("usernames").document(username).get() # TODO: Create a method in database controller to do this
-            if username_doc.exists:
+            if self.db_controller.username_exists(username):
                 return jsonify({"message": "Username already exists"}), 400
 
             user = self.auth.create_user_with_email_and_password(email, password)
             user_UID = user["localId"]
 
-            # Create user profile doc
-            user_data = {
-                "email": email,
-                "username": username,
-                "firstName": first_name,
-                "lastName": last_name,
-                "profilePic": "",
-                "notification_enabled": True,
-                "created_at": firestore.SERVER_TIMESTAMP
-            }
-
-            self.db_controller.db.collection("users").document(user_UID).set(user_data)
-
-            self.db_controller.db.collection("usernames").document(username).set({
-                "email": email,
-                "userUID": user_UID
-            })
-
+            new_user = User(uid=user_UID,
+                                email=email,
+                                username=username,
+                                first_name=first_name,
+                                last_name=last_name,
+                                settings=Settings(user_UID=user_UID),
+                                # activities=[],
+                                # saved_routes=[]
+                            )
             
-            self.db_controller.db.collection("users").document(user_UID).collection("savedRoutes").document("dummyRoute").set({"initial": True})
-            self.db_controller.db.collection("users").document(user_UID).collection("savedRoutes").document("dummyRoute").delete()
-
-            self.db_controller.db.collection("users").document(user_UID).collection("activities").document("dummyActivity").set({"initial": True})
-            self.db_controller.db.collection("users").document(user_UID).collection("activities").document("dummyActivity").delete()
-
-            return jsonify({"message": "User created successfully", "userUID": user_UID}), 201
+            if self.db_controller.add_user(new_user):
+                return jsonify({"message": "User created successfully", "userUID": user_UID}), 201
 
         except Exception as e:
             print("Registration failed:", str(e))

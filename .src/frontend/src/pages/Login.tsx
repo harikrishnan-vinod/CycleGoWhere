@@ -18,6 +18,12 @@ function Login() {
     setLoading(true);
     setError(null);
 
+    if (!login.trim() || !password.trim()) {
+      setError("Username or password cannot be empty");
+      setLoading(false);
+      return;
+    }
+
     fetch(`${API_URL}/auth`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,7 +73,6 @@ function Login() {
               className="username-input"
               value={login}
               onChange={(e) => setLogin(e.target.value)}
-              required
             />
           </div>
 
@@ -79,7 +84,6 @@ function Login() {
               className="password-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
             />
           </div>
 
