@@ -41,7 +41,7 @@ body {
   flex-direction: column;
 }
 
-.activities-list p {
+.no-activity {
   font-size: 16px;
   color: rgb(0, 0, 148);
 }
