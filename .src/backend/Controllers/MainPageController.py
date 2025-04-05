@@ -111,7 +111,7 @@ class MainPageController:
         return data
 
     @staticmethod
-    def findWaterPoints(route_points,radius_km=0.5): #TODO: Use filter entity?
+    def findWaterPoints(route_points,radius_km=0.5):
         """
         Load waterpoints from a CSV and return those within radius_km of any route point.
 
@@ -157,7 +157,7 @@ class MainPageController:
         return nearby
     
     @staticmethod
-    def findBikeParking(route_points,radius_km=0.5): #TODO: Use Filter entity?
+    def findBikeParking(route_points,radius_km=0.5):
         nearby = []
         seen = set()
         # Define CSV file name

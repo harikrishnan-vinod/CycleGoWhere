@@ -17,7 +17,11 @@ from Entities.SavedRoutes import SavedRoutes
 from Entities.Settings import Settings
 from Entities.Filters import Filters
 
+# Helper methods
 def to_serializable(doc_dict):
+    """
+    Converts Firestore document data to a serializable format.
+    """
     for key, value in doc_dict.items():
         if isinstance(value, firestore.GeoPoint):
             doc_dict[key] = {
@@ -89,7 +93,7 @@ class DatabaseController:
         """
         user_doc = self.db.collection('users').document(uid).get()
         if user_doc.exists:
-            return user_doc.to_dict().get('username')
+            return user_doc.to_dict().get('username','')
         return None
 
     def get_uid_by_username(self, username: str) -> Optional[str]:
@@ -106,6 +110,14 @@ class DatabaseController:
             return user_doc.to_dict().get('userUID')
         return None
     
+    def get_names_by_uid(self, uid: str):
+        user_doc = self.db.collection('users').document(uid).get()
+        if user_doc.exists:
+            doc = user_doc.to_dict().get('username')
+            if doc:
+                return doc.get('firstName'), doc.get('lastName')
+        return None
+
     def get_notifications_enabled(self, uid: str):
         """Retrieves a user's notification preferences."""
         try:
@@ -136,7 +148,7 @@ class DatabaseController:
             print(f"Error getting profile picture: {e}")
             return ''  # Default to empty string on error
     
-    def get_user_by_uid(self, user_UID: str) -> Optional[User]: # TODO: Fix this
+    def get_user_by_uid(self, user_UID: str) -> Optional[User]:
         """Retrieves a user by their ID.
         
         Args:
@@ -151,23 +163,28 @@ class DatabaseController:
         # Get email from usernames document
         email = self.get_email_by_username(username) if username else None
 
+        # Get user's first and last name
+        first_name, last_name = self.get_names_by_uid(user_UID) if username else (None, None)
+
         # Get user settings
         settings = Settings(user_UID,
                             self.get_notifications_enabled(user_UID),
                             self.get_profile_picture(user_UID))
         
         # Get user activities
-        # activities = self.db_controller.get_activities(username) # TODO: Method might not be correctly implemented
+        activities = self.get_user_activities(user_UID)
 
         # Get user saved routes
-        # saved_routes = self.db_controller.get_saved_routes(username) # TODO: Method might not be correctly implemented
+        saved_routes = self.get_saved_routes(user_UID)
             
         return User(uid=user_UID,
                     email=email,
                     username=username,
+                    first_name=first_name,
+                    last_name=last_name,
                     settings=settings,
-                    # activities, #TODO: To be implemented
-                    # saved_routes
+                    activities=activities,
+                    saved_routes=saved_routes
                     )
     
     def user_exists(self, uid: str) -> bool:
@@ -206,6 +223,19 @@ class DatabaseController:
         users = self.db.collection('users').where('email', '==', email).get()
         return len(users) > 0
     
+    def create_default_user_document(self, user_UID: str, email: str) -> bool:
+        username = email.split('@')[0]  # Default username from email
+        self.db.collection("users").document(user_UID).set({
+            "email": email,
+            "username": username
+        })
+        
+        # Create username mapping
+        self.db.collection("usernames").document(username).set({
+            "email": email,
+            "userUID": user_UID
+        })
+
     def add_user(self, user: User) -> bool:
         """Adds a new user to the database.
         
@@ -220,7 +250,6 @@ class DatabaseController:
                 'email': user.get_email(),
                 'userUID': user.get_uid()
             })
-
             user_data = {
                 'email': user.get_email(),
                 'username': user.get_username(),
@@ -232,11 +261,11 @@ class DatabaseController:
             }
             print(f"user_data: {user_data}")
             self.db.collection('users').document(user.get_uid()).set(user_data)
-            self.db_controller.db.collection("users").document(user.get_uid).collection("savedRoutes").document("dummyRoute").set({"initial": True})
-            self.db_controller.db.collection("users").document(user.get_uid).collection("savedRoutes").document("dummyRoute").delete()
+            self.db.collection("users").document(user.get_uid()).collection("savedRoutes").document("dummyRoute").set({"initial": True})
+            self.db.collection("users").document(user.get_uid()).collection("savedRoutes").document("dummyRoute").delete()
 
-            self.db_controller.db.collection("users").document(user.get_uid).collection("activities").document("dummyActivity").set({"initial": True})
-            self.db_controller.db.collection("users").document(user.get_uid).collection("activities").document("dummyActivity").delete()
+            self.db.collection("users").document(user.get_uid()).collection("activities").document("dummyActivity").set({"initial": True})
+            self.db.collection("users").document(user.get_uid()).collection("activities").document("dummyActivity").delete()
             
             return True
         except Exception as e:
@@ -254,36 +283,45 @@ class DatabaseController:
         """
         try:
             # Update basic user document
-            user_data = {
-                'email': user.email,
-                'password': user.password,
-                'notification_enabled': user.settings._app_notifications if user.settings else True
+            username_data = {
+                'email': user.get_email(),
+                'userUID': user.get_uid(),
             }
-            
-            self.db.collection('users').document(user.user_uid).update(user_data)
+
+            user_data = {
+                'email': user.get_email(),
+                'username': user.get_username(),
+                'firstName': user.get_first_name(),
+                'lastName': user.get_last_name(),
+                'profilePic': user.get_settings().get_profile_picture() if user.get_settings() else '',
+                'notification_enabled': user.get_settings().get_notification_enabled() if user.get_settings() else True
+            }
+
+            # Update username collection
+            old_username = self.get_username_by_uid(user.get_uid())
+            if old_username and old_username != user.get_username():
+                self.db.collection('usernames').document(old_username).delete()
+                self.db.collection('usernames').document(user.get_username()).set(username_data)
+
+            # Update user document
+            self.db.collection('users').document(user.get_uid()).update(user_data)
+
+            # Update activities if provided
+            if user.get_activities():
+                for activity in user.get_activities():
+                    self.save_activity(activity)
+
+            # Update saved routes if provided
+            if user.get_saved_routes():
+                for route in user.get_saved_routes():
+                    self.save_route(user.get_uid(), route)
+
             return True
         except Exception as e:
             print(f"Error updating user: {e}")
             return False
     
-    def update_user_profile_picture(self, user_UID: str, profile_picture_url: str) -> bool:
-        """Updates a user's profile picture.
-        
-        Args:
-            user_UID: User identifier
-            profile_picture: Binary image data
-            
-        Returns:
-            True if successful
-        """
-        try:
-            self.db.collection("users").document(user_UID).update({
-                "profilePic": profile_picture_url
-            })
-            return {"message": "Profile picture updated", "url": profile_picture_url}, 200
-        except Exception as e:
-            print("Firestore update failed:", e)
-            return {"message": "Failed to update Firestore"}, 500
+
 
     def update_user_email(self, user_UID, new_email):
         self.db.collection("users").document(user_UID).update({"email": new_email})
@@ -449,35 +487,25 @@ class DatabaseController:
             print(f"Error unsaving route: {e}")
             return False
     
-    # Filter methods
-    def update_filters(self, user_uid: str, filters: Filters) -> bool:
-        """Updates a user's map filters.
+    # Settings methods
+    def update_user_profile_picture(self, user_UID: str, profile_picture_url: str) -> bool:
+        """Updates a user's profile picture.
         
         Args:
-            user_uid: User identifier
-            filters: Filters object with updated preferences
+            user_UID: User identifier
+            profile_picture: Binary image data
             
         Returns:
             True if successful
         """
         try:
-            # Create filters document
-            filters_data = {
-                'show_water_point': filters.get_water_point(),
-                'show_repair_shop': filters._show_repair_shop  # Using private attribute directly as get method isn't defined
-            }
-            
-            # Update user's filters
-            self.db.collection('users').document(user_uid).update({
-                'filters': filters_data
+            self.db.collection("users").document(user_UID).update({
+                "profilePic": profile_picture_url
             })
-            
-            return True
+            return {"message": "Profile picture updated", "url": profile_picture_url}, 200
         except Exception as e:
-            print(f"Error updating filters: {e}")
-            return False
-    
-    # Settings methods
+            print("Firestore update failed:", e)
+            return {"message": "Failed to update Firestore"}, 500
     def update_notification_settings(self, user_uid: str, notification_enabled: bool) -> bool:
         """Updates a user's notification preferences.
         
@@ -498,30 +526,3 @@ class DatabaseController:
         except Exception as e:
             print(f"Error updating notification settings: {e}")
             return False
-    
-    # Helper methods
-    def _calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-        """Calculates distance between two coordinates using Haversine formula.
-        
-        Args:
-            lat1: Latitude of first point
-            lon1: Longitude of first point
-            lat2: Latitude of second point
-            lon2: Longitude of second point
-            
-        Returns:
-            Distance in kilometers
-        """
-        from math import radians, sin, cos, sqrt, atan2
-        
-        # Convert decimal degrees to radians
-        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-        
-        # Haversine formula
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-        c = 2 * atan2(sqrt(a), sqrt(1-a))
-        r = 6371  # Radius of Earth in kilometers
-        
-        return r * c
