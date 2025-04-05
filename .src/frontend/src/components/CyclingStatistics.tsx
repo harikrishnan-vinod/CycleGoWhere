@@ -14,22 +14,24 @@ const CyclingStatistics: React.FC = () => {
     const userUID = sessionStorage.getItem("userUID");
     const dateBarRef = useRef<HTMLDivElement>(null);
 
+    const toLocalDateString = (date: Date) =>
+        date.toLocaleDateString("sv-SE"); // "YYYY-MM-DD" in local timezone
+
     useEffect(() => {
         const today = new Date();
-        const yearStart = new Date(today.getFullYear(), 0, 1); // January 1st
-        const yearEnd = new Date(today.getFullYear(), 11, 31); // December 31st
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        const yearEnd = new Date(today.getFullYear(), 11, 31);
         const dateList: string[] = [];
         let currentDate = new Date(yearStart);
 
         while (currentDate <= yearEnd) {
-            dateList.push(currentDate.toISOString().split("T")[0]); // "YYYY-MM-DD"
+            dateList.push(toLocalDateString(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
         setDates(dateList);
 
-        // Automatically select today's date
-        const todayString = today.toISOString().split("T")[0];
+        const todayString = toLocalDateString(today);
         setSelectedDate(todayString);
         setWeekRangeForDate(today);
 
@@ -46,8 +48,6 @@ const CyclingStatistics: React.FC = () => {
 
         fetch(`http://localhost:1234/get-activities?userUID=${userUID}`)
             .then(async (res) => {
-                console.log("Raw response:", res);
-
                 if (!res.ok) {
                     throw new Error(`HTTP error! Status: ${res.status}`);
                 }
@@ -62,7 +62,6 @@ const CyclingStatistics: React.FC = () => {
                 return res.json();
             })
             .then((data) => {
-                console.log("Fetched activities:", data);
                 computeStatistics(data);
             })
             .catch((err) => console.error("Error fetching activities:", err.message));
@@ -70,15 +69,18 @@ const CyclingStatistics: React.FC = () => {
 
     const computeStatistics = (activities: any[]) => {
         const selected = new Date(selectedDate);
+        selected.setHours(0, 0, 0, 0);
 
-        // Set the start of the week to Sunday (Fixed)
         const startOfWeek = new Date(selected);
-        startOfWeek.setDate(selected.getDate() - selected.getDay());  // Adjust to Sunday
-        startOfWeek.setHours(0, 0, 0, 0);  // Optional: Set time to midnight
+        startOfWeek.setDate(selected.getDate() - selected.getDay()); // Sunday is the first day of the week (fixed)
+        startOfWeek.setHours(0, 0, 0, 0);
 
-        // Set the start of the month
-        const startOfMonth = new Date(selected.getFullYear(), selected.getMonth(), 1); // Start of the month
-        startOfMonth.setHours(0, 0, 0, 0); // Optional: Set time to midnight
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const startOfMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
+        startOfMonth.setHours(0, 0, 0, 0);
 
         let todayDistance = 0, todayTime = 0;
         let weekDistance = 0, weekTime = 0;
@@ -88,31 +90,34 @@ const CyclingStatistics: React.FC = () => {
 
         activities.forEach((activity) => {
             const actDate = new Date(activity.createdAt);
+            actDate.setHours(0, 0, 0, 0);
             const distance = activity.distance || 0;
             const time = activity.duration || 0;
 
             totalTimeSum += time;
 
-            // Today's stats (activities that match the selected date)
-            if (actDate.toISOString().split("T")[0] === selectedDate) {
+            // Today
+            if (actDate.getTime() === selected.getTime()) {
                 todayDistance += distance;
                 todayTime += time;
             }
 
-            // Weekly stats (activities from the start of the week to the selected day)
-            if (actDate.toISOString().split("T")[0] >= startOfWeek.toISOString().split("T")[0] && actDate.toISOString().split("T")[0] <= selected.toISOString().split("T")[0]) {
+            // Week
+            if (actDate >= startOfWeek && actDate <= endOfWeek) {
                 weekDistance += distance;
                 weekTime += time;
             }
 
-            // Monthly stats (activities from the start of the month to the selected day)
-            if (actDate.toISOString().split("T")[0] >= startOfMonth.toISOString().split("T")[0] && actDate.toISOString().split("T")[0] <= selected.toISOString().split("T")[0]) {
+            // Month
+            if (
+                actDate.getFullYear() === selected.getFullYear() &&
+                actDate.getMonth() === selected.getMonth()
+            ) {
                 monthDistance += distance;
                 monthTime += time;
             }
         });
 
-        // Set the stats
         setTodayStats({ distance: todayDistance, time: todayTime });
         setWeekStats({ distance: weekDistance, time: weekTime });
         setMonthStats({ distance: monthDistance, time: monthTime });
@@ -120,14 +125,13 @@ const CyclingStatistics: React.FC = () => {
         setRideCount(totalRides);
     };
 
-    const setWeekRangeForDate = (date: Date) => {
-        // Calculate the start of the week (Sunday) and the end of the week (Saturday)
-        const startOfWeek = new Date(date);
-        startOfWeek.setDate(date.getDate() - date.getDay()); // Adjust to Sunday (can change to Monday if needed)
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6); // 7 days later for the end of the week
 
-        // Format the start and end of the week
+    const setWeekRangeForDate = (date: Date) => {
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - date.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
         const formattedStart = startOfWeek.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
         const formattedEnd = endOfWeek.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
@@ -140,7 +144,7 @@ const CyclingStatistics: React.FC = () => {
                 <h4>{weekRange}</h4>
             </div>
 
-            <div className="date-bar" ref={dateBarRef} >
+            <div className="date-bar" ref={dateBarRef}>
                 {dates.map((date, index) => (
                     <div
                         key={index}
@@ -160,11 +164,18 @@ const CyclingStatistics: React.FC = () => {
             </div>
 
             <div className="statistics">
-                <h3>Statistics for {new Date(selectedDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</h3>
+                <h3>
+                    Statistics for{" "}
+                    {new Date(selectedDate).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric"
+                    })}
+                </h3>
                 <p><strong>Today:</strong> {(todayStats.distance / 1000).toFixed(1)} km, {(todayStats.time / 60).toFixed(1)} mins</p>
                 <p><strong>This Week:</strong> {(weekStats.distance / 1000).toFixed(1)} km, {(weekStats.time / 60).toFixed(1)} mins</p>
                 <p><strong>This Month:</strong> {(monthStats.distance / 1000).toFixed(1)} km, {(monthStats.time / 60).toFixed(1)} mins</p>
-                <p><strong>Total Time:</strong> {((totalTime) / 60).toFixed(1)} mins</p>
+                <p><strong>Total Time:</strong> {(totalTime / 60).toFixed(1)} mins</p>
                 <p><strong>Number of Rides:</strong> {rideCount}</p>
             </div>
         </div>
