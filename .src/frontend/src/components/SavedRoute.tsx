@@ -13,12 +13,21 @@ function SavedRoute({ route }: { route: any }) {
     const userUID = sessionStorage.getItem("userUID");
     if (!userUID) return;
 
-    const instructionsArrayFormat = route.instructions.map((inst: any) => [
-      inst.direction,
-      inst.distance,
-      inst.road,
-      inst.latLng,
-    ]);
+    const instructionsArrayFormat = route.instructions.map((inst: any) => {
+      if (Array.isArray(inst)) return inst;
+      return [
+        inst.direction, // 0
+        inst.road, // 1
+        "", // 2
+        inst.latLng, // 3
+        "", // 4
+        inst.distance, // 5
+        "", // 6
+        "", // 7
+        "", // 8
+        `Head ${inst.direction} on ${inst.road}`, // 9
+      ];
+    });
 
     sessionStorage.setItem(
       "savedRouteToStart",
@@ -30,6 +39,7 @@ function SavedRoute({ route }: { route: any }) {
         endPostal: route.endPostal,
         routePath: route.routePath,
         routeId: route.id,
+        route_summary: route.route_summary,
       })
     );
 
@@ -97,7 +107,9 @@ function SavedRoute({ route }: { route: any }) {
   }
   const handleUnsave = async () => {
     // Ask the user for confirmation
-    const isConfirmed = window.confirm("Are you sure you want to unsave this activity?");
+    const isConfirmed = window.confirm(
+      "Are you sure you want to unsave this route?"
+    );
 
     if (isConfirmed) {
       const userUID = sessionStorage.getItem("userUID");
@@ -131,8 +143,6 @@ function SavedRoute({ route }: { route: any }) {
     }
   };
 
-
-
   return (
     <div className="saved-activity-container">
       <div className="saved-activity-top">
@@ -145,17 +155,13 @@ function SavedRoute({ route }: { route: any }) {
         </div>
       </div>
 
-      <div
-        className="saved-activity-map"
-        ref={mapRef}
-
-      />
+      <div className="saved-activity-map" ref={mapRef} />
 
       <div className="saved-activity-details">
         <div className="saved-activity-distance">
           <p>Distance: {(route.distance / 1000).toFixed(2)} km</p>
         </div>
-        <div className='bottom-action-button'>
+        <div className="bottom-action-button">
           <button
             className="start-activity-from-route-btn"
             onClick={handleStart}
@@ -166,10 +172,9 @@ function SavedRoute({ route }: { route: any }) {
           <div onClick={handleUnsave}>
             <img className="unsave-activity-btn" src={saveicon} alt="Unsave" />
           </div>
-
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 

@@ -26,7 +26,7 @@
 }
 
 .saved-activity-map {
-    background-color: #000000;
+    background-color: transparent;
     border-radius: 8px;
     height: 250px;
     z-index: 0;
