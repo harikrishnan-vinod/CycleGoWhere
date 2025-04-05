@@ -107,7 +107,7 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
     setRouteInstructions([]);
 
     if (!formData.fromAddress.trim() || !formData.destAddress.trim()) {
-      alert("Please enter both a starting point and a destination.");
+      alert("Please enter both a valid starting point and destination.");
       return;
     }
 
@@ -117,8 +117,19 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
       url.searchParams.append("destAddress", formData.destAddress);
 
       const response = await fetch(url.toString());
+
       if (!response.ok) throw new Error("Failed to fetch route");
+
       const data = await response.json();
+
+      if (
+        !data.route_geometry ||
+        !Array.isArray(data.route_instructions) ||
+        data.route_instructions.length === 0
+      ) {
+        alert("Please enter both a valid starting point and destination.");
+        return;
+      }
 
       setRouteGeometry(data.route_geometry);
       setRouteInstructions(data.route_instructions);
@@ -141,7 +152,9 @@ const MapDrawer = forwardRef<MapDrawerRef, MapDrawerProps>((props, ref) => {
           data.route_summary.end_postal || formData.destAddress
         );
       }
-    } catch {}
+    } catch {
+      alert("Please enter both a valid starting point and destination.");
+    }
   };
 
   const fetchWaterPoint = async (instructions: any[]) => {
