@@ -1,5 +1,5 @@
 .filter-container {
-  width: 100%;
+  width: auto;
   background-color: white;
   border-radius: 5px;
   padding: 5px;
@@ -43,7 +43,6 @@
   color: white;
 }
 
-/* ✅ Green for true */
 .filter-button.active {
   background-color: #00cc66;
 }
@@ -52,7 +51,6 @@
   background-color: #00b359;
 }
 
-/* ❌ Red for false */
 .filter-button.inactive {
   background-color: #ff4444;
 }
