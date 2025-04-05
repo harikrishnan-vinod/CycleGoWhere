@@ -3,6 +3,7 @@ from firebase_admin import auth as admin_auth
 from firebase_admin import firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+import requests
 
 from Entities.User import User
 from Entities.Settings import Settings
@@ -71,7 +72,7 @@ class LoginPageController:
             google_auth_url = (
             f"https://accounts.google.com/o/oauth2/v2/auth?"
             f"client_id={google_client_id}&"
-            f"redirect_uri={url_for('google_callback', _external=True)}&"
+            f"redirect_uri={url_for('login.google_callback', _external=True)}&"
             f"response_type=code&"
             f"scope=openid%20email%20profile"
             )
@@ -89,11 +90,11 @@ class LoginPageController:
                 'code': code,
                 'client_id': google_client_id,
                 'client_secret': google_client_secret,
-                'redirect_uri': url_for('google_callback', _external=True),
+                'redirect_uri': url_for('login.google_callback', _external=True),
                 'grant_type': 'authorization_code'
             }
 
-            token_response = google_requests.Request().session.post(token_url, data=payload)
+            token_response = requests.post(token_url, data=payload)
             token_response_json = token_response.json()
 
             if 'id_token' in token_response_json:
@@ -111,37 +112,38 @@ class LoginPageController:
                 first_name = name_parts[0] if len(name_parts) > 0 else ""
                 last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-                # user_doc = self.db_controller.get_user_document(user_UID)
+                session["user"] = email
+                session["user_UID"] = user_UID
+
+                # Handle first-time users
                 if not self.db_controller.user_exists(user_UID):
                     username = email.split('@')[0]
                     base_username = username
                     counter = 0
                     while self.db_controller.username_exists(username):
-                        counter += 1 # Why?
+                        counter += 1
                         username = f"{base_username}{counter}"
 
-                    user = User(uid=user_UID,
-                                email=email,
-                                username=username,
-                                first_name=first_name,
-                                last_name=last_name,
-                                settings=Settings(user_UID=user_UID),
-                                # activities=[],
-                                # saved_routes=[]
-                            )
-                    if self.db_controller.add_user(user):
+                    user = User(
+                        uid=user_UID,
+                        email=email,
+                        username=username,
+                        first_name=first_name,
+                        last_name=last_name,
+                        settings=Settings(user_UID=user_UID),
+                    )
+                    self.db_controller.add_user(user)
 
-                        session["user"] = email
-                        session["user_UID"] = user_UID
+                # ✅ Always redirect on success
+                return redirect('http://localhost:5173/mainpage')
 
-                        return redirect('http://localhost:5173/mainpage')
-
+            # ❌ Token was missing
             return jsonify({"message": "Google login failed"}), 400
 
-        
         except Exception as e:
             print("Google callback failed:", str(e))
-            return jsonify({"message": "Google login failed"}), 401
+            return redirect('http://localhost:5173/login')
+
 
     def logout(self, session):
         session.pop("user", None)
