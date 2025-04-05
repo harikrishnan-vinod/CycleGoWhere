@@ -4,7 +4,6 @@ import L from "leaflet";
 import SaveIcon from "../assets/savedroutesicon.png";
 import SaveRouteModal from "./MapComponents/SaveRouteModal";
 import polyline from "@mapbox/polyline";
-import DisplayProfile from "./displayProfile";
 import deleteicon from "../assets/delete.png";
 
 interface ActivityProps {
@@ -133,6 +132,8 @@ function CyclingActivity({ activity }: ActivityProps) {
 
     if (isConfirmed) {
       const userUID = sessionStorage.getItem("userUID");
+      console.log("activity.id:", activity.id);
+
 
       if (!userUID || !activity.id) {
         alert("Missing user ID or activity ID.");
