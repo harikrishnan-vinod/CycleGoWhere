@@ -30,14 +30,8 @@ function CyclingActivity({ activity }: ActivityProps) {
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(
-      2,
-      "0"
-    )}:${String(s).padStart(2, "0")}`;
+    return `${h}h ${m} mins`;
   };
-
-
 
   useEffect(() => {
     if (
@@ -124,16 +118,15 @@ function CyclingActivity({ activity }: ActivityProps) {
       console.error("Error saving route:", err);
       alert("Error saving route.");
     }
-
-
   };
   const handleDeleteActivity = async () => {
-    const isConfirmed = window.confirm("Are you sure you want to delete this activity?");
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this activity?"
+    );
 
     if (isConfirmed) {
       const userUID = sessionStorage.getItem("userUID");
       console.log("activity.id:", activity.id);
-
 
       if (!userUID || !activity.id) {
         alert("Missing user ID or activity ID.");
@@ -146,7 +139,7 @@ function CyclingActivity({ activity }: ActivityProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userUID,
-            activityId: activity.id
+            activityId: activity.id,
           }),
         });
 
@@ -179,7 +172,31 @@ function CyclingActivity({ activity }: ActivityProps) {
       <div className="map-activity" ref={mapRef} />
 
       <div className="activity-bottom">
-        <p className="activity-distance">Distance: {(distance / 1000).toFixed(2)} km</p>
+        <div className="distance">
+          <p className="activity-distance">
+            Distance:{" "}
+            <span className="stat-value">
+              {(distance / 1000).toFixed(2)} km
+            </span>
+          </p>
+        </div>
+        <div className="duration">
+          <p>
+            Duration:{" "}
+            <span className="stat-value">{formatDuration(timeTaken)}</span>
+          </p>
+        </div>
+        <div className="average-speed">
+          <p>
+            Avg Speed:{" "}
+            <span className="stat-value">
+              {timeTaken > 0
+                ? ((distance * 3.6) / timeTaken).toFixed(2)
+                : "0.00"}{" "}
+              km/h
+            </span>
+          </p>
+        </div>
         <div className="action-button">
           <div className="save-activity">
             <img
@@ -192,11 +209,15 @@ function CyclingActivity({ activity }: ActivityProps) {
               alt="Save Route"
             />
           </div>
-          <img className="delete-activity" src={deleteicon} alt="Delete Activity" onClick={handleDeleteActivity} title="Delete This Activity" />
+          <img
+            className="delete-activity"
+            src={deleteicon}
+            alt="Delete Activity"
+            onClick={handleDeleteActivity}
+            title="Delete This Activity"
+          />
         </div>
-
       </div>
-
 
       {showModal && (
         <SaveRouteModal
