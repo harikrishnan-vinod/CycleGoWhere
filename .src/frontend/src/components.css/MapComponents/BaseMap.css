@@ -168,9 +168,8 @@
   top: 40%;
   left: 0.8%;
   z-index: 1000;
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 8px 16px;
+  background-color: #2c2c2e;
+  border: 1px solid #2c2c2e;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
@@ -188,24 +187,16 @@
 .center-location-button {
   position: absolute;
   bottom: 11%;
-  left: 1.5%;
+  left: 0.8%;
   z-index: 1000;
-  background-color: transparent;
-  padding: 0;
-  border-radius: 0;
-}
-
-.center-location-button button {
-  background-color: black;
+  background-color: #2c2c2e;
   color: white;
-  padding: 8px 16px;
   border: none;
   border-radius: 100px;
   font-weight: bold;
   cursor: pointer;
   font-size: 16px;
 }
-
 
 .filter-box {
   position: absolute;
