@@ -34,7 +34,7 @@
 
 ## 🧐 Introduction
 
-Our mission is to empower amateur cyclists with a seamless and stress‑free riding experience. **CyclistGoWhere!** lets you:
+Our mission is to empower amateur cyclists with a seamless and stress‑free riding experience. **CycleGoWhere!** lets you:
 
 - **Plan** safe, scenic routes using Singapore’s park connector network
 - **Discover** nearby amenities like `Water Coolers`, `Bike Repair Shops`, and `Bike Parking Spots`
@@ -46,7 +46,7 @@ This project supports Singapore’s Smart Nation initiative by leveraging public
 
 ## ✨ Features
 
-- **Authentication**: `User Login`, `Forgot Password`, `Create Account`
+- **Authentication**: `User Login`, `Create Account`, `Google Login`, `Forgot Password`,
 - **Route Planning**: Interactive `Search Bar` + `Map` with auto‑complete
 - **Filters**: Toggle `Water Coolers`, `Bike Repair`, `Bike Parks` within 500 m of your path
 - **Turn‑by‑Turn Navigation**: Real‑time tracking & guidance
@@ -62,8 +62,8 @@ This project supports Singapore’s Smart Nation initiative by leveraging public
 - **Frontend**: `React` • `Vite` • `react-router-dom` • `lucide-react`
 - **Backend**: `Python` • `Flask`
 - **Database**: `Firestore` (via Google Cloud)
-- **Map & Routing**: `Mapbox GL JS` + Park Connector API
-- **Authentication**: JSON Web Tokens (JWT) + Email reset links
+- **Map & Routing**: `OneMap API`
+- **Authentication**: Firebase Authentication
 
 ---
 
