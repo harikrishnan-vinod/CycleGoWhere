@@ -91,6 +91,13 @@ function Login() {
             {loading ? "Logging in..." : "Login"}
           </button>
 
+          <button
+            type="button"
+            className="forgot-password-button"
+            onClick={() => navigate("/forgot-password")}
+          >
+            Forgot Password?
+          </button>
           <div className="divider">
             <span>or</span>
           </div>

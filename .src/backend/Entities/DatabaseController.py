@@ -212,7 +212,7 @@ class DatabaseController:
             True if email exists
         """
         users = self.db.collection('users').where('email', '==', email).get()
-        return len(users) > 0
+        return (len(users) > 0)
     
     def create_default_user_document(self, user_UID: str, email: str) -> bool:
         username = email.split('@')[0]  # Default username from email

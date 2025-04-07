@@ -34,6 +34,14 @@ def register():
 def google_login():
     return login_controller.google_login(GOOGLE_CLIENT_ID)
 
+@login_bp.route("/forgot-password", methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data.get("email")
+
+    return login_controller.reset_password(email)
+
+    
 
 
 

@@ -149,6 +149,9 @@ class LoginPageController:
             # Check if username exists in Firestore
             if self.db_controller.username_exists(username):
                 return jsonify({"message": "Username already exists"}), 400
+            
+            if self.db_controller.email_exists(email):
+                return jsonify({"message": "Email already exists"}), 401
 
             user = self.auth.create_user_with_email_and_password(email, password)
             user_UID = user["localId"]
@@ -171,6 +174,14 @@ class LoginPageController:
             return jsonify({"message": "Unable to register: " + str(e)}), 400
 
 
+    def reset_password(self, email):
+        try:
+            self.auth.send_password_reset_email(email)
+            print(f"Password reset email sent to: {email}")
+            return jsonify({"message": "Password reset email sent!"})
+        except Exception as e:
+            print(f"Failed to send password reset email: {e}")
+            return jsonify({"message": "Failed to send password reset email"}), 400
     
     def forgot_password(self, email):
         try:

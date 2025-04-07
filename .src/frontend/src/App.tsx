@@ -15,6 +15,7 @@ import ChangeUsername from "./components/ChangeUsername";
 import ChangeEmail from "./components/ChangeEmail";
 import ChangePassword from "./components/ChangePassword";
 import ChangeProfilePicture from "./components/ChangeProfilePicture";
+import ForgotPassword from "./pages/ForgotPassword";
 import GoogleCallback from "./pages/GoogleCallback";
 
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ import the wrapper
@@ -96,6 +97,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/changeProfilePicture"
           element={
