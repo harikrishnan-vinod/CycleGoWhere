@@ -17,59 +17,6 @@ def save_route():
     user_uid = data.get("userUID")
     route_data = data.get("routeData")
     return profile_controller.save_route(user_uid, route_data)
-
-    if not isinstance(route_data["route_geometry"], str):
-        raise ValueError("route_geometry must be an encoded polyline string.")
-
-    try:
-        decoded_points = polyline.decode(route_data["route_geometry"], 5)
-        print("Received encoded polyline:", route_data["route_geometry"])
-
-        
-        if not decoded_points:
-            raise ValueError("Polyline decoding returned empty list.")
-
-        geo_points = [firestore.GeoPoint(lat, lng) for lat, lng in decoded_points]
-
-        instructions_converted = []
-        for row in route_data["route_instructions"]:
-            if isinstance(row, dict):  
-                instructions_converted.append({
-                    "direction": row.get("direction"),
-                    "road": row.get("road"),
-                    "distance": row.get("distance"),
-                    "latLng": row.get("latLng"),
-                })
-            elif isinstance(row, list):  
-                instructions_converted.append({
-                    "direction": row[0],
-                    "road": row[1],
-                    "distance": row[5],
-                    "latLng": row[3],
-            })
-
-
-
-        doc_data = {
-            "routeName": route_data["routeName"],
-            "notes": route_data["notes"],
-            "distance": route_data["distance"],
-            "startPostal": route_data["startPostal"],
-            "endPostal": route_data["endPostal"],
-            "routePath": geo_points,
-            "instructions": instructions_converted,
-            "startLocation": firestore.GeoPoint(*decoded_points[0]),
-            "endLocation": firestore.GeoPoint(*decoded_points[-1]),
-            "lastUsedAt": firestore.SERVER_TIMESTAMP
-        }
-
-        db.collection("users").document(user_uid).collection("savedRoutes").add(doc_data)
-        return jsonify({"message": "Route saved successfully"}), 200
-
-    except Exception as e:
-        print("Error saving route:", e)
-        traceback.print_exc()
-        return jsonify({"message": "Failed to save route"}), 500
     
 #unsave route (in saved route page)
 @savedroutes_bp.route("/unsave-route", methods=["DELETE"])
