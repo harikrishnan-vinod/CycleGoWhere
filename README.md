@@ -38,8 +38,7 @@ Our mission is to empower amateur cyclists with a seamless and stress‑free rid
 
 - **Plan** safe, scenic routes using Singapore’s park connector network
 - **Discover** nearby amenities like `Water Coolers`, `Bike Repair Shops`, and `Bike Parking Spots`
-- **Save** and **share** your favourite routes
-- **Connect** with fellow cyclists and view their activities
+- **Save** your favourite routes
 
 This project supports Singapore’s Smart Nation initiative by leveraging publicly available government data and modern web technologies.
 
