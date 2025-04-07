@@ -18,6 +18,7 @@ function ChangePassword() {
   });
   const [passwordChanged, setPasswordChanged] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -96,7 +97,7 @@ function ChangePassword() {
               <label htmlFor="current-password">Current Password</label>
               <input
                 id="current-password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter current password"
                 name="password"
                 value={password.password}
@@ -109,7 +110,7 @@ function ChangePassword() {
               <label htmlFor="new-password">New Password</label>
               <input
                 id="new-password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter new password"
                 name="newpassword"
                 value={password.newpassword}
@@ -122,13 +123,22 @@ function ChangePassword() {
               <label htmlFor="confirm-password">Confirm New Password</label>
               <input
                 id="confirm-password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Confirm your new password"
                 name="confirmnewpassword"
                 value={password.confirmnewpassword}
                 onChange={handleChange}
                 required
               />
+            </div>
+            <div className="show-password-box">
+              <input
+                type="checkbox"
+                id="showPassword"
+                checked={showPassword}
+                onChange={() => setShowPassword(!showPassword)}
+              />
+              <label htmlFor="showPassword">Show Password</label>
             </div>
 
             <div className="form-buttons">

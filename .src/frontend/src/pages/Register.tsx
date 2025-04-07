@@ -11,6 +11,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -140,7 +141,7 @@ function Register() {
 
           <div className="register-box">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               className="register-input"
               value={password}
@@ -151,13 +152,22 @@ function Register() {
 
           <div className="register-box">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Confirm Password"
               className="register-input"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
+          </div>
+          <div className="show-password-box">
+            <input
+              type="checkbox"
+              id="showPassword"
+              checked={showPassword}
+              onChange={() => setShowPassword(!showPassword)}
+            />
+            <label htmlFor="showPassword">Show Password</label>
           </div>
 
           <button className="register-submit-button" type="submit">

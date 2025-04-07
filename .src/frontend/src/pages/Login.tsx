@@ -10,6 +10,7 @@ function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const API_URL = "http://127.0.0.1:1234";
 
@@ -79,12 +80,21 @@ function Login() {
           <div className="password-box">
             <Lock size="16" color="gray" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               className="password-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+          </div>
+          <div className="show-password-box">
+            <input
+              type="checkbox"
+              id="showPassword"
+              checked={showPassword}
+              onChange={() => setShowPassword(!showPassword)}
+            />
+            <label htmlFor="showPassword">Show Password</label>
           </div>
 
           <button className="login-button" type="submit" disabled={loading}>
