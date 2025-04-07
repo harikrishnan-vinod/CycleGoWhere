@@ -31,7 +31,7 @@ Our mission is to empower amateur cyclists with a seamless and stress‑free rid
 
 - **Plan** safe, scenic routes using Singapore’s park connector network
 - **Discover** nearby amenities like `Water Coolers`, `Bike Repair Shops`, and `Bike Parking Spots`
-- **Save** your favourite routes
+- **Save** your favourite routes and ride activities
 
 This project supports Singapore’s Smart Nation initiative by leveraging publicly available government data and modern web technologies.
 
@@ -43,10 +43,11 @@ This project supports Singapore’s Smart Nation initiative by leveraging public
 - **Route Planning**: Interactive `Search Bar` + `Map` with auto‑complete
 - **Filters**: Toggle `Water Coolers`, `Bike Repair`, `Bike Parks` within 500 m of your path
 - **Turn‑by‑Turn Navigation**: Real‑time tracking & guidance
-- **Activity Logging**: Name of activity, Activity Notes, and save your ride activities.
-- **Profile Dashboard**: Daily/weekly/monthly stats, ride history
-- **Saved Routes**: Start or “unsave” previously saved routes
-- **Settings**: Update username, email, password, profile picture, or log out
+- **Activity Logging**: Name of activity, Activity Notes, and save your rides.
+- **Route Saving**: Name of Saved Route, Note
+- **Profile Dashboard**: Daily/weekly/monthly stats, View Past Rides - Distance, DateTime of ride, `Save Route`, `Delete` past rides.
+- **Saved Routes Page**: `Start` or `Unsave` previously saved routes, View `Last Used`.
+- **Settings**: Update `Username`, `Email`, `Password`, `Profile Picture`, or `Log Out`.
 
 ---
 
