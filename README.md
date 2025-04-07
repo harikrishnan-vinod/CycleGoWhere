@@ -18,7 +18,7 @@
 
 ## 📋 Table of Contents
 
-1. [Introduction](#introduction)
+1. [Introduction](##introduction)
 2. [Features](#features)
 3. [Tech Stack](#tech-stack)
 4. [Installation](#installation)
@@ -50,7 +50,7 @@ This project supports Singapore’s Smart Nation initiative by leveraging public
 - **Route Planning**: Interactive `Search Bar` + `Map` with auto‑complete
 - **Filters**: Toggle `Water Coolers`, `Bike Repair`, `Bike Parks` within 500 m of your path
 - **Turn‑by‑Turn Navigation**: Real‑time tracking & guidance
-- **Activity Logging**: Name, annotate, and save your rides
+- **Activity Logging**: Name of activity, Activity Notes, and save your ride activities.
 - **Profile Dashboard**: Daily/weekly/monthly stats, ride history
 - **Saved Routes**: Start or “unsave” previously saved routes
 - **Settings**: Update username, email, password, profile picture, or log out
