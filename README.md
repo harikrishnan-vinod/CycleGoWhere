@@ -18,17 +18,10 @@
 
 ## 📋 Table of Contents
 
-1. [Introduction](##introduction)
+1. [Introduction](#introduction)
 2. [Features](#features)
 3. [Tech Stack](#tech-stack)
 4. [Installation](#installation)
-5. [Usage](#usage)
-6. [Functional Requirements](#functional-requirements)
-7. [Non‑Functional Requirements](#non-functional-requirements)
-8. [Data Dictionary](#data-dictionary)
-9. [Contributing](#contributing)
-10. [License](#license)
-11. [Contact](#contact)
 
 ---
 
