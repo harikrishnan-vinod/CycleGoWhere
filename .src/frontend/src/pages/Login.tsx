@@ -11,7 +11,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:1234";
+  const API_URL = "http://127.0.0.1:1234";
 
   function handleSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
